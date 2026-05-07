@@ -15,10 +15,10 @@ function Dashboard() {
   const pendentes = quotes.filter((q) => q.status === "enviado").length;
 
   const stats = [
-    { label: "Vendas hoje", value: formatBRL(totalHoje), icon: TrendingUp, tone: "primary" as const },
-    { label: "Pedidos abertos", value: orders.filter((o) => o.status !== "entregue").length, icon: ShoppingBag, tone: "info" as const },
-    { label: "Orçamentos enviados", value: pendentes, icon: FileText, tone: "warning" as const },
-    { label: "Aprovados", value: aprovados, icon: Users, tone: "success" as const },
+    { label: "Vendas hoje", value: formatBRL(totalHoje), icon: TrendingUp, tone: "bg-primary/10 text-primary" },
+    { label: "Pedidos abertos", value: orders.filter((o) => o.status !== "entregue").length, icon: ShoppingBag, tone: "bg-info/15 text-info" },
+    { label: "Orçamentos enviados", value: pendentes, icon: FileText, tone: "bg-warning/20 text-warning-foreground" },
+    { label: "Aprovados", value: aprovados, icon: Users, tone: "bg-success/15 text-success" },
   ];
 
   return (
@@ -41,7 +41,7 @@ function Dashboard() {
           <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
-              <span className={`flex h-7 w-7 items-center justify-center rounded-md bg-${s.tone}/10 text-${s.tone}`}>
+              <span className={`flex h-7 w-7 items-center justify-center rounded-md ${s.tone}`}>
                 <s.icon className="h-3.5 w-3.5" />
               </span>
             </div>
