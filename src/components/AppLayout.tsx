@@ -1,6 +1,7 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Users, FileText, ShoppingBag, Truck, Package, LogOut, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 
 const nav = [
   { to: "/dashboard", label: "Início", icon: LayoutDashboard },
@@ -13,6 +14,12 @@ const nav = [
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { signOut, profile } = useAuth();
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,9 +29,9 @@ export function AppLayout() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Hammer className="h-5 w-5" />
           </div>
-          <div>
-            <p className="font-display text-base font-semibold leading-none">ObraGestor</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1">Gestão para sua loja</p>
+          <div className="min-w-0">
+            <p className="font-display text-base font-semibold leading-none truncate">ObraGestor</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || "Gestão para sua loja"}</p>
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-3">
@@ -48,10 +55,10 @@ export function AppLayout() {
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border">
-          <Link to="/login" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent">
             <LogOut className="h-4 w-4" />
             Sair
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -63,7 +70,7 @@ export function AppLayout() {
           </div>
           <span className="font-display font-semibold">ObraGestor</span>
         </Link>
-        <Link to="/login" className="text-sm text-muted-foreground">Sair</Link>
+        <button onClick={handleLogout} className="text-sm text-muted-foreground">Sair</button>
       </header>
 
       <main className="lg:pl-60 pb-20 lg:pb-8">
