@@ -55,10 +55,10 @@ export function AppLayout() {
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border">
-          <Link to="/login" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent">
             <LogOut className="h-4 w-4" />
             Sair
-          </Link>
+          </button>
         </div>
       </aside>
 
