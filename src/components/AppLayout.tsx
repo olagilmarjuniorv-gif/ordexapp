@@ -70,7 +70,7 @@ export function AppLayout() {
           </div>
           <span className="font-display font-semibold">ObraGestor</span>
         </Link>
-        <Link to="/login" className="text-sm text-muted-foreground">Sair</Link>
+        <button onClick={handleLogout} className="text-sm text-muted-foreground">Sair</button>
       </header>
 
       <main className="lg:pl-60 pb-20 lg:pb-8">
