@@ -10,17 +10,12 @@ export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — ObraGestor" }] }),
 });
 
-type Mode = "login" | "signup";
-
 function LoginPage() {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
-  const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
 
   if (!authLoading && session) return <Navigate to="/dashboard" />;
 
@@ -28,31 +23,13 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Bem-vindo de volta!");
-        navigate({ to: "/dashboard" });
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: fullName, phone },
-          },
-        });
-        if (error) throw error;
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-        setMode("login");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Bem-vindo de volta!");
+      navigate({ to: "/dashboard" });
     } catch (err: any) {
-      const msg = err?.message ?? "Erro ao processar";
-      toast.error(
-        msg.includes("Invalid login") ? "E-mail ou senha inválidos" :
-        msg.includes("already registered") ? "E-mail já cadastrado" :
-        msg
-      );
+      const msg = err?.message ?? "Erro ao entrar";
+      toast.error(msg.includes("Invalid login") ? "E-mail ou senha inválidos" : msg);
     } finally {
       setLoading(false);
     }
@@ -87,53 +64,10 @@ function LoginPage() {
             <span className="font-display text-lg font-semibold">ObraGestor</span>
           </div>
 
-          <div className="flex gap-1 p-1 rounded-lg bg-muted mb-6">
-            <button
-              type="button"
-              onClick={() => setMode("login")}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${mode === "login" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${mode === "signup" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-            >
-              Criar conta
-            </button>
-          </div>
-
-          <h2 className="font-display text-2xl font-bold">
-            {mode === "login" ? "Acessar painel" : "Criar sua conta"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "login" ? "Entre com seu e-mail e senha." : "Preencha os dados para começar."}
-          </p>
+          <h2 className="font-display text-2xl font-bold">Acessar painel</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Entre com seu e-mail e senha.</p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
-            {mode === "signup" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium">Nome completo</label>
-                  <input
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Telefone (opcional)</label>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="11999999999"
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-              </>
-            )}
             <div>
               <label className="text-sm font-medium">E-mail</label>
               <input
@@ -161,17 +95,18 @@ function LoginPage() {
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-elevated hover:opacity-95 disabled:opacity-70"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {mode === "login" ? "Entrar" : "Criar conta"}
+              Entrar
             </button>
           </form>
 
-          {mode === "login" && (
-            <p className="mt-4 text-xs text-center">
-              <Link to="/forgot-password" className="text-primary font-medium hover:underline">
-                Esqueci minha senha
-              </Link>
-            </p>
-          )}
+          <p className="mt-4 text-xs text-center">
+            <Link to="/forgot-password" className="text-primary font-medium hover:underline">
+              Esqueci minha senha
+            </Link>
+          </p>
+          <p className="mt-6 text-xs text-center text-muted-foreground">
+            Acesso restrito. Solicite cadastro a um administrador.
+          </p>
         </div>
       </div>
     </div>
