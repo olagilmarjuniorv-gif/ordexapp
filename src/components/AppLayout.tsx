@@ -14,6 +14,12 @@ const nav = [
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { signOut, profile } = useAuth();
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="min-h-screen bg-background">
