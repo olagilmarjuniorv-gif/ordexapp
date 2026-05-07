@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          active: boolean
           created_at: string
           full_name: string
           id: string
@@ -23,6 +24,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           full_name?: string
           id: string
@@ -30,6 +32,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           full_name?: string
           id?: string
@@ -73,7 +76,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "vendedor"
+      app_role: "admin" | "vendedor" | "entregador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -201,7 +204,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "vendedor"],
+      app_role: ["admin", "vendedor", "entregador"],
     },
   },
 } as const

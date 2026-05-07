@@ -2,13 +2,24 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app")({
   component: Guard,
 });
 
 function Guard() {
-  const { session, loading } = useAuth();
+  const { session, loading, profile } = useAuth();
+
+  useEffect(() => {
+    if (profile && profile.active === false) {
+      toast.error("Sua conta foi desativada");
+      supabase.auth.signOut();
+    }
+  }, [profile]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
