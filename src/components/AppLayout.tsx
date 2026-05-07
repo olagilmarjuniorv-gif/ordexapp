@@ -29,9 +29,9 @@ export function AppLayout() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Hammer className="h-5 w-5" />
           </div>
-          <div>
-            <p className="font-display text-base font-semibold leading-none">ObraGestor</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1">Gestão para sua loja</p>
+          <div className="min-w-0">
+            <p className="font-display text-base font-semibold leading-none truncate">ObraGestor</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || "Gestão para sua loja"}</p>
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-3">
