@@ -1,6 +1,50 @@
 export type QuoteStatus = "rascunho" | "enviado" | "aprovado" | "recusado";
 export type OrderStatus = "novo" | "separando" | "pronto" | "entregue";
 
+export type ProductCategory =
+  | "Cimento"
+  | "Areia e Brita"
+  | "Tijolos e Blocos"
+  | "Tintas"
+  | "Hidráulica"
+  | "Elétrica"
+  | "Ferramentas"
+  | "Acabamento";
+
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  unit: string;
+  category: ProductCategory;
+  minStock: number;
+}
+
+export const productCategories: ProductCategory[] = [
+  "Cimento",
+  "Areia e Brita",
+  "Tijolos e Blocos",
+  "Tintas",
+  "Hidráulica",
+  "Elétrica",
+  "Ferramentas",
+  "Acabamento",
+];
+
+export const products: Product[] = [
+  { id: "p1", name: "Cimento CP II 50kg", price: 38.9, stock: 120, unit: "sc", category: "Cimento", minStock: 30 },
+  { id: "p2", name: "Areia média lavada", price: 120, stock: 8, unit: "m³", category: "Areia e Brita", minStock: 5 },
+  { id: "p3", name: "Brita nº 1", price: 145, stock: 4, unit: "m³", category: "Areia e Brita", minStock: 5 },
+  { id: "p4", name: "Tijolo baiano 9x19x19", price: 0.55, stock: 6500, unit: "un", category: "Tijolos e Blocos", minStock: 1000 },
+  { id: "p5", name: "Bloco estrutural 14x19x39", price: 4.05, stock: 220, unit: "un", category: "Tijolos e Blocos", minStock: 300 },
+  { id: "p6", name: "Tinta acrílica branca 18L", price: 245, stock: 18, unit: "lt", category: "Tintas", minStock: 6 },
+  { id: "p7", name: "Massa corrida 5kg", price: 38, stock: 2, unit: "un", category: "Acabamento", minStock: 8 },
+  { id: "p8", name: "Tubo PVC esgoto 100mm 6m", price: 89.9, stock: 24, unit: "un", category: "Hidráulica", minStock: 10 },
+  { id: "p9", name: "Fio flexível 2,5mm 100m", price: 189, stock: 9, unit: "rl", category: "Elétrica", minStock: 5 },
+  { id: "p10", name: "Furadeira de impacto 650W", price: 349, stock: 5, unit: "un", category: "Ferramentas", minStock: 2 },
+];
+
 export interface Customer {
   id: string;
   name: string;
