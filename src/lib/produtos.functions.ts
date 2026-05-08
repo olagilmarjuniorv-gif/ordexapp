@@ -38,7 +38,7 @@ export const listProdutos = createServerFn({ method: "GET" })
 
     let query = supabaseAdmin.from("produtos").select("id, name, description, price, active");
 
-    if (!caller.isSuperAdmin) {
+    if (!caller.isSuperAdmin && caller.companyId) {
       query = query.eq("company_id", caller.companyId);
     }
 

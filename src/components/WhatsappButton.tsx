@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  phone?: string;
+  phone?: string | null;
   message?: string;
   label?: string;
   className?: string;
