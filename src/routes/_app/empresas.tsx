@@ -51,8 +51,10 @@ function Panel() {
   });
 
   const saveM = useMutation({
-    mutationFn: (d: { id?: string; name: string; slug: string | null; phone: string | null }) =>
-      d.id ? updateFn({ data: { ...d, id: d.id } }) : createFn({ data: d }),
+    mutationFn: async (d: { id?: string; name: string; slug: string | null; phone: string | null }) => {
+      if (d.id) await updateFn({ data: { id: d.id, name: d.name, slug: d.slug, phone: d.phone } });
+      else await createFn({ data: { name: d.name, slug: d.slug, phone: d.phone } });
+    },
     onSuccess: () => {
       toast.success("Empresa salva");
       qc.invalidateQueries({ queryKey: ["companies"] });
