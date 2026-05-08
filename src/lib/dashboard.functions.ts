@@ -34,15 +34,13 @@ export const getSuperAdminDashboardData = createServerFn({ method: "GET" })
         supabaseAdmin.from('pedidos').select('total_amount').eq('status', 'completed'),
     ]);
 
-    const companyRanking = await supabaseAdmin.rpc('get_company_sales_ranking');
-
     return {
         totalCompanies: companies.data?.length ?? 0,
         activeCompanies: companies.data?.filter(c => c.active).length ?? 0,
         totalUsers: users.count ?? 0,
         totalPedidos: pedidos.count ?? 0,
-        totalSalesValue: sales.data?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0,
-        companyRanking: companyRanking.data ?? [],
+        totalSalesValue: sales.data?.reduce((sum, p) => sum + Number(p.total_amount), 0) ?? 0,
+        companyRanking: [] as Array<{ id: string; name: string; total: number }>,
     };
   });
 
@@ -70,7 +68,7 @@ export const getCompanyDashboardData = createServerFn({ method: "POST" })
         supabaseAdmin.from('orcamentos').select('id, status', { count: 'exact' })
             .eq('company_id', caller.companyId).gte('created_at', from).lte('created_at', to),
         // All active products
-        supabaseAdmin.from('produtos').select('stock, minStock')
+        supabaseAdmin.from('produtos').select('stock, "minStock"')
             .eq('company_id', caller.companyId).eq('active', true),
         // Total clients
         supabaseAdmin.from('clientes').select('id', { count: 'exact' })
@@ -81,11 +79,11 @@ export const getCompanyDashboardData = createServerFn({ method: "POST" })
         // Recent Orcamentos
         supabaseAdmin.from('orcamentos').select('*, cliente:clientes(*)').eq('company_id', caller.companyId).order('created_at', { ascending: false }).limit(4),
         // Ongoing Pedidos
-        supabaseAdmin.from('pedidos').select('*, cliente:clientes(*)').eq('company_id', caller.companyId).neq('status', 'entregue').order('created_at', { ascending: false }).limit(3),
+        supabaseAdmin.from('pedidos').select('*, cliente:clientes(*)').eq('company_id', caller.companyId).neq('status', 'completed').order('created_at', { ascending: false }).limit(3),
     ]);
 
-    const lowStockProducts = products.data?.filter(p => p.stock <= p.minStock).length ?? 0;
-    const openPedidos = pedidos.data?.filter(p => p.status !== 'entregue').length ?? 0;
+    const lowStockProducts = (products.data ?? []).filter((p: any) => Number(p.stock) <= Number(p.minStock)).length;
+    const openPedidos = pedidos.data?.filter(p => p.status !== 'completed').length ?? 0;
 
     return {
         pedidosAbertos: openPedidos,
@@ -93,8 +91,8 @@ export const getCompanyDashboardData = createServerFn({ method: "POST" })
         orcamentosAprovados: orcamentos.data?.filter(o => o.status === 'approved').length ?? 0,
         produtosEstoqueBaixo: lowStockProducts,
         clientesCadastrados: clients.count ?? 0,
-        valorTotalVendido: sales.data?.reduce((sum, p) => sum + p.total_amount, 0) ?? 0,
-        recentOrcamentos: recentOrcamentos.data ?? [],
-        ongoingPedidos: ongoingPedidos.data ?? [],
+        valorTotalVendido: sales.data?.reduce((sum, p) => sum + Number(p.total_amount), 0) ?? 0,
+        recentOrcamentos: (recentOrcamentos.data ?? []) as any[],
+        ongoingPedidos: (ongoingPedidos.data ?? []) as any[],
     };
   });

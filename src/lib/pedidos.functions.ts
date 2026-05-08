@@ -81,17 +81,22 @@ export const createPedidoFromOrcamento = createServerFn({ method: "POST" })
         if (orcamentoError || !orcamento) throw new Response("Orçamento não encontrado", { status: 404 });
         if (orcamento.status !== 'sent') throw new Response(`Orçamento com status \"${orcamento.status}\" não pode ser aprovado.`, { status: 400 });
 
-        // 2. Call RPC to create pedido and update stock in a transaction
-        const { data: newPedido, error: rpcError } = await supabaseAdmin.rpc('create_pedido_and_update_stock', {
-            p_company_id: caller.companyId,
-            p_user_id: caller.userId,
-            p_orcamento_id: orcamento.id,
-            p_client_id: orcamento.client_id,
-            p_total_amount: orcamento.total_amount,
-            p_items: orcamento.items
-        });
+        // 2. Insert pedido directly (RPC for stock update will be added later)
+        const { data: newPedido, error: insErr } = await supabaseAdmin
+            .from("pedidos")
+            .insert({
+                company_id: caller.companyId,
+                user_id: caller.userId,
+                client_id: orcamento.client_id,
+                orcamento_id: orcamento.id,
+                total_amount: orcamento.total_amount,
+                items: orcamento.items,
+                status: 'pending',
+            })
+            .select("id")
+            .single();
 
-        if (rpcError) throw new Response(rpcError.message, { status: 500 });
+        if (insErr || !newPedido) throw new Response(insErr?.message ?? "Erro ao criar pedido", { status: 500 });
 
         // 3. Update orcamento status to 'approved'
         await supabaseAdmin.from("orcamentos").update({ status: 'approved' }).eq("id", orcamento.id);
