@@ -2,14 +2,22 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type Profile = { id: string; full_name: string; phone: string | null; active: boolean };
-export type AppRole = "admin" | "vendedor" | "entregador";
+type Profile = {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  active: boolean;
+  company_id: string | null;
+};
+export type AppRole = "super_admin" | "admin" | "vendedor" | "entregador";
 
 interface AuthCtx {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
   role: AppRole | null;
+  companyId: string | null;
+  isSuperAdmin: boolean;
   isAdmin: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -26,10 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (uid: string) => {
     const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, phone, active").eq("id", uid).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, full_name, phone, active, company_id")
+        .eq("id", uid)
+        .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid).maybeSingle(),
     ]);
-    setProfile(p ?? null);
+    setProfile((p as Profile | null) ?? null);
     setRole((r?.role as AppRole | undefined) ?? null);
   };
 
@@ -58,7 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         profile,
         role,
-        isAdmin: role === "admin",
+        companyId: profile?.company_id ?? null,
+        isSuperAdmin: role === "super_admin",
+        isAdmin: role === "admin" || role === "super_admin",
         loading,
         signOut: async () => {
           await supabase.auth.signOut();

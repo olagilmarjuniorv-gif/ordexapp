@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, ShoppingBag, Truck, Package, LogOut, Hammer, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, FileText, ShoppingBag, Truck, Package, LogOut, Hammer, ShieldCheck, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
@@ -15,10 +15,12 @@ const baseNav = [
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { signOut, profile, isAdmin } = useAuth();
-  const nav = isAdmin
-    ? [...baseNav, { to: "/usuarios", label: "Usuários", icon: ShieldCheck } as const]
-    : baseNav;
+  const { signOut, profile, isAdmin, isSuperAdmin } = useAuth();
+  const adminLinks = [
+    ...(isAdmin ? [{ to: "/usuarios", label: "Usuários", icon: ShieldCheck } as const] : []),
+    ...(isSuperAdmin ? [{ to: "/empresas", label: "Empresas", icon: Building2 } as const] : []),
+  ];
+  const nav = [...baseNav, ...adminLinks];
   const handleLogout = async () => {
     await signOut();
     navigate({ to: "/login" });

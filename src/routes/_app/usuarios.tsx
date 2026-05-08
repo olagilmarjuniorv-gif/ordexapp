@@ -7,9 +7,10 @@ import {
   createUser,
   setUserActive,
   setUserRole,
-  bootstrapAdmin,
+  bootstrapSuperAdmin,
   type AppRole,
 } from "@/lib/users.functions";
+import { listCompanies } from "@/lib/companies.functions";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Loader2, UserPlus, ShieldCheck, Power } from "lucide-react";
@@ -20,23 +21,24 @@ export const Route = createFileRoute("/_app/usuarios")({
 });
 
 const ROLE_LABEL: Record<AppRole, string> = {
+  super_admin: "Super Admin",
   admin: "Administrador",
   vendedor: "Vendedor",
   entregador: "Entregador",
 };
 
 function UsersPage() {
-  const { isAdmin, role, loading: authLoading, refreshProfile, user } = useAuth();
-  const bootstrap = useServerFn(bootstrapAdmin);
+  const { isAdmin, isSuperAdmin, role, loading: authLoading, refreshProfile, user } = useAuth();
+  const bootstrap = useServerFn(bootstrapSuperAdmin);
 
-  // Auto-promote first user as admin if no admin exists yet
+  // Auto-promote first user as super_admin if none exists
   useEffect(() => {
     if (authLoading || !user) return;
     if (role !== null) return;
     bootstrap({})
-      .then((r) => {
+      .then((r: { promoted: boolean }) => {
         if (r.promoted) {
-          toast.success("Você foi definido como administrador inicial");
+          toast.success("Você foi definido como administrador geral");
           refreshProfile();
         }
       })
@@ -52,12 +54,13 @@ function UsersPage() {
   }
   if (!isAdmin && role !== null) return <Navigate to="/dashboard" />;
 
-  return <UsersPanel />;
+  return <UsersPanel isSuperAdmin={isSuperAdmin} />;
 }
 
-function UsersPanel() {
+function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const qc = useQueryClient();
   const fetchUsers = useServerFn(listUsers);
+  const fetchCompanies = useServerFn(listCompanies);
   const createFn = useServerFn(createUser);
   const activeFn = useServerFn(setUserActive);
   const roleFn = useServerFn(setUserRole);
@@ -68,9 +71,19 @@ function UsersPanel() {
     queryFn: () => fetchUsers({}),
   });
 
+  const { data: companies } = useQuery({
+    queryKey: ["companies"],
+    queryFn: () => fetchCompanies({}),
+  });
+
   const createM = useMutation({
-    mutationFn: (data: { full_name: string; email: string; password: string; role: AppRole }) =>
-      createFn({ data }),
+    mutationFn: (data: {
+      full_name: string;
+      email: string;
+      password: string;
+      role: AppRole;
+      company_id: string | null;
+    }) => createFn({ data }),
     onSuccess: () => {
       toast.success("Usuário criado");
       qc.invalidateQueries({ queryKey: ["users"] });
@@ -107,7 +120,9 @@ function UsersPanel() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Usuários</h1>
-          <p className="text-sm text-muted-foreground">Gerencie quem tem acesso ao sistema.</p>
+          <p className="text-sm text-muted-foreground">
+            {isSuperAdmin ? "Todos os usuários de todas as empresas." : "Usuários da sua empresa."}
+          </p>
         </div>
         <button
           onClick={() => setOpen(true)}
@@ -129,8 +144,13 @@ function UsersPanel() {
               className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
             >
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium truncate">{u.full_name || "(sem nome)"}</p>
+                  {u.role === "super_admin" && (
+                    <span className="text-[10px] uppercase tracking-wide rounded-full bg-primary/10 text-primary px-2 py-0.5">
+                      Super Admin
+                    </span>
+                  )}
                   {!u.active && (
                     <span className="text-[10px] uppercase tracking-wide rounded-full bg-destructive/10 text-destructive px-2 py-0.5">
                       Inativo
@@ -138,6 +158,9 @@ function UsersPanel() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                {u.company_name && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">🏢 {u.company_name}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -145,9 +168,11 @@ function UsersPanel() {
                   onChange={(e) =>
                     roleM.mutate({ user_id: u.id, role: e.target.value as AppRole })
                   }
+                  disabled={u.role === "super_admin" && !isSuperAdmin}
                   className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm"
                 >
                   {!u.role && <option value="">— sem função —</option>}
+                  {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                   <option value="admin">Administrador</option>
                   <option value="vendedor">Vendedor</option>
                   <option value="entregador">Entregador</option>
@@ -172,27 +197,51 @@ function UsersPanel() {
         </div>
       )}
 
-      {open && <CreateDialog onClose={() => setOpen(false)} onSubmit={(d) => createM.mutate(d)} loading={createM.isPending} />}
+      {open && (
+        <CreateDialog
+          isSuperAdmin={isSuperAdmin}
+          companies={(companies ?? []).filter((c: any) => c.active)}
+          onClose={() => setOpen(false)}
+          onSubmit={(d) => createM.mutate(d)}
+          loading={createM.isPending}
+        />
+      )}
     </div>
   );
 }
 
 function CreateDialog({
+  isSuperAdmin,
+  companies,
   onClose,
   onSubmit,
   loading,
 }: {
+  isSuperAdmin: boolean;
+  companies: Array<{ id: string; name: string }>;
   onClose: () => void;
-  onSubmit: (d: { full_name: string; email: string; password: string; role: AppRole }) => void;
+  onSubmit: (d: {
+    full_name: string;
+    email: string;
+    password: string;
+    role: AppRole;
+    company_id: string | null;
+  }) => void;
   loading: boolean;
 }) {
   const [full_name, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<AppRole>("vendedor");
+  const [companyId, setCompanyId] = useState<string>("");
+
+  const needsCompany = role !== "super_admin";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4"
+      onClick={onClose}
+    >
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-background p-5 shadow-elevated"
@@ -204,28 +253,78 @@ function CreateDialog({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            onSubmit({ full_name, email, password, role });
+            onSubmit({
+              full_name,
+              email,
+              password,
+              role,
+              company_id: needsCompany ? (isSuperAdmin ? companyId || null : null) : null,
+            });
           }}
           className="space-y-3"
         >
           <Field label="Nome completo">
-            <input required value={full_name} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
+            <input
+              required
+              value={full_name}
+              onChange={(e) => setFullName(e.target.value)}
+              className={inputCls}
+            />
           </Field>
           <Field label="E-mail">
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={inputCls}
+            />
           </Field>
           <Field label="Senha">
-            <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputCls}
+            />
           </Field>
           <Field label="Função">
-            <select value={role} onChange={(e) => setRole(e.target.value as AppRole)} className={inputCls}>
-              <option value="admin">Administrador</option>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as AppRole)}
+              className={inputCls}
+            >
+              {isSuperAdmin && <option value="super_admin">Super Admin (todas as empresas)</option>}
+              <option value="admin">Administrador da empresa</option>
               <option value="vendedor">Vendedor</option>
               <option value="entregador">Entregador</option>
             </select>
           </Field>
+          {isSuperAdmin && needsCompany && (
+            <Field label="Empresa">
+              <select
+                required
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">Selecione…</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <div className="flex gap-2 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-border px-3 py-2.5 text-sm font-medium">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-border px-3 py-2.5 text-sm font-medium"
+            >
               Cancelar
             </button>
             <button
