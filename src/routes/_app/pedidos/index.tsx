@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listPedidos } from "@/lib/pedidos.functions";
 import { Loader2, ShoppingCart } from "lucide-react";
 
-export const Route = createFileRoute("/_app/pedidos")({
+export const Route = createFileRoute("/_app/pedidos/")({
   component: PedidosList,
   head: () => ({ meta: [{ title: "Pedidos — ObraGestor" }] }),
 });

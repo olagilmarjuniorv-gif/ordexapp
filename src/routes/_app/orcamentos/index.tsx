@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listOrcamentos } from "@/lib/orcamentos.functions";
 import { Loader2, Plus, FileText } from "lucide-react";
 
-export const Route = createFileRoute("/_app/orcamentos")({
+export const Route = createFileRoute("/_app/orcamentos/")({
   component: OrcamentosList,
   head: () => ({ meta: [{ title: "Orçamentos — ObraGestor" }] }),
 });
