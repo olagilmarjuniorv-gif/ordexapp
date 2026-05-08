@@ -16,13 +16,15 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUsuariosRouteImport } from './routes/_app/usuarios'
 import { Route as AppProdutosRouteImport } from './routes/_app/produtos'
-import { Route as AppPedidosRouteImport } from './routes/_app/pedidos'
 import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
 import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
-import { Route as AppOrcamentosIndexRouteImport } from './routes/_app/orcamentos.index'
-import { Route as AppOrcamentosNovoRouteImport } from './routes/_app/orcamentos.novo'
+import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
+import { Route as AppOrcamentosIndexRouteImport } from './routes/_app/orcamentos/index'
+import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
+import { Route as AppOrcamentosNovoRouteImport } from './routes/_app/orcamentos/novo'
+import { Route as AppOrcamentosIdRouteImport } from './routes/_app/orcamentos/$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -58,11 +60,6 @@ const AppProdutosRoute = AppProdutosRouteImport.update({
   path: '/produtos',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPedidosRoute = AppPedidosRouteImport.update({
-  id: '/pedidos',
-  path: '/pedidos',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppEntregasRoute = AppEntregasRouteImport.update({
   id: '/entregas',
   path: '/entregas',
@@ -83,14 +80,29 @@ const AppClientesRoute = AppClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
+  id: '/pedidos/',
+  path: '/pedidos/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrcamentosIndexRoute = AppOrcamentosIndexRouteImport.update({
   id: '/orcamentos/',
   path: '/orcamentos/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPedidosIdRoute = AppPedidosIdRouteImport.update({
+  id: '/pedidos/$id',
+  path: '/pedidos/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrcamentosNovoRoute = AppOrcamentosNovoRouteImport.update({
   id: '/orcamentos/novo',
   path: '/orcamentos/novo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrcamentosIdRoute = AppOrcamentosIdRouteImport.update({
+  id: '/orcamentos/$id',
+  path: '/orcamentos/$id',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -103,11 +115,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
   '/entregas': typeof AppEntregasRoute
-  '/pedidos': typeof AppPedidosRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
+  '/orcamentos/$id': typeof AppOrcamentosIdRoute
   '/orcamentos/novo': typeof AppOrcamentosNovoRoute
+  '/pedidos/$id': typeof AppPedidosIdRoute
   '/orcamentos/': typeof AppOrcamentosIndexRoute
+  '/pedidos/': typeof AppPedidosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,11 +132,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
   '/entregas': typeof AppEntregasRoute
-  '/pedidos': typeof AppPedidosRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
+  '/orcamentos/$id': typeof AppOrcamentosIdRoute
   '/orcamentos/novo': typeof AppOrcamentosNovoRoute
+  '/pedidos/$id': typeof AppPedidosIdRoute
   '/orcamentos': typeof AppOrcamentosIndexRoute
+  '/pedidos': typeof AppPedidosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -135,11 +151,13 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
   '/_app/entregas': typeof AppEntregasRoute
-  '/_app/pedidos': typeof AppPedidosRoute
   '/_app/produtos': typeof AppProdutosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
+  '/_app/orcamentos/$id': typeof AppOrcamentosIdRoute
   '/_app/orcamentos/novo': typeof AppOrcamentosNovoRoute
+  '/_app/pedidos/$id': typeof AppPedidosIdRoute
   '/_app/orcamentos/': typeof AppOrcamentosIndexRoute
+  '/_app/pedidos/': typeof AppPedidosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -152,11 +170,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/empresas'
     | '/entregas'
-    | '/pedidos'
     | '/produtos'
     | '/usuarios'
+    | '/orcamentos/$id'
     | '/orcamentos/novo'
+    | '/pedidos/$id'
     | '/orcamentos/'
+    | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -167,11 +187,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/empresas'
     | '/entregas'
-    | '/pedidos'
     | '/produtos'
     | '/usuarios'
+    | '/orcamentos/$id'
     | '/orcamentos/novo'
+    | '/pedidos/$id'
     | '/orcamentos'
+    | '/pedidos'
   id:
     | '__root__'
     | '/'
@@ -183,11 +205,13 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/empresas'
     | '/_app/entregas'
-    | '/_app/pedidos'
     | '/_app/produtos'
     | '/_app/usuarios'
+    | '/_app/orcamentos/$id'
     | '/_app/orcamentos/novo'
+    | '/_app/pedidos/$id'
     | '/_app/orcamentos/'
+    | '/_app/pedidos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,13 +273,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProdutosRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/pedidos': {
-      id: '/_app/pedidos'
-      path: '/pedidos'
-      fullPath: '/pedidos'
-      preLoaderRoute: typeof AppPedidosRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/entregas': {
       id: '/_app/entregas'
       path: '/entregas'
@@ -284,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppClientesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/pedidos/': {
+      id: '/_app/pedidos/'
+      path: '/pedidos'
+      fullPath: '/pedidos/'
+      preLoaderRoute: typeof AppPedidosIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/orcamentos/': {
       id: '/_app/orcamentos/'
       path: '/orcamentos'
@@ -291,11 +315,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrcamentosIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/pedidos/$id': {
+      id: '/_app/pedidos/$id'
+      path: '/pedidos/$id'
+      fullPath: '/pedidos/$id'
+      preLoaderRoute: typeof AppPedidosIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/orcamentos/novo': {
       id: '/_app/orcamentos/novo'
       path: '/orcamentos/novo'
       fullPath: '/orcamentos/novo'
       preLoaderRoute: typeof AppOrcamentosNovoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orcamentos/$id': {
+      id: '/_app/orcamentos/$id'
+      path: '/orcamentos/$id'
+      fullPath: '/orcamentos/$id'
+      preLoaderRoute: typeof AppOrcamentosIdRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -306,11 +344,13 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
   AppEntregasRoute: typeof AppEntregasRoute
-  AppPedidosRoute: typeof AppPedidosRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
+  AppOrcamentosIdRoute: typeof AppOrcamentosIdRoute
   AppOrcamentosNovoRoute: typeof AppOrcamentosNovoRoute
+  AppPedidosIdRoute: typeof AppPedidosIdRoute
   AppOrcamentosIndexRoute: typeof AppOrcamentosIndexRoute
+  AppPedidosIndexRoute: typeof AppPedidosIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -318,11 +358,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
   AppEntregasRoute: AppEntregasRoute,
-  AppPedidosRoute: AppPedidosRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppUsuariosRoute: AppUsuariosRoute,
+  AppOrcamentosIdRoute: AppOrcamentosIdRoute,
   AppOrcamentosNovoRoute: AppOrcamentosNovoRoute,
+  AppPedidosIdRoute: AppPedidosIdRoute,
   AppOrcamentosIndexRoute: AppOrcamentosIndexRoute,
+  AppPedidosIndexRoute: AppPedidosIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -337,13 +379,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

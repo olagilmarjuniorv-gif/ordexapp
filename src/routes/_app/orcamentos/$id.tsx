@@ -23,10 +23,11 @@ function OrcamentoDetail() {
     const statusFn = useServerFn(updateOrcamentoStatus);
     const approveFn = useServerFn(createPedidoFromOrcamento);
 
-    const { data: orcamento, isLoading, error } = useQuery({ 
+    const { data: orcRaw, isLoading, error } = useQuery({ 
         queryKey: ['orcamento', id], 
         queryFn: () => getFn({ data: { id } }) 
     });
+    const orcamento = orcRaw as any;
 
     const statusM = useMutation({
         mutationFn: (vars: { status: any }) => statusFn({ data: { id, status: vars.status } }),
@@ -45,8 +46,8 @@ function OrcamentoDetail() {
         onError: (e: any) => toast.error(e?.message ?? "Erro ao aprovar"),
     });
 
-    if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin"/></div>
-    if (error) return <div className="text-center text-destructive py-12">{error.message}</div>
+    if (isLoading || !orcamento) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin"/></div>
+    if (error) return <div className="text-center text-destructive py-12">{(error as Error).message}</div>
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">

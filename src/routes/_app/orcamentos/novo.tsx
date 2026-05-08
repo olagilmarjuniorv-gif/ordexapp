@@ -54,7 +54,7 @@ function OrcamentoForm() {
     const total = items.reduce((acc, item) => acc + item.quantity * item.price, 0);
 
     function handleAddProduct(productId: string) {
-        const product = produtos.find((p: any) => p.id === productId);
+        const product = (produtos ?? []).find((p: any) => p.id === productId);
         if (product && !items.find(i => i.product_id === productId)) {
             setItems([...items, { product_id: product.id, name: product.name, quantity: 1, price: product.price }]);
         }
@@ -93,7 +93,7 @@ function OrcamentoForm() {
             <div className="space-y-3">
                 <h2 className="font-semibold">Itens</h2>
                  {loadingProdutos ? <Loader2 className="h-4 w-4 animate-spin"/> : 
-                    <Combobox options={produtos.filter((p: any) => p.active)} value="" onChange={handleAddProduct} placeholder="+ Adicionar produto..." />
+                    <Combobox options={(produtos ?? []).filter((p: any) => p.active)} value="" onChange={handleAddProduct} placeholder="+ Adicionar produto..." />
                  }
                 <ul className="space-y-2">
                     {items.map((item, index) => (

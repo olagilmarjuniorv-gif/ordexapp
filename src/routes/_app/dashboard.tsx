@@ -4,7 +4,9 @@ import { formatBRL } from "@/lib/utils";
 import { OrderBadge, QuoteBadge } from "@/components/StatusBadge";
 import { WhatsappButton } from "@/components/WhatsappButton";
 import { getCompanyDashboardData } from "@/lib/dashboard.functions";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
@@ -12,16 +14,19 @@ export const Route = createFileRoute("/_app/dashboard")({
 });
 
 function Dashboard() {
+  const fetchFn = useServerFn(getCompanyDashboardData);
   const to = new Date();
   const from = new Date();
   from.setDate(to.getDate() - 30);
 
-  const { data } = useSuspenseQuery(getCompanyDashboardData.queryOptions({
-    period: {
-      from: from.toISOString(),
-      to: to.toISOString(),
-    }
-  }));
+  const { data, isLoading } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: () => fetchFn({ data: { period: { from: from.toISOString(), to: to.toISOString() } } }),
+  });
+
+  if (isLoading || !data) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  }
 
   const stats = [
     { label: "Vendas no período", value: formatBRL(data.valorTotalVendido), icon: TrendingUp, tone: "bg-primary/10 text-primary" },
@@ -80,17 +85,17 @@ function Dashboard() {
           </Link>
         </header>
         <ul className="divide-y divide-border">
-          {data.recentOrcamentos.map((q) => (
+          {data.recentOrcamentos.map((q: any) => (
             <li key={q.id} className="flex items-center gap-3 p-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary text-xs font-bold">
-                {q.number.slice(-3)}
+                {String(q.id).slice(-3)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{q.cliente?.name}</p>
-                <p className="text-xs text-muted-foreground">{q.number} · {new Date(q.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-muted-foreground">#{String(q.id).slice(0,6)} · {new Date(q.created_at).toLocaleDateString()}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold">{formatBRL(q.total_amount)}</p>
+                <p className="text-sm font-semibold">{formatBRL(Number(q.total_amount))}</p>
                 <div className="mt-1"><QuoteBadge status={q.status} /></div>
               </div>
             </li>
@@ -106,14 +111,14 @@ function Dashboard() {
           </Link>
         </header>
         <ul className="divide-y divide-border">
-          {data.ongoingPedidos.map((o) => (
+          {data.ongoingPedidos.map((o: any) => (
             <li key={o.id} className="flex items-center gap-3 p-4">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{o.cliente?.name}</p>
-                <p className="text-xs text-muted-foreground">{o.number} · {formatBRL(o.total_amount)}</p>
+                <p className="text-xs text-muted-foreground">#{String(o.id).slice(0,6)} · {formatBRL(Number(o.total_amount))}</p>
               </div>
               <OrderBadge status={o.status} />
-              <WhatsappButton phone={o.cliente?.phone} variant="ghost" label="" message={`Olá ${o.cliente?.name}, atualização do pedido ${o.number}.`} />
+              <WhatsappButton phone={o.cliente?.phone} variant="ghost" label="" message={`Olá ${o.cliente?.name}, atualização do pedido #${String(o.id).slice(0,6)}.`} />
             </li>
           ))}
         </ul>

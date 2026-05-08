@@ -3,87 +3,115 @@ import {
   useContext,
   useState,
   useEffect,
-  useCallback,
   type ReactNode,
 } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { type AppRole } from "./users.functions";
 
-type AuthUser = {
+type Profile = {
   id: string;
-  email: string;
-  last_sign_in_at: string;
-  profile: {
-    full_name: string;
-    company_id: string | null;
-    company_name: string | null;
-    role: AppRole | null;
-  };
+  full_name: string;
+  phone: string | null;
+  company_id: string | null;
+  active: boolean;
 };
 
 type AuthState = {
-  user: AuthUser | null;
+  session: Session | null;
+  user: User | null;
+  profile: Profile | null;
   role: AppRole | null;
   companyId: string | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
   loading: boolean;
   isLoggedIn: boolean;
-  refreshProfile: () => Promise<any>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
-function getProfileFn() {
-  return supabase.from("profiles").select("*, role:user_roles(role)").single();
+async function loadProfile(userId: string): Promise<{ profile: Profile | null; role: AppRole | null }> {
+  const [{ data: profile }, { data: roleRow }] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, phone, company_id, active").eq("id", userId).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+  ]);
+  return {
+    profile: (profile as Profile | null) ?? null,
+    role: (roleRow?.role as AppRole | undefined) ?? null,
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { data: profile, refetch: refreshProfile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: useServerFn(getProfileFn),
-    enabled: !!user,
-  });
-
-  const profileData = profile?.data as any;
+  const refreshProfile = async () => {
+    if (!session?.user?.id) {
+      setProfile(null);
+      setRole(null);
+      return;
+    }
+    const { profile, role } = await loadProfile(session.user.id);
+    setProfile(profile);
+    setRole(role);
+  };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(session.user as any);
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s?.user) {
+        loadProfile(s.user.id).then(({ profile, role }) => {
+          setProfile(profile);
+          setRole(role);
+        });
+      } else {
+        setProfile(null);
+        setRole(null);
       }
-      setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser((session?.user as any) ?? null);
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s?.user) {
+        loadProfile(s.user.id).then(({ profile, role }) => {
+          setProfile(profile);
+          setRole(role);
+          setLoading(false);
+        });
+      } else {
         setLoading(false);
-      },
-    );
+      }
+    });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const isLoggedIn = !!user;
-  const role = (profileData?.role?.[0]?.role as AppRole) ?? null;
-  const companyId = profileData?.company_id ?? null;
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setProfile(null);
+    setRole(null);
+  };
+
   const isSuperAdmin = role === "super_admin";
   const isAdmin = isSuperAdmin || role === "admin";
 
-  const value = {
-    user,
+  const value: AuthState = {
+    session,
+    user: session?.user ?? null,
+    profile,
     role,
-    companyId,
+    companyId: profile?.company_id ?? null,
     isAdmin,
     isSuperAdmin,
     loading,
-    isLoggedIn,
+    isLoggedIn: !!session,
+    signOut,
     refreshProfile,
   };
 

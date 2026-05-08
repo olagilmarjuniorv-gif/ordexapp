@@ -39,7 +39,7 @@ export const listClientes = createServerFn({ method: "GET" })
 
     let query = supabaseAdmin.from("clientes").select("id, name, email, phone, address");
 
-    if (!caller.isSuperAdmin) {
+    if (!caller.isSuperAdmin && caller.companyId) {
       query = query.eq("company_id", caller.companyId);
     }
 
