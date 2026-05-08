@@ -20,10 +20,11 @@ function PedidoDetail() {
     const getFn = useServerFn(getPedido);
     const statusFn = useServerFn(updatePedidoStatus);
 
-    const { data: pedido, isLoading, error } = useQuery({ 
+    const { data: pedRaw, isLoading, error } = useQuery({ 
         queryKey: ['pedido', id], 
         queryFn: () => getFn({ data: { id } }) 
     });
+    const pedido = pedRaw as any;
 
     const statusM = useMutation({
         mutationFn: (vars: { status: any }) => statusFn({ data: { id, status: vars.status } }),
@@ -31,8 +32,8 @@ function PedidoDetail() {
         onError: (e: any) => toast.error(e?.message ?? "Erro"),
     });
 
-    if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin"/></div>
-    if (error) return <div className="text-center text-destructive py-12">{error.message}</div>
+    if (isLoading || !pedido) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin"/></div>
+    if (error) return <div className="text-center text-destructive py-12">{(error as Error).message}</div>
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
