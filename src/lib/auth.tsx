@@ -1,94 +1,99 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { type AppRole } from "./users.functions";
 
-type Profile = {
+type AuthUser = {
   id: string;
-  full_name: string;
-  phone: string | null;
-  active: boolean;
-  company_id: string | null;
+  email: string;
+  last_sign_in_at: string;
+  profile: {
+    full_name: string;
+    company_id: string | null;
+    company_name: string | null;
+    role: AppRole | null;
+  };
 };
-export type AppRole = "super_admin" | "admin" | "vendedor" | "entregador";
 
-interface AuthCtx {
-  session: Session | null;
-  user: User | null;
-  profile: Profile | null;
+type AuthState = {
+  user: AuthUser | null;
   role: AppRole | null;
   companyId: string | null;
-  isSuperAdmin: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   loading: boolean;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  isLoggedIn: boolean;
+  refreshProfile: () => Promise<any>;
+};
+
+const AuthContext = createContext<AuthState | undefined>(undefined);
+
+function getProfileFn() {
+  return supabase.from("profiles").select("*, role:user_roles(role)").single();
 }
 
-const Ctx = createContext<AuthCtx | undefined>(undefined);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (uid: string) => {
-    const [{ data: p }, { data: r }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, full_name, phone, active, company_id")
-        .eq("id", uid)
-        .maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid).maybeSingle(),
-    ]);
-    setProfile((p as Profile | null) ?? null);
-    setRole((r?.role as AppRole | undefined) ?? null);
-  };
+  const { data: profile, refetch: refreshProfile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: useServerFn(getProfileFn),
+    enabled: !!user,
+  });
+
+  const profileData = profile?.data as any;
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      if (s?.user) {
-        setTimeout(() => loadProfile(s.user.id), 0);
-      } else {
-        setProfile(null);
-        setRole(null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUser(session.user as any);
       }
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) loadProfile(data.session.user.id);
       setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser((session?.user as any) ?? null);
+        setLoading(false);
+      },
+    );
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
-  return (
-    <Ctx.Provider
-      value={{
-        session,
-        user: session?.user ?? null,
-        profile,
-        role,
-        companyId: profile?.company_id ?? null,
-        isSuperAdmin: role === "super_admin",
-        isAdmin: role === "admin" || role === "super_admin",
-        loading,
-        signOut: async () => {
-          await supabase.auth.signOut();
-        },
-        refreshProfile: async () => {
-          if (session?.user) await loadProfile(session.user.id);
-        },
-      }}
-    >
-      {children}
-    </Ctx.Provider>
-  );
+  const isLoggedIn = !!user;
+  const role = (profileData?.role?.[0]?.role as AppRole) ?? null;
+  const companyId = profileData?.company_id ?? null;
+  const isSuperAdmin = role === "super_admin";
+  const isAdmin = isSuperAdmin || role === "admin";
+
+  const value = {
+    user,
+    role,
+    companyId,
+    isAdmin,
+    isSuperAdmin,
+    loading,
+    isLoggedIn,
+    refreshProfile,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const c = useContext(Ctx);
-  if (!c) throw new Error("useAuth must be inside AuthProvider");
-  return c;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

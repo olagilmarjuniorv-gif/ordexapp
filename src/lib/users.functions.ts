@@ -3,8 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const ROLES = ["super_admin", "admin", "vendedor", "entregador"] as const;
-const COMPANY_ROLES = ["admin", "vendedor", "entregador"] as const;
+const ROLES = ["super_admin", "admin", "vendedor"] as const;
+const COMPANY_ROLES = ["admin", "vendedor"] as const;
 export type AppRole = (typeof ROLES)[number];
 
 type Caller = {

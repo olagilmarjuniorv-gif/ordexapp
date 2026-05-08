@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, FileText, ShoppingBag, TrendingUp, Users, Plus } from "lucide-react";
-import { customerById, formatBRL, orders, quotes } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 import { OrderBadge, QuoteBadge } from "@/components/StatusBadge";
 import { WhatsappButton } from "@/components/WhatsappButton";
+import { getCompanyDashboardData } from "@/lib/dashboard.functions";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
@@ -10,15 +12,22 @@ export const Route = createFileRoute("/_app/dashboard")({
 });
 
 function Dashboard() {
-  const totalHoje = orders.reduce((s, o) => s + o.total, 0);
-  const aprovados = quotes.filter((q) => q.status === "aprovado").length;
-  const pendentes = quotes.filter((q) => q.status === "enviado").length;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - 30);
+
+  const { data } = useSuspenseQuery(getCompanyDashboardData.queryOptions({
+    period: {
+      from: from.toISOString(),
+      to: to.toISOString(),
+    }
+  }));
 
   const stats = [
-    { label: "Vendas hoje", value: formatBRL(totalHoje), icon: TrendingUp, tone: "bg-primary/10 text-primary" },
-    { label: "Pedidos abertos", value: orders.filter((o) => o.status !== "entregue").length, icon: ShoppingBag, tone: "bg-info/15 text-info" },
-    { label: "Orçamentos enviados", value: pendentes, icon: FileText, tone: "bg-warning/20 text-warning-foreground" },
-    { label: "Aprovados", value: aprovados, icon: Users, tone: "bg-success/15 text-success" },
+    { label: "Vendas no período", value: formatBRL(data.valorTotalVendido), icon: TrendingUp, tone: "bg-primary/10 text-primary" },
+    { label: "Pedidos abertos", value: data.pedidosAbertos, icon: ShoppingBag, tone: "bg-info/15 text-info" },
+    { label: "Orçamentos enviados", value: data.orcamentosEnviados, icon: FileText, tone: "bg-warning/20 text-warning-foreground" },
+    { label: "Orçamentos aprovados", value: data.orcamentosAprovados, icon: Users, tone: "bg-success/15 text-success" },
   ];
 
   return (
@@ -71,24 +80,21 @@ function Dashboard() {
           </Link>
         </header>
         <ul className="divide-y divide-border">
-          {quotes.slice(0, 4).map((q) => {
-            const c = customerById(q.customerId);
-            return (
-              <li key={q.id} className="flex items-center gap-3 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary text-xs font-bold">
-                  {q.number.slice(-3)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{c?.name}</p>
-                  <p className="text-xs text-muted-foreground">{q.number} · {q.createdAt}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{formatBRL(q.total)}</p>
-                  <div className="mt-1"><QuoteBadge status={q.status} /></div>
-                </div>
-              </li>
-            );
-          })}
+          {data.recentOrcamentos.map((q) => (
+            <li key={q.id} className="flex items-center gap-3 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary text-xs font-bold">
+                {q.number.slice(-3)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{q.cliente?.name}</p>
+                <p className="text-xs text-muted-foreground">{q.number} · {new Date(q.created_at).toLocaleDateString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold">{formatBRL(q.total_amount)}</p>
+                <div className="mt-1"><QuoteBadge status={q.status} /></div>
+              </div>
+            </li>
+          ))}
         </ul>
       </section>
 
@@ -100,19 +106,16 @@ function Dashboard() {
           </Link>
         </header>
         <ul className="divide-y divide-border">
-          {orders.slice(0, 3).map((o) => {
-            const c = customerById(o.customerId);
-            return (
-              <li key={o.id} className="flex items-center gap-3 p-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{c?.name}</p>
-                  <p className="text-xs text-muted-foreground">{o.number} · {formatBRL(o.total)}</p>
-                </div>
-                <OrderBadge status={o.status} />
-                <WhatsappButton phone={c?.phone} variant="ghost" label="" message={`Olá ${c?.name}, atualização do pedido ${o.number}.`} />
-              </li>
-            );
-          })}
+          {data.ongoingPedidos.map((o) => (
+            <li key={o.id} className="flex items-center gap-3 p-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{o.cliente?.name}</p>
+                <p className="text-xs text-muted-foreground">{o.number} · {formatBRL(o.total_amount)}</p>
+              </div>
+              <OrderBadge status={o.status} />
+              <WhatsappButton phone={o.cliente?.phone} variant="ghost" label="" message={`Olá ${o.cliente?.name}, atualização do pedido ${o.number}.`} />
+            </li>
+          ))}
         </ul>
       </section>
     </div>

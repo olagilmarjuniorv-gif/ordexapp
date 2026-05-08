@@ -26,18 +26,19 @@ type Company = {
 };
 
 function EmpresasPage() {
-  const { isSuperAdmin, loading } = useAuth();
-  if (loading)
+  const { isAdmin, isSuperAdmin, loading } = useAuth();
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
-  if (!isSuperAdmin) return <Navigate to="/dashboard" />;
-  return <Panel />;
+  }
+  if (!isAdmin) return <Navigate to="/dashboard" />;
+  return <Panel isSuperAdmin={isSuperAdmin} />;
 }
 
-function Panel() {
+function Panel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const qc = useQueryClient();
   const fetchFn = useServerFn(listCompanies);
   const createFn = useServerFn(createCompany);
@@ -52,8 +53,11 @@ function Panel() {
 
   const saveM = useMutation({
     mutationFn: async (d: { id?: string; name: string; slug: string | null; phone: string | null }) => {
-      if (d.id) await updateFn({ data: { id: d.id, name: d.name, slug: d.slug, phone: d.phone } });
-      else await createFn({ data: { name: d.name, slug: d.slug, phone: d.phone } });
+      if (d.id) {
+        await updateFn({ data: { id: d.id, name: d.name, slug: d.slug, phone: d.phone } });
+      } else {
+        await createFn({ data: { name: d.name, slug: d.slug, phone: d.phone } });
+      }
     },
     onSuccess: () => {
       toast.success("Empresa salva");
@@ -74,14 +78,20 @@ function Panel() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Empresas</h1>
-          <p className="text-sm text-muted-foreground">Gerencie as lojas cadastradas no sistema.</p>
+          <p className="text-sm text-muted-foreground">
+            {isSuperAdmin
+              ? "Gerencie as lojas cadastradas no sistema."
+              : "Gerencie os dados da sua empresa."}
+          </p>
         </div>
-        <button
-          onClick={() => setEditing("new")}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-elevated"
-        >
-          <Plus className="h-4 w-4" /> Nova empresa
-        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setEditing("new")}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-elevated"
+          >
+            <Plus className="h-4 w-4" /> Nova empresa
+          </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -118,17 +128,19 @@ function Panel() {
               >
                 <Pencil className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => activeM.mutate({ id: c.id, active: !c.active })}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium border ${
-                  c.active
-                    ? "border-border text-muted-foreground hover:bg-muted"
-                    : "border-primary/30 text-primary hover:bg-primary/5"
-                }`}
-              >
-                <Power className="h-3.5 w-3.5" />
-                {c.active ? "Desativar" : "Ativar"}
-              </button>
+              {isSuperAdmin && (
+                <button
+                  onClick={() => activeM.mutate({ id: c.id, active: !c.active })}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium border ${
+                    c.active
+                      ? "border-border text-muted-foreground hover:bg-muted"
+                      : "border-primary/30 text-primary hover:bg-primary/5"
+                  }`}
+                >
+                  <Power className="h-3.5 w-3.5" />
+                  {c.active ? "Desativar" : "Ativar"}
+                </button>
+              )}
             </div>
           ))}
           {(data ?? []).length === 0 && (

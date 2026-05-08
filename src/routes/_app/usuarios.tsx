@@ -24,7 +24,6 @@ const ROLE_LABEL: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin: "Administrador",
   vendedor: "Vendedor",
-  entregador: "Entregador",
 };
 
 function UsersPage() {
@@ -175,7 +174,6 @@ function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                   <option value="admin">Administrador</option>
                   <option value="vendedor">Vendedor</option>
-                  <option value="entregador">Entregador</option>
                 </select>
                 <button
                   onClick={() => activeM.mutate({ user_id: u.id, active: !u.active })}
@@ -299,7 +297,6 @@ function CreateDialog({
               {isSuperAdmin && <option value="super_admin">Super Admin (todas as empresas)</option>}
               <option value="admin">Administrador da empresa</option>
               <option value="vendedor">Vendedor</option>
-              <option value="entregador">Entregador</option>
             </select>
           </Field>
           {isSuperAdmin && needsCompany && (
