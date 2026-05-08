@@ -14,7 +14,7 @@ import { WhatsappButton } from "@/components/WhatsappButton";
 
 export const Route = createFileRoute("/_app/clientes")({
   component: Clientes,
-  head: () => ({ meta: [{ title: "Clientes — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Clientes — ORDEX" }] }),
 });
 
 type Cliente = {

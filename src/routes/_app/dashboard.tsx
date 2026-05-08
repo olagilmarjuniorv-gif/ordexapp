@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Painel — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Painel — ORDEX" }] }),
 });
 
 function Dashboard() {

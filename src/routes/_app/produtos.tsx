@@ -21,7 +21,7 @@ import {
 
 export const Route = createFileRoute("/_app/produtos")({
   component: Produtos,
-  head: () => ({ meta: [{ title: "Produtos — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Produtos — ORDEX" }] }),
 });
 
 type Produto = {

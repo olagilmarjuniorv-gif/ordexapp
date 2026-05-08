@@ -17,7 +17,7 @@ import { Loader2, UserPlus, ShieldCheck, Power } from "lucide-react";
 
 export const Route = createFileRoute("/_app/usuarios")({
   component: UsersPage,
-  head: () => ({ meta: [{ title: "Usuários — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Usuários — ORDEX" }] }),
 });
 
 const ROLE_LABEL: Record<AppRole, string> = {

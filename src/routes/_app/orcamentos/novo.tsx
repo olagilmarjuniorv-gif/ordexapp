@@ -10,7 +10,7 @@ import { Loader2, Trash2, Plus, ChevronsUpDown } from "lucide-react";
 
 export const Route = createFileRoute("/_app/orcamentos/novo")({
   component: OrcamentoForm,
-  head: () => ({ meta: [{ title: "Novo Orçamento — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Novo Orçamento — ORDEX" }] }),
 });
 
 function formatBRL(value: number) {

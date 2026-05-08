@@ -6,7 +6,7 @@ import { Loader2, ShoppingCart } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pedidos/")({
   component: PedidosList,
-  head: () => ({ meta: [{ title: "Pedidos — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Pedidos — ORDEX" }] }),
 });
 
 function formatBRL(value: number) {

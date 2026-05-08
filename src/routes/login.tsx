@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Entrar — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Entrar — ORDEX" }] }),
 });
 
 function LoginPage() {
@@ -42,7 +42,7 @@ function LoginPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur">
             <Hammer className="h-5 w-5" />
           </div>
-          <span className="font-display text-lg font-semibold">ObraGestor</span>
+          <span className="font-display text-lg font-semibold">ORDEX</span>
         </div>
         <div className="space-y-4 max-w-md">
           <h1 className="font-display text-4xl font-bold leading-tight">
@@ -52,7 +52,7 @@ function LoginPage() {
             Crie orçamentos em segundos, envie ao cliente e acompanhe pedidos sem complicação.
           </p>
         </div>
-        <p className="text-xs text-primary-foreground/60">© ObraGestor</p>
+        <p className="text-xs text-primary-foreground/60">© ORDEX</p>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-10 bg-background">
@@ -61,7 +61,7 @@ function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Hammer className="h-5 w-5" />
             </div>
-            <span className="font-display text-lg font-semibold">ObraGestor</span>
+            <span className="font-display text-lg font-semibold">ORDEX</span>
           </div>
 
           <h2 className="font-display text-2xl font-bold">Acessar painel</h2>

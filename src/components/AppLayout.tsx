@@ -35,7 +35,7 @@ export function AppLayout() {
             <Hammer className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="font-display text-base font-semibold leading-none truncate">ObraGestor</p>
+            <p className="font-display text-base font-semibold leading-none truncate">ORDEX</p>
             <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || "Gestão para sua loja"}</p>
           </div>
         </div>
@@ -73,7 +73,7 @@ export function AppLayout() {
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Hammer className="h-4 w-4" />
           </div>
-          <span className="font-display font-semibold">ObraGestor</span>
+          <span className="font-display font-semibold">ORDEX</span>
         </Link>
         <button onClick={handleLogout} className="text-sm text-muted-foreground">Sair</button>
       </header>

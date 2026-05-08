@@ -6,7 +6,7 @@ import { Loader2, Plus, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_app/orcamentos/")({
   component: OrcamentosList,
-  head: () => ({ meta: [{ title: "Orçamentos — ObraGestor" }] }),
+  head: () => ({ meta: [{ title: "Orçamentos — ORDEX" }] }),
 });
 
 function formatBRL(value: number) {
