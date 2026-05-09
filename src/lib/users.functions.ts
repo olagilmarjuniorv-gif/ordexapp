@@ -72,6 +72,13 @@ export const listUsers = createServerFn({ method: "GET" })
       .select("id, name");
     const companyMap = new Map((companies ?? []).map((x) => [x.id, x.name]));
 
+    // Re-fetch profiles with username
+    const { data: profilesFull } = await supabaseAdmin
+      .from("profiles")
+      .select("id, username")
+      .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+    const usernameMap = new Map((profilesFull ?? []).map((x: any) => [x.id, x.username]));
+
     return (profiles ?? []).map((p) => {
       const u = usersList.users.find((x) => x.id === p.id);
       const role = roles?.find((r) => r.user_id === p.id)?.role as AppRole | undefined;
@@ -81,6 +88,7 @@ export const listUsers = createServerFn({ method: "GET" })
         phone: p.phone,
         active: p.active,
         email: u?.email ?? "",
+        username: (usernameMap.get(p.id) as string | null) ?? null,
         role: role ?? null,
         company_id: p.company_id as string | null,
         company_name: p.company_id ? companyMap.get(p.company_id) ?? null : null,
@@ -94,7 +102,12 @@ export const createUser = createServerFn({ method: "POST" })
     z
       .object({
         full_name: z.string().trim().min(1).max(120),
-        email: z.string().trim().email().max(255),
+        username: z
+          .string()
+          .trim()
+          .min(3)
+          .max(32)
+          .regex(/^[a-zA-Z0-9._-]+$/, "Username inválido"),
         password: z.string().min(6).max(128),
         role: z.enum(ROLES),
         company_id: z.string().uuid().nullable().optional(),
@@ -109,11 +122,9 @@ export const createUser = createServerFn({ method: "POST" })
     let role: AppRole = data.role;
 
     if (c.isSuperAdmin) {
-      // Super admin can pick any company or create a super_admin (no company)
       if (role === "super_admin") companyId = null;
       else if (!companyId) throw new Response("Empresa é obrigatória", { status: 400 });
     } else {
-      // Company admin: forced to own company; can't create super_admin
       if (role === "super_admin") throw new Response("Sem permissão", { status: 403 });
       if (!c.companyId) throw new Response("Sua conta não está vinculada a uma empresa", { status: 400 });
       companyId = c.companyId;
@@ -122,17 +133,30 @@ export const createUser = createServerFn({ method: "POST" })
       }
     }
 
+    const username = data.username.toLowerCase();
+
+    // Ensure username is unique
+    const { data: existing } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("username", username)
+      .maybeSingle();
+    if (existing) throw new Response("Usuário já existe", { status: 400 });
+
+    // Synthetic internal email — never shown to end user
+    const syntheticEmail = `${username}@ordex.local`;
+
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
+      email: syntheticEmail,
       password: data.password,
       email_confirm: true,
-      user_metadata: { full_name: data.full_name },
+      user_metadata: { full_name: data.full_name, username },
     });
     if (error) throw new Response(error.message, { status: 400 });
     const uid = created.user!.id;
     await supabaseAdmin
       .from("profiles")
-      .update({ full_name: data.full_name, company_id: companyId })
+      .update({ full_name: data.full_name, company_id: companyId, username })
       .eq("id", uid);
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
