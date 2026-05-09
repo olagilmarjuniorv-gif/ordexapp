@@ -4,7 +4,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { AppRole } from "./users.functions";
 
-// Helper to get user's context
 type Caller = {
   userId: string;
   role: AppRole | null;
@@ -20,79 +19,142 @@ async function getCaller(userId: string): Promise<Caller> {
   return { userId, role, companyId: p?.company_id ?? null };
 }
 
-// SUPER ADMIN DASHBOARD
-export const getSuperAdminDashboardData = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const caller = await getCaller(context.userId);
-    if (caller.role !== 'super_admin') throw new Response("Unauthorized", { status: 403 });
+export type Granularity = "day" | "week" | "month" | "year";
+export type ChartPoint = { label: string; value: number };
 
-    const [companies, users, pedidos, sales] = await Promise.all([
-        supabaseAdmin.from('companies').select('id, active'),
-        supabaseAdmin.from('profiles').select('id', { count: 'exact' }),
-        supabaseAdmin.from('pedidos').select('id', { count: 'exact' }),
-        supabaseAdmin.from('pedidos').select('total_amount').eq('status', 'completed'),
-    ]);
-
-    return {
-        totalCompanies: companies.data?.length ?? 0,
-        activeCompanies: companies.data?.filter(c => c.active).length ?? 0,
-        totalUsers: users.count ?? 0,
-        totalPedidos: pedidos.count ?? 0,
-        totalSalesValue: sales.data?.reduce((sum, p) => sum + Number(p.total_amount), 0) ?? 0,
-        companyRanking: [] as Array<{ id: string; name: string; total: number }>,
-    };
-  });
-
-
-// COMPANY DASHBOARD
-const periodSchema = z.object({
-    from: z.string().datetime(),
-    to: z.string().datetime(),
+const granularitySchema = z.enum(["day", "week", "month", "year"]);
+const inputSchema = z.object({
+  granularity: granularitySchema,
+  from: z.string().datetime(),
+  to: z.string().datetime(),
 });
 
+function buildBuckets(
+  rows: Array<{ created_at: string; total_amount: number | string }>,
+  granularity: Granularity,
+  from: string,
+): ChartPoint[] {
+  const fromD = new Date(from);
+  if (granularity === "day") {
+    const b: ChartPoint[] = Array.from({ length: 24 }, (_, i) => ({
+      label: `${String(i).padStart(2, "0")}h`,
+      value: 0,
+    }));
+    for (const r of rows) {
+      const h = new Date(r.created_at).getHours();
+      b[h].value += Number(r.total_amount);
+    }
+    return b;
+  }
+  if (granularity === "week") {
+    const labels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const b = labels.map((l) => ({ label: l, value: 0 }));
+    for (const r of rows) {
+      const d = new Date(r.created_at).getDay();
+      const idx = d === 0 ? 6 : d - 1;
+      b[idx].value += Number(r.total_amount);
+    }
+    return b;
+  }
+  if (granularity === "month") {
+    const days = new Date(fromD.getFullYear(), fromD.getMonth() + 1, 0).getDate();
+    const b: ChartPoint[] = Array.from({ length: days }, (_, i) => ({
+      label: String(i + 1),
+      value: 0,
+    }));
+    for (const r of rows) {
+      const day = new Date(r.created_at).getDate();
+      b[day - 1].value += Number(r.total_amount);
+    }
+    return b;
+  }
+  const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  const b = labels.map((l) => ({ label: l, value: 0 }));
+  for (const r of rows) {
+    const m = new Date(r.created_at).getMonth();
+    b[m].value += Number(r.total_amount);
+  }
+  return b;
+}
+
+// COMPANY DASHBOARD
 export const getCompanyDashboardData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ period: periodSchema }).parse(d))
+  .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Response("User not linked to a company", { status: 403 });
 
-    const { from, to } = data.period;
+    const { from, to, granularity } = data;
+    const companyId = caller.companyId;
 
-    const [pedidos, orcamentos, products, clients, sales, recentOrcamentos, ongoingPedidos] = await Promise.all([
-        // Pedidos in period
-        supabaseAdmin.from('pedidos').select('id, status')
-            .eq('company_id', caller.companyId).gte('created_at', from).lte('created_at', to),
-        // Orcamentos in period
-        supabaseAdmin.from('orcamentos').select('id, status', { count: 'exact' })
-            .eq('company_id', caller.companyId).gte('created_at', from).lte('created_at', to),
-        // All active products
-        supabaseAdmin.from('produtos').select('stock, "minStock"')
-            .eq('company_id', caller.companyId).eq('active', true),
-        // Total clients
-        supabaseAdmin.from('clientes').select('id', { count: 'exact' })
-            .eq('company_id', caller.companyId).eq('active', true),
-        // Total sales value in period
-        supabaseAdmin.from('pedidos').select('total_amount')
-            .eq('company_id', caller.companyId).eq('status', 'completed').gte('created_at', from).lte('created_at', to),
-        // Recent Orcamentos
-        supabaseAdmin.from('orcamentos').select('*, cliente:clientes(*)').eq('company_id', caller.companyId).order('created_at', { ascending: false }).limit(4),
-        // Ongoing Pedidos
-        supabaseAdmin.from('pedidos').select('*, cliente:clientes(*)').eq('company_id', caller.companyId).neq('status', 'completed').order('created_at', { ascending: false }).limit(3),
+    const [pedidosRes, orcamentosRes, openPedidosRes, productsRes, clientsRes, recentOrcRes, ongoingPedRes] = await Promise.all([
+      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at")
+        .eq("company_id", companyId).gte("created_at", from).lte("created_at", to),
+      supabaseAdmin.from("orcamentos").select("id, status", { count: "exact" })
+        .eq("company_id", companyId).gte("created_at", from).lte("created_at", to),
+      supabaseAdmin.from("pedidos").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).neq("status", "completed"),
+      supabaseAdmin.from("produtos").select('stock, "minStock"')
+        .eq("company_id", companyId).eq("active", true),
+      supabaseAdmin.from("clientes").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).eq("active", true),
+      supabaseAdmin.from("orcamentos").select("*, cliente:clientes(*)").eq("company_id", companyId).order("created_at", { ascending: false }).limit(4),
+      supabaseAdmin.from("pedidos").select("*, cliente:clientes(*)").eq("company_id", companyId).neq("status", "completed").order("created_at", { ascending: false }).limit(3),
     ]);
 
-    const lowStockProducts = (products.data ?? []).filter((p: any) => Number(p.stock) <= Number(p.minStock)).length;
-    const openPedidos = pedidos.data?.filter(p => p.status !== 'completed').length ?? 0;
+    const all = (pedidosRes.data ?? []) as any[];
+    const completed = all.filter((p) => p.status === "completed");
+    const valorTotalVendido = completed.reduce((s, p) => s + Number(p.total_amount), 0);
+    const lowStock = (productsRes.data ?? []).filter((p: any) => Number(p.stock) <= Number(p.minStock)).length;
 
     return {
-        pedidosAbertos: openPedidos,
-        orcamentosEnviados: orcamentos.data?.filter(o => o.status === 'sent').length ?? 0,
-        orcamentosAprovados: orcamentos.data?.filter(o => o.status === 'approved').length ?? 0,
-        produtosEstoqueBaixo: lowStockProducts,
-        clientesCadastrados: clients.count ?? 0,
-        valorTotalVendido: sales.data?.reduce((sum, p) => sum + Number(p.total_amount), 0) ?? 0,
-        recentOrcamentos: (recentOrcamentos.data ?? []) as any[],
-        ongoingPedidos: (ongoingPedidos.data ?? []) as any[],
+      valorTotalVendido,
+      pedidosNoPeriodo: all.length,
+      orcamentosNoPeriodo: orcamentosRes.count ?? 0,
+      vendasConcluidas: completed.length,
+      pedidosAbertos: openPedidosRes.count ?? 0,
+      orcamentosEnviados: orcamentosRes.data?.filter((o: any) => o.status === "sent").length ?? 0,
+      orcamentosAprovados: orcamentosRes.data?.filter((o: any) => o.status === "approved").length ?? 0,
+      produtosEstoqueBaixo: lowStock,
+      clientesCadastrados: clientsRes.count ?? 0,
+      chart: buildBuckets(completed, granularity, from),
+      recentOrcamentos: (recentOrcRes.data ?? []) as any[],
+      ongoingPedidos: (ongoingPedRes.data ?? []) as any[],
+    };
+  });
+
+// SUPER ADMIN DASHBOARD (consolidated across all companies)
+export const getSuperAdminDashboardData = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => inputSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (caller.role !== "super_admin") throw new Response("Unauthorized", { status: 403 });
+
+    const { from, to, granularity } = data;
+
+    const [companies, users, pedidosRes, orcamentosRes] = await Promise.all([
+      supabaseAdmin.from("companies").select("id, active"),
+      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at")
+        .gte("created_at", from).lte("created_at", to),
+      supabaseAdmin.from("orcamentos").select("id, status", { count: "exact", head: true })
+        .gte("created_at", from).lte("created_at", to),
+    ]);
+
+    const all = (pedidosRes.data ?? []) as any[];
+    const completed = all.filter((p) => p.status === "completed");
+    const totalSalesValue = completed.reduce((s, p) => s + Number(p.total_amount), 0);
+
+    return {
+      totalCompanies: companies.data?.length ?? 0,
+      activeCompanies: companies.data?.filter((c) => c.active).length ?? 0,
+      totalUsers: users.count ?? 0,
+      pedidosNoPeriodo: all.length,
+      orcamentosNoPeriodo: orcamentosRes.count ?? 0,
+      vendasConcluidas: completed.length,
+      totalSalesValue,
+      chart: buildBuckets(completed, granularity, from),
     };
   });
