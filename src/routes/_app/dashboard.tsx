@@ -1,60 +1,122 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, FileText, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { ArrowUpRight, FileText, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { OrderBadge, QuoteBadge } from "@/components/StatusBadge";
 import { WhatsappButton } from "@/components/WhatsappButton";
 import { getCompanyDashboardData, getSuperAdminDashboardData } from "@/lib/dashboard.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { SalesChart } from "@/components/SalesChart";
+import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/period";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
   head: () => ({ meta: [{ title: "Painel — ORDEX" }] }),
 });
 
+function PeriodTabs({ value, onChange }: { value: Granularity; onChange: (g: Granularity) => void }) {
+  const opts: Granularity[] = ["day", "week", "month", "year"];
+  return (
+    <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+      {opts.map((o) => (
+        <button
+          key={o}
+          type="button"
+          onClick={() => onChange(o)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            value === o ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {GRANULARITY_LABELS[o]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: any; tone: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-md ${tone}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+      </div>
+      <p className="mt-2 font-display text-xl lg:text-2xl font-bold">{value}</p>
+    </div>
+  );
+}
+
+function ChartSection({ chart, granularity, onChange, loading }: {
+  chart: { label: string; value: number }[];
+  granularity: Granularity;
+  onChange: (g: Granularity) => void;
+  loading?: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 className="font-display font-semibold">Evolução de vendas</h2>
+          <p className="text-xs text-muted-foreground">Faturamento por período</p>
+        </div>
+        <PeriodTabs value={granularity} onChange={onChange} />
+      </header>
+      {loading ? (
+        <div className="flex h-[260px] items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <SalesChart data={chart} />
+      )}
+    </section>
+  );
+}
+
 function SuperAdminDashboard() {
+  const [granularity, setGranularity] = useState<Granularity>("month");
   const fetchFn = useServerFn(getSuperAdminDashboardData);
+  const range = getPeriodRange(granularity);
   const { data, isLoading, error } = useQuery({
-    queryKey: ["super-admin-dashboard"],
-    queryFn: () => fetchFn(),
+    queryKey: ["super-admin-dashboard", granularity],
+    queryFn: () => fetchFn({ data: { granularity, ...range } }),
   });
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   }
   if (error || !data) {
     return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
   }
 
-  const stats = [
-    { label: "Empresas ativas", value: `${data.activeCompanies}/${data.totalCompanies}`, icon: Building2, tone: "bg-primary/10 text-primary" },
-    { label: "Usuários totais", value: data.totalUsers, icon: Users, tone: "bg-info/15 text-info" },
-    { label: "Pedidos totais", value: data.totalPedidos, icon: ShoppingBag, tone: "bg-warning/20 text-warning-foreground" },
-    { label: "Vendas globais", value: formatBRL(data.totalSalesValue), icon: TrendingUp, tone: "bg-success/15 text-success" },
-  ];
-
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm text-muted-foreground inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Super administrador</p>
-        <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel global</h1>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Super administrador</p>
+          <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel global</h1>
+        </div>
+        <PeriodTabs value={granularity} onChange={setGranularity} />
       </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
-              <span className={`flex h-7 w-7 items-center justify-center rounded-md ${s.tone}`}>
-                <s.icon className="h-3.5 w-3.5" />
-              </span>
-            </div>
-            <p className="mt-2 font-display text-xl lg:text-2xl font-bold">{s.value}</p>
-          </div>
-        ))}
+        <StatCard label="Vendas no período" value={formatBRL(data.totalSalesValue)} icon={TrendingUp} tone="bg-success/15 text-success" />
+        <StatCard label="Pedidos no período" value={data.pedidosNoPeriodo} icon={ShoppingBag} tone="bg-info/15 text-info" />
+        <StatCard label="Orçamentos no período" value={data.orcamentosNoPeriodo} icon={FileText} tone="bg-warning/20 text-warning-foreground" />
+        <StatCard label="Vendas concluídas" value={data.vendasConcluidas} icon={CheckCircle2} tone="bg-primary/10 text-primary" />
       </div>
-      <div className="flex gap-3">
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Empresas ativas" value={`${data.activeCompanies}/${data.totalCompanies}`} icon={Building2} tone="bg-primary/10 text-primary" />
+        <StatCard label="Usuários totais" value={data.totalUsers} icon={Users} tone="bg-info/15 text-info" />
+      </div>
+
+      <ChartSection chart={data.chart} granularity={granularity} onChange={setGranularity} loading={isLoading} />
+
+      <div className="flex gap-3 flex-wrap">
         <Link to="/empresas" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-95">
           <Building2 className="h-4 w-4" /> Gerenciar empresas
         </Link>
@@ -80,58 +142,48 @@ function Dashboard() {
 }
 
 function CompanyDashboard() {
+  const [granularity, setGranularity] = useState<Granularity>("month");
   const fetchFn = useServerFn(getCompanyDashboardData);
-  const to = new Date();
-  const from = new Date();
-  from.setDate(to.getDate() - 30);
+  const range = getPeriodRange(granularity);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => fetchFn({ data: { period: { from: from.toISOString(), to: to.toISOString() } } }),
+    queryKey: ["dashboard", granularity],
+    queryFn: () => fetchFn({ data: { granularity, ...range } }),
   });
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   }
   if (error || !data) {
     return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
   }
 
-  const stats = [
-    { label: "Vendas no período", value: formatBRL(data.valorTotalVendido), icon: TrendingUp, tone: "bg-primary/10 text-primary" },
-    { label: "Pedidos abertos", value: data.pedidosAbertos, icon: ShoppingBag, tone: "bg-info/15 text-info" },
-    { label: "Orçamentos enviados", value: data.orcamentosEnviados, icon: FileText, tone: "bg-warning/20 text-warning-foreground" },
-    { label: "Orçamentos aprovados", value: data.orcamentosAprovados, icon: Users, tone: "bg-success/15 text-success" },
-  ];
-
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">Olá, vendedor 👷</p>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel da loja</h1>
         </div>
-        <Link
-          to="/orcamentos/novo"
-          className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-95"
-        >
-          <Plus className="h-4 w-4" /> Novo orçamento
-        </Link>
+        <div className="flex items-center gap-2">
+          <PeriodTabs value={granularity} onChange={setGranularity} />
+          <Link
+            to="/orcamentos/novo"
+            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-95"
+          >
+            <Plus className="h-4 w-4" /> Novo
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
-              <span className={`flex h-7 w-7 items-center justify-center rounded-md ${s.tone}`}>
-                <s.icon className="h-3.5 w-3.5" />
-              </span>
-            </div>
-            <p className="mt-2 font-display text-xl lg:text-2xl font-bold">{s.value}</p>
-          </div>
-        ))}
+        <StatCard label="Total vendido" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" />
+        <StatCard label="Pedidos no período" value={data.pedidosNoPeriodo} icon={ShoppingBag} tone="bg-info/15 text-info" />
+        <StatCard label="Orçamentos no período" value={data.orcamentosNoPeriodo} icon={FileText} tone="bg-warning/20 text-warning-foreground" />
+        <StatCard label="Vendas concluídas" value={data.vendasConcluidas} icon={CheckCircle2} tone="bg-primary/10 text-primary" />
       </div>
+
+      <ChartSection chart={data.chart} granularity={granularity} onChange={setGranularity} loading={isLoading} />
 
       {/* Quick action mobile */}
       <Link
