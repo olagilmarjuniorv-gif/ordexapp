@@ -78,7 +78,7 @@ function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const createM = useMutation({
     mutationFn: (data: {
       full_name: string;
-      email: string;
+      username: string;
       password: string;
       role: AppRole;
       company_id: string | null;
@@ -156,7 +156,7 @@ function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                <p className="text-xs text-muted-foreground truncate">@{u.username ?? "—"}</p>
                 {u.company_name && (
                   <p className="text-[11px] text-muted-foreground mt-0.5">🏢 {u.company_name}</p>
                 )}
@@ -220,7 +220,7 @@ function CreateDialog({
   onClose: () => void;
   onSubmit: (d: {
     full_name: string;
-    email: string;
+    username: string;
     password: string;
     role: AppRole;
     company_id: string | null;
@@ -228,7 +228,7 @@ function CreateDialog({
   loading: boolean;
 }) {
   const [full_name, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<AppRole>("vendedor");
   const [companyId, setCompanyId] = useState<string>("");
@@ -253,7 +253,7 @@ function CreateDialog({
             e.preventDefault();
             onSubmit({
               full_name,
-              email,
+              username: username.trim().toLowerCase(),
               password,
               role,
               company_id: needsCompany ? (isSuperAdmin ? companyId || null : null) : null,
@@ -269,12 +269,15 @@ function CreateDialog({
               className={inputCls}
             />
           </Field>
-          <Field label="E-mail">
+          <Field label="Usuário (login)">
             <input
-              type="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              minLength={3}
+              maxLength={32}
+              pattern="[a-zA-Z0-9._-]+"
+              placeholder="ex: joao.silva"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className={inputCls}
             />
           </Field>
