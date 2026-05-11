@@ -29,6 +29,10 @@ const inputSchema = z.object({
   to: z.string().datetime(),
 });
 
+const PAID = "pago";
+const ACTIVE_STATUSES = ["novo", "preparo", "pronto"];
+const LATE_MINUTES = 25;
+
 function buildBuckets(
   rows: Array<{ created_at: string; total_amount: number | string }>,
   granularity: Granularity,
@@ -77,6 +81,32 @@ function buildBuckets(
   return b;
 }
 
+function topItem(rows: Array<{ items: any }>): { name: string; qty: number } | null {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    const items = Array.isArray(r.items) ? r.items : [];
+    for (const it of items) {
+      const name = it?.name ?? "Item";
+      const qty = Number(it?.quantity ?? 1);
+      map.set(name, (map.get(name) ?? 0) + qty);
+    }
+  }
+  let best: { name: string; qty: number } | null = null;
+  for (const [name, qty] of map) {
+    if (!best || qty > best.qty) best = { name, qty };
+  }
+  return best;
+}
+
+function byCanal(rows: Array<{ canal?: string | null }>) {
+  const m = new Map<string, number>();
+  for (const r of rows) {
+    const c = r.canal ?? "salao";
+    m.set(c, (m.get(c) ?? 0) + 1);
+  }
+  return Array.from(m.entries()).map(([canal, count]) => ({ canal, count }));
+}
+
 // COMPANY DASHBOARD
 export const getCompanyDashboardData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -87,44 +117,43 @@ export const getCompanyDashboardData = createServerFn({ method: "POST" })
 
     const { from, to, granularity } = data;
     const companyId = caller.companyId;
+    const lateThreshold = new Date(Date.now() - LATE_MINUTES * 60_000).toISOString();
 
-    const [pedidosRes, orcamentosRes, openPedidosRes, productsRes, clientsRes, recentOrcRes, ongoingPedRes] = await Promise.all([
-      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at")
+    const [pedidosRes, openMesasRes, recentPedRes] = await Promise.all([
+      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at, items, canal, mesa_id")
         .eq("company_id", companyId).gte("created_at", from).lte("created_at", to),
-      supabaseAdmin.from("orcamentos").select("id, status", { count: "exact" })
-        .eq("company_id", companyId).gte("created_at", from).lte("created_at", to),
-      supabaseAdmin.from("pedidos").select("id", { count: "exact", head: true })
-        .eq("company_id", companyId).neq("status", "completed"),
-      supabaseAdmin.from("produtos").select('stock, "minStock"')
-        .eq("company_id", companyId).eq("active", true),
-      supabaseAdmin.from("clientes").select("id", { count: "exact", head: true })
-        .eq("company_id", companyId).eq("active", true),
-      supabaseAdmin.from("orcamentos").select("*, cliente:clientes(*)").eq("company_id", companyId).order("created_at", { ascending: false }).limit(4),
-      supabaseAdmin.from("pedidos").select("*, cliente:clientes(*)").eq("company_id", companyId).neq("status", "completed").order("created_at", { ascending: false }).limit(3),
+      supabaseAdmin.from("mesas").select("id", { count: "exact", head: true })
+        .eq("company_id", companyId).neq("status", "livre"),
+      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at, canal, mesa_id, cliente:clientes(name, phone)")
+        .eq("company_id", companyId).in("status", ACTIVE_STATUSES).order("created_at", { ascending: false }).limit(8),
     ]);
 
     const all = (pedidosRes.data ?? []) as any[];
-    const completed = all.filter((p) => p.status === "completed");
-    const valorTotalVendido = completed.reduce((s, p) => s + Number(p.total_amount), 0);
-    const lowStock = (productsRes.data ?? []).filter((p: any) => Number(p.stock) <= Number(p.minStock)).length;
+    const paid = all.filter((p) => p.status === PAID);
+    const valorTotalVendido = paid.reduce((s, p) => s + Number(p.total_amount), 0);
+    const ticketMedio = paid.length ? valorTotalVendido / paid.length : 0;
+
+    const ativos = all.filter((p) => ACTIVE_STATUSES.includes(p.status));
+    const emPreparo = all.filter((p) => p.status === "preparo");
+    const atrasados = ativos.filter((p) => p.created_at < lateThreshold);
 
     return {
       valorTotalVendido,
+      ticketMedio,
       pedidosNoPeriodo: all.length,
-      orcamentosNoPeriodo: orcamentosRes.count ?? 0,
-      vendasConcluidas: completed.length,
-      pedidosAbertos: openPedidosRes.count ?? 0,
-      orcamentosEnviados: orcamentosRes.data?.filter((o: any) => o.status === "sent").length ?? 0,
-      orcamentosAprovados: orcamentosRes.data?.filter((o: any) => o.status === "approved").length ?? 0,
-      produtosEstoqueBaixo: lowStock,
-      clientesCadastrados: clientsRes.count ?? 0,
-      chart: buildBuckets(completed, granularity, from),
-      recentOrcamentos: (recentOrcRes.data ?? []) as any[],
-      ongoingPedidos: (ongoingPedRes.data ?? []) as any[],
+      vendasConcluidas: paid.length,
+      pedidosAtivos: ativos.length,
+      emPreparo: emPreparo.length,
+      atrasados: atrasados.length,
+      mesasAbertas: openMesasRes.count ?? 0,
+      topItem: topItem(paid),
+      porCanal: byCanal(all),
+      chart: buildBuckets(paid, granularity, from),
+      recentPedidos: (recentPedRes.data ?? []) as any[],
     };
   });
 
-// SUPER ADMIN DASHBOARD (consolidated across all companies)
+// SUPER ADMIN DASHBOARD
 export const getSuperAdminDashboardData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => inputSchema.parse(d))
@@ -133,28 +162,33 @@ export const getSuperAdminDashboardData = createServerFn({ method: "POST" })
     if (caller.role !== "super_admin") throw new Response("Unauthorized", { status: 403 });
 
     const { from, to, granularity } = data;
+    const lateThreshold = new Date(Date.now() - LATE_MINUTES * 60_000).toISOString();
 
-    const [companies, users, pedidosRes, orcamentosRes] = await Promise.all([
+    const [companies, users, pedidosRes] = await Promise.all([
       supabaseAdmin.from("companies").select("id, active"),
       supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at")
-        .gte("created_at", from).lte("created_at", to),
-      supabaseAdmin.from("orcamentos").select("id, status", { count: "exact", head: true })
+      supabaseAdmin.from("pedidos").select("id, status, total_amount, created_at, items, canal")
         .gte("created_at", from).lte("created_at", to),
     ]);
 
     const all = (pedidosRes.data ?? []) as any[];
-    const completed = all.filter((p) => p.status === "completed");
-    const totalSalesValue = completed.reduce((s, p) => s + Number(p.total_amount), 0);
+    const paid = all.filter((p) => p.status === PAID);
+    const totalSalesValue = paid.reduce((s, p) => s + Number(p.total_amount), 0);
+    const ativos = all.filter((p) => ACTIVE_STATUSES.includes(p.status));
+    const atrasados = ativos.filter((p) => p.created_at < lateThreshold);
 
     return {
       totalCompanies: companies.data?.length ?? 0,
       activeCompanies: companies.data?.filter((c) => c.active).length ?? 0,
       totalUsers: users.count ?? 0,
       pedidosNoPeriodo: all.length,
-      orcamentosNoPeriodo: orcamentosRes.count ?? 0,
-      vendasConcluidas: completed.length,
+      vendasConcluidas: paid.length,
+      pedidosAtivos: ativos.length,
+      atrasados: atrasados.length,
+      ticketMedio: paid.length ? totalSalesValue / paid.length : 0,
       totalSalesValue,
-      chart: buildBuckets(completed, granularity, from),
+      topItem: topItem(paid),
+      porCanal: byCanal(all),
+      chart: buildBuckets(paid, granularity, from),
     };
   });

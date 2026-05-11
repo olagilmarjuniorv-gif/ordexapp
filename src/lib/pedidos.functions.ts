@@ -1,17 +1,14 @@
-
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { AppRole } from "./users.functions";
 
-// Helper to get user's context
 type Caller = {
   userId: string;
   role: AppRole | null;
   companyId: string | null;
   isSuperAdmin: boolean;
-  isCompanyAdmin: boolean;
 };
 
 async function getCaller(userId: string): Promise<Caller> {
@@ -25,9 +22,28 @@ async function getCaller(userId: string): Promise<Caller> {
     role,
     companyId: (p?.company_id as string | null) ?? null,
     isSuperAdmin: role === "super_admin",
-    isCompanyAdmin: role === "admin",
   };
 }
+
+export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"] as const;
+export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery", "whatsapp"] as const;
+export type PedidoStatus = typeof PEDIDO_STATUSES[number];
+
+const pedidoItemSchema = z.object({
+  product_id: z.string().uuid(),
+  name: z.string().optional(),
+  quantity: z.number().min(1),
+  price: z.number().min(0).optional(),
+  observacao: z.string().optional(),
+});
+
+const createSchema = z.object({
+  client_id: z.string().uuid().nullable().optional(),
+  mesa_id: z.string().uuid().nullable().optional(),
+  canal: z.enum(PEDIDO_CANAIS).default("salao"),
+  observacao: z.string().optional(),
+  items: z.array(pedidoItemSchema).min(1, "Adicione ao menos um item."),
+});
 
 export const listPedidos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -37,7 +53,7 @@ export const listPedidos = createServerFn({ method: "GET" })
 
     const { data, error } = await supabaseAdmin
       .from("pedidos")
-      .select("id, created_at, status, total_amount, cliente:clientes(id, name)")
+      .select("id, created_at, status, total_amount, canal, mesa_id, cliente:clientes(id, name)")
       .eq("company_id", caller.companyId)
       .order("created_at", { ascending: false });
 
@@ -46,77 +62,87 @@ export const listPedidos = createServerFn({ method: "GET" })
   });
 
 export const getPedido = createServerFn({ method: "GET" })
-    .middleware([requireSupabaseAuth])
-    .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-    .handler(async ({ context, data }) => {
-        const caller = await getCaller(context.userId);
-        if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
 
-        const { data: pedido, error } = await supabaseAdmin
-            .from("pedidos")
-            .select("*, cliente:clientes(id, name, phone, email, address)")
-            .eq("id", data.id)
-            .eq("company_id", caller.companyId)
-            .single();
-        
-        if (error) throw new Response("Pedido não encontrado", { status: 404 });
-        return pedido;
+    const { data: pedido, error } = await supabaseAdmin
+      .from("pedidos")
+      .select("*, cliente:clientes(id, name, phone, email, address)")
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .single();
+
+    if (error) throw new Response("Pedido não encontrado", { status: 404 });
+    return pedido;
+  });
+
+export const createPedido = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => createSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+
+    const productIds = data.items.map((i) => i.product_id);
+    const { data: produtos, error: prodErr } = await supabaseAdmin
+      .from("produtos")
+      .select("id, name, price")
+      .in("id", productIds)
+      .eq("company_id", caller.companyId);
+
+    if (prodErr) throw new Response("Falha ao validar produtos", { status: 500 });
+    if (!produtos || produtos.length !== new Set(productIds).size) {
+      throw new Response("Produto inválido", { status: 400 });
+    }
+
+    const priceMap = new Map(produtos.map((p) => [p.id, { price: Number(p.price), name: p.name }]));
+    let total_amount = 0;
+    const items = data.items.map((i) => {
+      const ref = priceMap.get(i.product_id)!;
+      const price = i.price ?? ref.price;
+      total_amount += i.quantity * price;
+      return { product_id: i.product_id, name: ref.name, quantity: i.quantity, price, observacao: i.observacao ?? null };
     });
 
-export const createPedidoFromOrcamento = createServerFn({ method: "POST" })
-    .middleware([requireSupabaseAuth])
-    .inputValidator((d: unknown) => z.object({ orcamento_id: z.string().uuid() }).parse(d))
-    .handler(async ({ context, data }) => {
-        const caller = await getCaller(context.userId);
-        if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    const { data: created, error: insErr } = await supabaseAdmin
+      .from("pedidos")
+      .insert({
+        company_id: caller.companyId,
+        user_id: caller.userId,
+        client_id: data.client_id ?? null,
+        mesa_id: data.mesa_id ?? null,
+        canal: data.canal,
+        observacao: data.observacao ?? null,
+        items,
+        total_amount,
+        status: "novo",
+      })
+      .select("id")
+      .single();
 
-        // 1. Get the orcamento
-        const { data: orcamento, error: orcamentoError } = await supabaseAdmin
-            .from("orcamentos")
-            .select("*")
-            .eq("id", data.orcamento_id)
-            .eq("company_id", caller.companyId)
-            .single();
-        
-        if (orcamentoError || !orcamento) throw new Response("Orçamento não encontrado", { status: 404 });
-        if (orcamento.status !== 'sent') throw new Response(`Orçamento com status \"${orcamento.status}\" não pode ser aprovado.`, { status: 400 });
-
-        // 2. Insert pedido directly (RPC for stock update will be added later)
-        const { data: newPedido, error: insErr } = await supabaseAdmin
-            .from("pedidos")
-            .insert({
-                company_id: caller.companyId,
-                user_id: caller.userId,
-                client_id: orcamento.client_id,
-                orcamento_id: orcamento.id,
-                total_amount: orcamento.total_amount,
-                items: orcamento.items,
-                status: 'pending',
-            })
-            .select("id")
-            .single();
-
-        if (insErr || !newPedido) throw new Response(insErr?.message ?? "Erro ao criar pedido", { status: 500 });
-
-        // 3. Update orcamento status to 'approved'
-        await supabaseAdmin.from("orcamentos").update({ status: 'approved' }).eq("id", orcamento.id);
-
-        return { id: newPedido.id };
-    });
+    if (insErr || !created) throw new Response(insErr?.message ?? "Erro ao criar pedido", { status: 500 });
+    return { id: created.id };
+  });
 
 export const updatePedidoStatus = createServerFn({ method: "POST" })
-    .middleware([requireSupabaseAuth])
-    .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(["pending", "processing", "completed", "cancelled"]) }).parse(d))
-    .handler(async ({ context, data }) => {
-        const caller = await getCaller(context.userId);
-        if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(PEDIDO_STATUSES) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
 
-        const { error } = await supabaseAdmin
-            .from("pedidos")
-            .update({ status: data.status })
-            .eq("id", data.id)
-            .eq("company_id", caller.companyId);
+    const patch: Record<string, unknown> = { status: data.status };
+    if (data.status === "pago") patch.paid_at = new Date().toISOString();
 
-        if (error) throw new Response(error.message, { status: 500 });
-        return { ok: true };
-    });
+    const { error } = await supabaseAdmin
+      .from("pedidos")
+      .update(patch)
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId);
+
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
