@@ -21,10 +21,7 @@ import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
-import { Route as AppOrcamentosIndexRouteImport } from './routes/_app/orcamentos/index'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
-import { Route as AppOrcamentosNovoRouteImport } from './routes/_app/orcamentos/novo'
-import { Route as AppOrcamentosIdRouteImport } from './routes/_app/orcamentos/$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -85,24 +82,9 @@ const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
   path: '/pedidos/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOrcamentosIndexRoute = AppOrcamentosIndexRouteImport.update({
-  id: '/orcamentos/',
-  path: '/orcamentos/',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPedidosIdRoute = AppPedidosIdRouteImport.update({
   id: '/pedidos/$id',
   path: '/pedidos/$id',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOrcamentosNovoRoute = AppOrcamentosNovoRouteImport.update({
-  id: '/orcamentos/novo',
-  path: '/orcamentos/novo',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOrcamentosIdRoute = AppOrcamentosIdRouteImport.update({
-  id: '/orcamentos/$id',
-  path: '/orcamentos/$id',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -117,10 +99,7 @@ export interface FileRoutesByFullPath {
   '/entregas': typeof AppEntregasRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
-  '/orcamentos/$id': typeof AppOrcamentosIdRoute
-  '/orcamentos/novo': typeof AppOrcamentosNovoRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
-  '/orcamentos/': typeof AppOrcamentosIndexRoute
   '/pedidos/': typeof AppPedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -134,10 +113,7 @@ export interface FileRoutesByTo {
   '/entregas': typeof AppEntregasRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
-  '/orcamentos/$id': typeof AppOrcamentosIdRoute
-  '/orcamentos/novo': typeof AppOrcamentosNovoRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
-  '/orcamentos': typeof AppOrcamentosIndexRoute
   '/pedidos': typeof AppPedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -153,10 +129,7 @@ export interface FileRoutesById {
   '/_app/entregas': typeof AppEntregasRoute
   '/_app/produtos': typeof AppProdutosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
-  '/_app/orcamentos/$id': typeof AppOrcamentosIdRoute
-  '/_app/orcamentos/novo': typeof AppOrcamentosNovoRoute
   '/_app/pedidos/$id': typeof AppPedidosIdRoute
-  '/_app/orcamentos/': typeof AppOrcamentosIndexRoute
   '/_app/pedidos/': typeof AppPedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -172,10 +145,7 @@ export interface FileRouteTypes {
     | '/entregas'
     | '/produtos'
     | '/usuarios'
-    | '/orcamentos/$id'
-    | '/orcamentos/novo'
     | '/pedidos/$id'
-    | '/orcamentos/'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -189,10 +159,7 @@ export interface FileRouteTypes {
     | '/entregas'
     | '/produtos'
     | '/usuarios'
-    | '/orcamentos/$id'
-    | '/orcamentos/novo'
     | '/pedidos/$id'
-    | '/orcamentos'
     | '/pedidos'
   id:
     | '__root__'
@@ -207,10 +174,7 @@ export interface FileRouteTypes {
     | '/_app/entregas'
     | '/_app/produtos'
     | '/_app/usuarios'
-    | '/_app/orcamentos/$id'
-    | '/_app/orcamentos/novo'
     | '/_app/pedidos/$id'
-    | '/_app/orcamentos/'
     | '/_app/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -308,32 +272,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPedidosIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/orcamentos/': {
-      id: '/_app/orcamentos/'
-      path: '/orcamentos'
-      fullPath: '/orcamentos/'
-      preLoaderRoute: typeof AppOrcamentosIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/pedidos/$id': {
       id: '/_app/pedidos/$id'
       path: '/pedidos/$id'
       fullPath: '/pedidos/$id'
       preLoaderRoute: typeof AppPedidosIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/orcamentos/novo': {
-      id: '/_app/orcamentos/novo'
-      path: '/orcamentos/novo'
-      fullPath: '/orcamentos/novo'
-      preLoaderRoute: typeof AppOrcamentosNovoRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/orcamentos/$id': {
-      id: '/_app/orcamentos/$id'
-      path: '/orcamentos/$id'
-      fullPath: '/orcamentos/$id'
-      preLoaderRoute: typeof AppOrcamentosIdRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -346,10 +289,7 @@ interface AppRouteChildren {
   AppEntregasRoute: typeof AppEntregasRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
-  AppOrcamentosIdRoute: typeof AppOrcamentosIdRoute
-  AppOrcamentosNovoRoute: typeof AppOrcamentosNovoRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
-  AppOrcamentosIndexRoute: typeof AppOrcamentosIndexRoute
   AppPedidosIndexRoute: typeof AppPedidosIndexRoute
 }
 
@@ -360,10 +300,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEntregasRoute: AppEntregasRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppUsuariosRoute: AppUsuariosRoute,
-  AppOrcamentosIdRoute: AppOrcamentosIdRoute,
-  AppOrcamentosNovoRoute: AppOrcamentosNovoRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
-  AppOrcamentosIndexRoute: AppOrcamentosIndexRoute,
   AppPedidosIndexRoute: AppPedidosIndexRoute,
 }
 
@@ -379,3 +316,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
