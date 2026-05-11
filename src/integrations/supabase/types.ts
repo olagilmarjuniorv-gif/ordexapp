@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      adicionais_grupos: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          max_select: number
+          min_select: number
+          name: string
+          required: boolean
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          max_select?: number
+          min_select?: number
+          name: string
+          required?: boolean
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          max_select?: number
+          min_select?: number
+          name?: string
+          required?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      adicionais_opcoes: {
+        Row: {
+          active: boolean
+          created_at: string
+          grupo_id: string
+          id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          grupo_id: string
+          id?: string
+          name: string
+          price?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          grupo_id?: string
+          id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adicionais_opcoes_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "adicionais_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categorias: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           active: boolean
@@ -58,6 +156,68 @@ export type Database = {
           },
         ]
       }
+      combo_itens: {
+        Row: {
+          combo_id: string
+          produto_id: string
+          quantity: number
+        }
+        Insert: {
+          combo_id: string
+          produto_id: string
+          quantity?: number
+        }
+        Update: {
+          combo_id?: string
+          produto_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combo_itens_combo_id_fkey"
+            columns: ["combo_id"]
+            isOneToOne: false
+            referencedRelation: "combos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combos: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           active: boolean
@@ -84,6 +244,39 @@ export type Database = {
           name?: string
           phone?: string | null
           slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mesas: {
+        Row: {
+          capacidade: number
+          company_id: string
+          created_at: string
+          id: string
+          numero: string
+          opened_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          capacidade?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          numero: string
+          opened_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          capacidade?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          numero?: string
+          opened_at?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -141,36 +334,48 @@ export type Database = {
       }
       pedidos: {
         Row: {
-          client_id: string
+          canal: string
+          client_id: string | null
           company_id: string
           created_at: string
           id: string
           items: Json
+          mesa_id: string | null
+          observacao: string | null
           orcamento_id: string | null
+          paid_at: string | null
           status: string
           total_amount: number
           updated_at: string
           user_id: string
         }
         Insert: {
-          client_id: string
+          canal?: string
+          client_id?: string | null
           company_id: string
           created_at?: string
           id?: string
           items?: Json
+          mesa_id?: string | null
+          observacao?: string | null
           orcamento_id?: string | null
+          paid_at?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
           user_id: string
         }
         Update: {
-          client_id?: string
+          canal?: string
+          client_id?: string | null
           company_id?: string
           created_at?: string
           id?: string
           items?: Json
+          mesa_id?: string | null
+          observacao?: string | null
           orcamento_id?: string | null
+          paid_at?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
@@ -200,13 +405,39 @@ export type Database = {
           },
         ]
       }
+      produto_grupos_adicionais: {
+        Row: {
+          grupo_id: string
+          produto_id: string
+        }
+        Insert: {
+          grupo_id: string
+          produto_id: string
+        }
+        Update: {
+          grupo_id?: string
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_grupos_adicionais_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "adicionais_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           active: boolean
+          available: boolean
+          category_id: string | null
           company_id: string
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           minStock: number
           name: string
           price: number
@@ -215,10 +446,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          available?: boolean
+          category_id?: string | null
           company_id: string
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           minStock?: number
           name: string
           price?: number
@@ -227,10 +461,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          available?: boolean
+          category_id?: string | null
           company_id?: string
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           minStock?: number
           name?: string
           price?: number
@@ -325,7 +562,12 @@ export type Database = {
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "vendedor" | "entregador" | "super_admin"
+      app_role:
+        | "admin"
+        | "vendedor"
+        | "entregador"
+        | "super_admin"
+        | "atendente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -453,7 +695,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "vendedor", "entregador", "super_admin"],
+      app_role: ["admin", "vendedor", "entregador", "super_admin", "atendente"],
     },
   },
 } as const
