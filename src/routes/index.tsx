@@ -6,8 +6,8 @@ export const Route = createFileRoute("/")({
   component: IndexRedirect,
   head: () => ({
     meta: [
-      { title: "ORDEX — Gestão para lojas de material de construção" },
-      { name: "description", content: "Sistema simples e rápido para orçamentos, pedidos e entregas em lojas de material de construção." },
+      { title: "ORDEX — Sistema operacional para hamburguerias e deliverys" },
+      { name: "description", content: "Centralize pedidos do salão, balcão, retirada, delivery e WhatsApp em tempo real, com cozinha integrada e operação rápida." },
     ],
   }),
 });

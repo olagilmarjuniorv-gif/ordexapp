@@ -126,7 +126,7 @@ export const deleteCliente = createServerFn({ method: "POST" })
 
     if (error) {
       if (error.code === '23503') { // Foreign key violation
-        throw new Response("Este cliente não pode ser excluído pois está associado a orçamentos ou pedidos.", { status: 409 });
+        throw new Response("Este cliente não pode ser excluído pois está vinculado a pedidos.", { status: 409 });
       }
       throw new Response(error.message, { status: 500 });
     }

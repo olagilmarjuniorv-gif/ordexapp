@@ -1,15 +1,15 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, FileText, ShoppingBag, Truck, Package, LogOut, Hammer, ShieldCheck, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed, ShieldCheck, Building2, ChefHat, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
 const baseNav = [
   { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-  { to: "/clientes", label: "Clientes", icon: Users },
-  { to: "/orcamentos", label: "Orçamentos", icon: FileText },
   { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+  { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+  { to: "/cozinha", label: "Cozinha", icon: ChefHat },
   { to: "/produtos", label: "Produtos", icon: Package },
-  { to: "/entregas", label: "Entregas", icon: Truck },
+  { to: "/clientes", label: "Clientes", icon: Users },
 ] as const;
 
 export function AppLayout() {
@@ -32,11 +32,11 @@ export function AppLayout() {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Hammer className="h-5 w-5" />
+            <UtensilsCrossed className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <p className="font-display text-base font-semibold leading-none truncate">ORDEX</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || "Gestão para sua loja"}</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || "Operação food"}</p>
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-3">
@@ -71,7 +71,7 @@ export function AppLayout() {
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3 lg:hidden">
         <Link to="/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Hammer className="h-4 w-4" />
+            <UtensilsCrossed className="h-4 w-4" />
           </div>
           <span className="font-display font-semibold">ORDEX</span>
         </Link>
