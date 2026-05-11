@@ -134,7 +134,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
 
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: { status: PedidoStatus; paid_at?: string } = { status: data.status };
     if (data.status === "pago") patch.paid_at = new Date().toISOString();
 
     const { error } = await supabaseAdmin

@@ -16,11 +16,14 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUsuariosRouteImport } from './routes/_app/usuarios'
 import { Route as AppProdutosRouteImport } from './routes/_app/produtos'
+import { Route as AppMesasRouteImport } from './routes/_app/mesas'
 import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
 import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppCozinhaRouteImport } from './routes/_app/cozinha'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
+import { Route as AppPedidosNovoRouteImport } from './routes/_app/pedidos/novo'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -57,6 +60,11 @@ const AppProdutosRoute = AppProdutosRouteImport.update({
   path: '/produtos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMesasRoute = AppMesasRouteImport.update({
+  id: '/mesas',
+  path: '/mesas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEntregasRoute = AppEntregasRouteImport.update({
   id: '/entregas',
   path: '/entregas',
@@ -72,6 +80,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCozinhaRoute = AppCozinhaRouteImport.update({
+  id: '/cozinha',
+  path: '/cozinha',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppClientesRoute = AppClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -80,6 +93,11 @@ const AppClientesRoute = AppClientesRouteImport.update({
 const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
   id: '/pedidos/',
   path: '/pedidos/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPedidosNovoRoute = AppPedidosNovoRouteImport.update({
+  id: '/pedidos/novo',
+  path: '/pedidos/novo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPedidosIdRoute = AppPedidosIdRouteImport.update({
@@ -94,12 +112,15 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AppClientesRoute
+  '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
   '/entregas': typeof AppEntregasRoute
+  '/mesas': typeof AppMesasRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
+  '/pedidos/novo': typeof AppPedidosNovoRoute
   '/pedidos/': typeof AppPedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -108,12 +129,15 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AppClientesRoute
+  '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
   '/entregas': typeof AppEntregasRoute
+  '/mesas': typeof AppMesasRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
+  '/pedidos/novo': typeof AppPedidosNovoRoute
   '/pedidos': typeof AppPedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -124,12 +148,15 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/clientes': typeof AppClientesRoute
+  '/_app/cozinha': typeof AppCozinhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
   '/_app/entregas': typeof AppEntregasRoute
+  '/_app/mesas': typeof AppMesasRoute
   '/_app/produtos': typeof AppProdutosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/pedidos/$id': typeof AppPedidosIdRoute
+  '/_app/pedidos/novo': typeof AppPedidosNovoRoute
   '/_app/pedidos/': typeof AppPedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -140,12 +167,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/clientes'
+    | '/cozinha'
     | '/dashboard'
     | '/empresas'
     | '/entregas'
+    | '/mesas'
     | '/produtos'
     | '/usuarios'
     | '/pedidos/$id'
+    | '/pedidos/novo'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,12 +184,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/clientes'
+    | '/cozinha'
     | '/dashboard'
     | '/empresas'
     | '/entregas'
+    | '/mesas'
     | '/produtos'
     | '/usuarios'
     | '/pedidos/$id'
+    | '/pedidos/novo'
     | '/pedidos'
   id:
     | '__root__'
@@ -169,12 +202,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_app/clientes'
+    | '/_app/cozinha'
     | '/_app/dashboard'
     | '/_app/empresas'
     | '/_app/entregas'
+    | '/_app/mesas'
     | '/_app/produtos'
     | '/_app/usuarios'
     | '/_app/pedidos/$id'
+    | '/_app/pedidos/novo'
     | '/_app/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -237,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProdutosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mesas': {
+      id: '/_app/mesas'
+      path: '/mesas'
+      fullPath: '/mesas'
+      preLoaderRoute: typeof AppMesasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/entregas': {
       id: '/_app/entregas'
       path: '/entregas'
@@ -258,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/cozinha': {
+      id: '/_app/cozinha'
+      path: '/cozinha'
+      fullPath: '/cozinha'
+      preLoaderRoute: typeof AppCozinhaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/clientes': {
       id: '/_app/clientes'
       path: '/clientes'
@@ -272,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPedidosIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/pedidos/novo': {
+      id: '/_app/pedidos/novo'
+      path: '/pedidos/novo'
+      fullPath: '/pedidos/novo'
+      preLoaderRoute: typeof AppPedidosNovoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pedidos/$id': {
       id: '/_app/pedidos/$id'
       path: '/pedidos/$id'
@@ -284,23 +341,29 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppClientesRoute: typeof AppClientesRoute
+  AppCozinhaRoute: typeof AppCozinhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
   AppEntregasRoute: typeof AppEntregasRoute
+  AppMesasRoute: typeof AppMesasRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
+  AppPedidosNovoRoute: typeof AppPedidosNovoRoute
   AppPedidosIndexRoute: typeof AppPedidosIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppClientesRoute: AppClientesRoute,
+  AppCozinhaRoute: AppCozinhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
   AppEntregasRoute: AppEntregasRoute,
+  AppMesasRoute: AppMesasRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppUsuariosRoute: AppUsuariosRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
+  AppPedidosNovoRoute: AppPedidosNovoRoute,
   AppPedidosIndexRoute: AppPedidosIndexRoute,
 }
 
@@ -316,13 +379,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
