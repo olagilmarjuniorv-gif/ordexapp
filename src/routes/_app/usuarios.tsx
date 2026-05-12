@@ -305,6 +305,7 @@ function CreateDialog({
               {isSuperAdmin && <option value="super_admin">Super Admin (todas as empresas)</option>}
               <option value="admin">Administrador da empresa</option>
               <option value="atendente">Atendente</option>
+              <option value="cozinha">Cozinha</option>
             </select>
           </Field>
           {isSuperAdmin && needsCompany && (
