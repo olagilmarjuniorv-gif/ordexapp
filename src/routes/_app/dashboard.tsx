@@ -50,9 +50,9 @@ function PeriodTabs({ value, onChange }: { value: Granularity; onChange: (g: Gra
   );
 }
 
-function StatCard({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: any; tone: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+function StatCard({ label, value, icon: Icon, tone, to }: { label: string; value: string | number; icon: any; tone: string; to?: string }) {
+  const inner = (
+    <>
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <span className={`flex h-7 w-7 items-center justify-center rounded-md ${tone}`}>
@@ -60,8 +60,16 @@ function StatCard({ label, value, icon: Icon, tone }: { label: string; value: st
         </span>
       </div>
       <p className="mt-2 font-display text-xl lg:text-2xl font-bold">{value}</p>
-    </div>
+    </>
   );
+  if (to) {
+    return (
+      <Link to={to} className="rounded-xl border border-border bg-card p-4 shadow-card hover:border-primary/40 hover:shadow-elevated transition-all">
+        {inner}
+      </Link>
+    );
+  }
+  return <div className="rounded-xl border border-border bg-card p-4 shadow-card">{inner}</div>;
 }
 
 function ChartSection({ chart, granularity, onChange, loading }: {
@@ -223,15 +231,15 @@ function CompanyDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" />
-        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" />
-        <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" />
-        <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" />
+        <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
+        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" to="/pedidos" />
+        <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" to="/cozinha" />
+        <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" to="/cozinha" />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Mesas abertas" value={data.mesasAbertas} icon={LayoutGrid} tone="bg-primary/10 text-primary" />
-        <StatCard label="Vendas pagas" value={data.vendasConcluidas} icon={BadgeCheck} tone="bg-success/15 text-success" />
+        <StatCard label="Mesas abertas" value={data.mesasAbertas} icon={LayoutGrid} tone="bg-primary/10 text-primary" to="/mesas" />
+        <StatCard label="Vendas pagas" value={data.vendasConcluidas} icon={BadgeCheck} tone="bg-success/15 text-success" to="/pedidos" />
         <StatCard label="Ticket médio" value={formatBRL(data.ticketMedio)} icon={TrendingUp} tone="bg-primary/10 text-primary" />
         <StatCard label="Top item" value={data.topItem?.name ?? "—"} icon={Trophy} tone="bg-warning/20 text-warning-foreground" />
       </div>

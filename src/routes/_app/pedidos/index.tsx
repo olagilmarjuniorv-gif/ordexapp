@@ -37,7 +37,7 @@ const canalLabel: Record<string, string> = {
 };
 
 function PedidosList() {
-  const { user } = useAuth();
+  const { user, isAtendente } = useAuth();
   const [onlyMine, setOnlyMine] = useState(false);
   const fetchFn = useServerFn(listPedidos);
   const { data, isLoading } = useQuery({
@@ -45,13 +45,17 @@ function PedidosList() {
     queryFn: () => fetchFn({}),
   });
 
+  const filtered = (data ?? []).filter((p: any) =>
+    onlyMine && user?.id ? p.user_id === user.id : true,
+  );
+
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Pedidos</h1>
           <p className="text-sm text-muted-foreground">
-            {isLoading ? "Carregando..." : `${(data ?? []).length} no total`}
+            {isLoading ? "Carregando..." : `${filtered.length} ${onlyMine ? "meus" : "no total"}`}
           </p>
         </div>
         <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
@@ -59,13 +63,32 @@ function PedidosList() {
         </Link>
       </div>
 
+      {(isAtendente || user) && (
+        <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+          <button
+            type="button"
+            onClick={() => setOnlyMine(false)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!onlyMine ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            onClick={() => setOnlyMine(true)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${onlyMine ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            Meus pedidos
+          </button>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <ul className="space-y-2">
-          {(data ?? []).map((p: any) => (
+          {filtered.map((p: any) => (
             <li key={p.id}>
               <Link to={`/pedidos/${p.id}`} className="block rounded-xl border border-border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all">
                 <div className="flex items-start gap-3">
@@ -93,12 +116,12 @@ function PedidosList() {
               </Link>
             </li>
           ))}
-          {(data ?? []).length === 0 && (
+          {filtered.length === 0 && (
             <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
                 <ShoppingBag className="h-6 w-6" />
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido ainda.</p>
+              <p className="mt-3 text-sm text-muted-foreground">{onlyMine ? "Você ainda não criou pedidos." : "Nenhum pedido ainda."}</p>
               <Link to="/pedidos/novo" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
                 <Plus className="h-4 w-4" /> Criar pedido
               </Link>

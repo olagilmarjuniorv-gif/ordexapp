@@ -161,6 +161,9 @@ function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                 {u.company_name && (
                   <p className="text-[11px] text-muted-foreground mt-0.5">🏢 {u.company_name}</p>
                 )}
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  ⏱ Último login: {u.last_login_at ? new Date(u.last_login_at).toLocaleString("pt-BR") : "nunca"}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -175,6 +178,7 @@ function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                   <option value="admin">Administrador</option>
                   <option value="atendente">Atendente</option>
+                  <option value="cozinha">Cozinha</option>
                 </select>
                 <button
                   onClick={() => activeM.mutate({ user_id: u.id, active: !u.active })}
@@ -301,6 +305,7 @@ function CreateDialog({
               {isSuperAdmin && <option value="super_admin">Super Admin (todas as empresas)</option>}
               <option value="admin">Administrador da empresa</option>
               <option value="atendente">Atendente</option>
+              <option value="cozinha">Cozinha</option>
             </select>
           </Field>
           {isSuperAdmin && needsCompany && (
