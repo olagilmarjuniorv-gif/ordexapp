@@ -24,6 +24,7 @@ const ROLE_LABEL: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin: "Administrador",
   atendente: "Atendente",
+  cozinha: "Cozinha",
 };
 
 function UsersPage() {
