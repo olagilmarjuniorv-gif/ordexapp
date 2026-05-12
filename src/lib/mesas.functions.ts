@@ -132,6 +132,7 @@ export const fecharContaMesa = createServerFn({ method: "POST" })
       .eq("id", data.mesaId)
       .eq("company_id", companyId);
     if (error) throw new Response(error.message, { status: 500 });
+    await audit({ companyId, userId: context.userId, action: "mesa.fechar_conta", entityType: "mesa", entityId: data.mesaId, description: "Conta fechada (aguardando pagamento)" });
     return { ok: true };
   });
 
@@ -140,10 +141,11 @@ export const pagarMesa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    // Usar o client autenticado para que a RPC veja auth.uid()
     const { supabase } = context;
     const { error } = await (supabase as any).rpc("pagar_mesa", { _mesa_id: data.mesaId });
     if (error) throw new Response(error.message, { status: 500 });
+    const companyId = await getCompanyId(context.userId);
+    await audit({ companyId, userId: context.userId, action: "mesa.pagar", entityType: "mesa", entityId: data.mesaId, description: "Mesa paga e liberada" });
     return { ok: true };
   });
 
@@ -159,5 +161,6 @@ export const liberarMesa = createServerFn({ method: "POST" })
       .eq("id", data.mesaId)
       .eq("company_id", companyId);
     if (error) throw new Response(error.message, { status: 500 });
+    await audit({ companyId, userId: context.userId, action: "mesa.liberar", entityType: "mesa", entityId: data.mesaId, description: "Mesa liberada manualmente" });
     return { ok: true };
   });
