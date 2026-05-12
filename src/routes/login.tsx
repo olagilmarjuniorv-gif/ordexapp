@@ -14,20 +14,22 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, isAtendente, isCozinha } = useAuth();
   const resolveEmail = useServerFn(resolveLoginEmail);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  if (!authLoading && session) return <Navigate to="/dashboard" />;
+  if (!authLoading && session) {
+    const dest = isCozinha ? "/cozinha" : isAtendente ? "/pedidos" : "/dashboard";
+    return <Navigate to={dest} />;
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const u = username.trim().toLowerCase();
-      // If user typed an email, use it directly; otherwise resolve username -> email
       let email = u;
       if (!u.includes("@")) {
         const r = await resolveEmail({ data: { username: u } });
@@ -36,7 +38,8 @@ function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Bem-vindo de volta!");
-      navigate({ to: "/dashboard" });
+      // navegação real acontece pelo Navigate acima depois que o auth state carregar.
+      navigate({ to: "/" });
     } catch (err: any) {
       const msg = err?.message ?? "Erro ao entrar";
       const isInvalid =

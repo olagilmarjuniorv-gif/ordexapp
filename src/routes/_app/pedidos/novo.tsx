@@ -27,7 +27,6 @@ const CANAL_OPTIONS: { value: Canal; label: string }[] = [
   { value: "balcao", label: "Balcão" },
   { value: "retirada", label: "Retirada" },
   { value: "delivery", label: "Delivery" },
-  { value: "whatsapp", label: "WhatsApp" },
 ];
 
 function formatBRL(v: number) {
@@ -63,7 +62,7 @@ function NovoPedido() {
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes"],
     queryFn: () => fetchClientes({}),
-    enabled: canal === "delivery" || canal === "whatsapp",
+    enabled: canal === "delivery",
   });
 
   const filtered = useMemo(() => {
@@ -185,8 +184,8 @@ function NovoPedido() {
         </div>
       )}
 
-      {/* Cliente (delivery/whatsapp) */}
-      {(canal === "delivery" || canal === "whatsapp") && (
+      {/* Cliente (delivery) */}
+      {canal === "delivery" && (
         <div className="mb-4">
           <p className="text-xs font-medium text-muted-foreground mb-2">Cliente</p>
           <select

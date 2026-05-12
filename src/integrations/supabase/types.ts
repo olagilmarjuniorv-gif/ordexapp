@@ -82,6 +82,45 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          company_id: string | null
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       categorias: {
         Row: {
           active: boolean
@@ -491,6 +530,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          last_login_at: string | null
           phone: string | null
           updated_at: string
           username: string | null
@@ -501,6 +541,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id: string
+          last_login_at?: string | null
           phone?: string | null
           updated_at?: string
           username?: string | null
@@ -511,6 +552,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          last_login_at?: string | null
           phone?: string | null
           updated_at?: string
           username?: string | null
@@ -560,6 +602,19 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_event: {
+        Args: {
+          _action: string
+          _company_id: string
+          _description: string
+          _entity_id: string
+          _entity_type: string
+          _metadata?: Json
+          _user_id: string
+          _user_name: string
+        }
+        Returns: undefined
+      }
       pagar_mesa: { Args: { _mesa_id: string }; Returns: undefined }
     }
     Enums: {
@@ -569,6 +624,7 @@ export type Database = {
         | "entregador"
         | "super_admin"
         | "atendente"
+        | "cozinha"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -696,7 +752,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "vendedor", "entregador", "super_admin", "atendente"],
+      app_role: [
+        "admin",
+        "vendedor",
+        "entregador",
+        "super_admin",
+        "atendente",
+        "cozinha",
+      ],
     },
   },
 } as const

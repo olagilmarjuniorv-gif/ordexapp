@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { audit } from "./audit.server";
 import type { AppRole } from "./users.functions";
 
 type Caller = {
@@ -26,7 +27,7 @@ async function getCaller(userId: string): Promise<Caller> {
 }
 
 export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"] as const;
-export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery", "whatsapp"] as const;
+export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
 export type PedidoStatus = typeof PEDIDO_STATUSES[number];
 
 const pedidoItemSchema = z.object({
@@ -53,7 +54,7 @@ export const listPedidos = createServerFn({ method: "GET" })
 
     const { data, error } = await supabaseAdmin
       .from("pedidos")
-      .select("id, created_at, status, total_amount, canal, mesa_id, cliente:clientes(id, name)")
+      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, cliente:clientes(id, name), mesa:mesas(numero)")
       .eq("company_id", caller.companyId)
       .order("created_at", { ascending: false });
 
@@ -134,6 +135,16 @@ export const createPedido = createServerFn({ method: "POST" })
         .eq("status", "livre");
     }
 
+    await audit({
+      companyId: caller.companyId,
+      userId: caller.userId,
+      action: "pedido.create",
+      entityType: "pedido",
+      entityId: created.id,
+      description: `Pedido criado (${data.canal}) — ${formatBRL(total_amount)}`,
+      metadata: { canal: data.canal, total: total_amount, mesa_id: data.mesa_id ?? null },
+    });
+
     return { id: created.id };
   });
 
@@ -154,5 +165,19 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
       .eq("company_id", caller.companyId);
 
     if (error) throw new Response(error.message, { status: 500 });
+
+    await audit({
+      companyId: caller.companyId,
+      userId: caller.userId,
+      action: `pedido.${data.status}`,
+      entityType: "pedido",
+      entityId: data.id,
+      description: `Status alterado para "${data.status}"`,
+    });
+
     return { ok: true };
   });
+
+function formatBRL(v: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+}

@@ -1,36 +1,83 @@
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed, ShieldCheck, Building2, ChefHat, LayoutGrid } from "lucide-react";
+import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
+import {
+  LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { signOut, profile, isAdmin, isSuperAdmin, isAtendente } = useAuth();
+  const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha } = useAuth();
 
-  // Atendente: apenas operação. Sem dashboard executivo.
-  const baseNav = isAtendente
-    ? [
-        { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
-        { to: "/mesas", label: "Mesas", icon: LayoutGrid },
-        { to: "/cozinha", label: "Cozinha", icon: ChefHat },
-        { to: "/produtos", label: "Produtos", icon: Package },
-        { to: "/clientes", label: "Clientes", icon: Users },
-      ]
-    : ([
-        { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-        { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
-        { to: "/mesas", label: "Mesas", icon: LayoutGrid },
-        { to: "/cozinha", label: "Cozinha", icon: ChefHat },
-        { to: "/produtos", label: "Produtos", icon: Package },
-        { to: "/clientes", label: "Clientes", icon: Users },
-      ] as const);
+  // Cozinha: layout minimal, vê só /cozinha
+  if (isCozinha) {
+    if (!path.startsWith("/cozinha")) return <Navigate to="/cozinha" />;
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <ChefHat className="h-4 w-4" />
+            </div>
+            <span className="font-display font-semibold">ORDEX · Cozinha</span>
+          </div>
+          <button
+            onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Sair
+          </button>
+        </header>
+        <main className="mx-auto max-w-7xl p-4 lg:p-6">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
-  const adminLinks = [
-    ...(isAdmin ? [{ to: "/usuarios", label: "Usuários", icon: ShieldCheck } as const] : []),
-    ...(isSuperAdmin ? [{ to: "/empresas", label: "Empresas", icon: Building2 } as const] : []),
-  ];
-  const nav = [...baseNav, ...adminLinks];
+  type NavItem = { to: string; label: string; icon: any };
+  let nav: NavItem[];
+  if (isAtendente) {
+    nav = [
+      { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+      { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+      { to: "/produtos", label: "Produtos", icon: Package },
+      { to: "/clientes", label: "Clientes", icon: Users },
+    ];
+  } else if (isSuperAdmin) {
+    nav = [
+      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+      { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+      { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+      { to: "/cozinha", label: "Cozinha", icon: ChefHat },
+      { to: "/produtos", label: "Produtos", icon: Package },
+      { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/historico", label: "Histórico", icon: History },
+      { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
+      { to: "/empresas", label: "Empresas", icon: Building2 },
+    ];
+  } else if (isAdmin) {
+    nav = [
+      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+      { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+      { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+      { to: "/cozinha", label: "Cozinha", icon: ChefHat },
+      { to: "/produtos", label: "Produtos", icon: Package },
+      { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/historico", label: "Histórico", icon: History },
+      { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
+    ];
+  } else {
+    // Sem role definida ainda: navegação mínima.
+    nav = [
+      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+    ];
+  }
+
+  const homePath = isAtendente ? "/pedidos" : "/dashboard";
+
   const handleLogout = async () => {
     await signOut();
     navigate({ to: "/login" });
@@ -38,7 +85,6 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
@@ -46,10 +92,10 @@ export function AppLayout() {
           </div>
           <div className="min-w-0">
             <p className="font-display text-base font-semibold leading-none truncate">ORDEX</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || "Operação food"}</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || role || "Operação"}</p>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
           {nav.map((n) => {
             const active = path.startsWith(n.to);
             return (
@@ -77,9 +123,8 @@ export function AppLayout() {
         </div>
       </aside>
 
-      {/* Mobile top bar */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3 lg:hidden">
-        <Link to={isAtendente ? "/pedidos" : "/dashboard"} className="flex items-center gap-2">
+        <Link to={homePath} className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <UtensilsCrossed className="h-4 w-4" />
           </div>
@@ -94,7 +139,6 @@ export function AppLayout() {
         </div>
       </main>
 
-      {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-5 border-t border-border bg-background/95 backdrop-blur lg:hidden">
         {nav.slice(0, 5).map((n) => {
           const active = path.startsWith(n.to);

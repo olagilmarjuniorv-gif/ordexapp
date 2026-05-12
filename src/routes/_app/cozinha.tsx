@@ -160,26 +160,35 @@ function Cozinha() {
                   late ? "ring-2 ring-rose-400 animate-pulse" : ""
                 }`}
               >
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className={`font-display font-bold ${tv ? "text-3xl" : "text-2xl"}`}>
-                    #{p.id.slice(0, 4).toUpperCase()}
-                  </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className={`font-display font-extrabold leading-none ${tv ? "text-4xl" : "text-3xl"}`}>
+                      {p.mesa?.numero ? `Mesa ${p.mesa.numero}` : (p.canal === "balcao" ? "Balcão" : p.canal === "retirada" ? "Retirada" : p.canal === "delivery" ? "Delivery" : "Salão")}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                      #{p.id.slice(0, 4).toUpperCase()} · {p.cliente?.name ?? ""}
+                    </p>
+                  </div>
                   <span className={`text-[10px] font-bold uppercase rounded px-2 py-0.5 ${tone.pill}`}>{p.status}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {p.cliente?.name ?? (p.mesa_id ? "Mesa" : p.canal)} · {ageMin}min
-                  {late && <span className="ml-1 font-bold text-rose-600">ATRASADO</span>}
-                </p>
                 <ul className="mt-3 space-y-1">
                   {((p.items ?? []) as any[]).map((it, i) => (
-                    <li key={i} className={`leading-tight ${tv ? "text-lg" : "text-base"} font-semibold`}>
-                      {it.quantity}x {it.name}
+                    <li key={i} className={`leading-tight ${tv ? "text-xl" : "text-lg"} font-semibold`}>
+                      {it.quantity}× {it.name}
                       {it.observacao ? (
                         <span className="block text-xs text-muted-foreground font-normal">{it.observacao}</span>
                       ) : null}
                     </li>
                   ))}
                 </ul>
+                {p.observacao && (
+                  <p className="mt-2 text-xs italic text-muted-foreground border-l-2 border-amber-400 pl-2">
+                    {p.observacao}
+                  </p>
+                )}
+                <div className={`mt-2 flex items-center justify-between text-xs ${late ? "text-rose-600 font-bold" : "text-muted-foreground"}`}>
+                  <span>{ageMin}min{late ? " · ATRASADO" : ""}</span>
+                </div>
                 {showAction && action && (
                   <button
                     onClick={() => updateM.mutate({ id: p.id, status: action.next })}
