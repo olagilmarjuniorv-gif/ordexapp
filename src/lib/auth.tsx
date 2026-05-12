@@ -26,6 +26,7 @@ type AuthState = {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isAtendente: boolean;
+  isCozinha: boolean;
   canSeeFinancials: boolean;
   loading: boolean;
   isLoggedIn: boolean;
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = role === "super_admin";
   const isAdmin = isSuperAdmin || role === "admin";
   const isAtendente = role === "atendente";
-  // Atendentes não veem dados financeiros (faturamento, ticket médio etc.)
+  const isCozinha = role === "cozinha";
   const canSeeFinancials = isAdmin;
 
   const value: AuthState = {
@@ -115,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     isSuperAdmin,
     isAtendente,
+    isCozinha,
     canSeeFinancials,
     loading,
     isLoggedIn: !!session,
