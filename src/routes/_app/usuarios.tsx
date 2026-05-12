@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_app/usuarios")({
 const ROLE_LABEL: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin: "Administrador",
-  vendedor: "Vendedor",
+  atendente: "Atendente",
 };
 
 function UsersPage() {
@@ -173,7 +173,7 @@ function UsersPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   {!u.role && <option value="">— sem função —</option>}
                   {isSuperAdmin && <option value="super_admin">Super Admin</option>}
                   <option value="admin">Administrador</option>
-                  <option value="vendedor">Vendedor</option>
+                  <option value="atendente">Atendente</option>
                 </select>
                 <button
                   onClick={() => activeM.mutate({ user_id: u.id, active: !u.active })}
@@ -230,7 +230,7 @@ function CreateDialog({
   const [full_name, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<AppRole>("vendedor");
+  const [role, setRole] = useState<AppRole>("atendente");
   const [companyId, setCompanyId] = useState<string>("");
 
   const needsCompany = role !== "super_admin";
@@ -299,7 +299,7 @@ function CreateDialog({
             >
               {isSuperAdmin && <option value="super_admin">Super Admin (todas as empresas)</option>}
               <option value="admin">Administrador da empresa</option>
-              <option value="vendedor">Vendedor</option>
+              <option value="atendente">Atendente</option>
             </select>
           </Field>
           {isSuperAdmin && needsCompany && (
