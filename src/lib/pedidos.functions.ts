@@ -124,6 +124,16 @@ export const createPedido = createServerFn({ method: "POST" })
       .single();
 
     if (insErr || !created) throw new Response(insErr?.message ?? "Erro ao criar pedido", { status: 500 });
+
+    if (data.mesa_id) {
+      await supabaseAdmin
+        .from("mesas")
+        .update({ status: "ocupada", opened_at: new Date().toISOString() })
+        .eq("id", data.mesa_id)
+        .eq("company_id", caller.companyId)
+        .eq("status", "livre");
+    }
+
     return { id: created.id };
   });
 
