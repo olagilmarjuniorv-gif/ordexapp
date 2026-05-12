@@ -47,6 +47,7 @@ export const createMesa = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Response(error.message, { status: 400 });
+    await audit({ companyId, userId: context.userId, action: "mesa.create", entityType: "mesa", entityId: created.id, description: `Mesa ${data.numero} criada` });
     return { id: created.id };
   });
 
