@@ -30,7 +30,7 @@ export async function audit(input: AuditInput) {
       entity_type: input.entityType,
       entity_id: input.entityId ?? null,
       description: input.description ?? null,
-      metadata: input.metadata ?? {},
+      metadata: (input.metadata ?? {}) as any,
     });
   } catch (e) {
     // swallow
