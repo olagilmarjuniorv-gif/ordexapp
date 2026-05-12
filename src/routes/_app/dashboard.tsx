@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
@@ -6,6 +6,7 @@ import { getCompanyDashboardData, getSuperAdminDashboardData } from "@/lib/dashb
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { SalesChart } from "@/components/SalesChart";
 import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/period";
 
@@ -169,7 +170,14 @@ function SuperAdminDashboard() {
 }
 
 function Dashboard() {
-  const { isSuperAdmin, companyId, loading } = useAuth();
+  const { isSuperAdmin, isAtendente, companyId, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Atendente não vê dashboard executivo — redireciona para operação.
+  if (isAtendente) {
+    if (typeof window !== "undefined") navigate({ to: "/pedidos" });
+    return null;
+  }
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -189,8 +197,9 @@ function CompanyDashboard() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard", granularity],
     queryFn: () => fetchFn({ data: { granularity, ...range } }),
-    refetchInterval: 30_000,
   });
+  useRealtimeInvalidate("pedidos", [["dashboard", granularity]]);
+  useRealtimeInvalidate("mesas", [["dashboard", granularity]]);
 
   if (isLoading && !data) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (error || !data) return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
