@@ -25,6 +25,8 @@ type AuthState = {
   companyId: string | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isAtendente: boolean;
+  canSeeFinancials: boolean;
   loading: boolean;
   isLoggedIn: boolean;
   signOut: () => Promise<void>;
@@ -100,6 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isSuperAdmin = role === "super_admin";
   const isAdmin = isSuperAdmin || role === "admin";
+  const isAtendente = role === "atendente";
+  // Atendentes não veem dados financeiros (faturamento, ticket médio etc.)
+  const canSeeFinancials = isAdmin;
 
   const value: AuthState = {
     session,
@@ -109,6 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     companyId: profile?.company_id ?? null,
     isAdmin,
     isSuperAdmin,
+    isAtendente,
+    canSeeFinancials,
     loading,
     isLoggedIn: !!session,
     signOut,

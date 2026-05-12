@@ -560,6 +560,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      pagar_mesa: { Args: { _mesa_id: string }; Returns: undefined }
     }
     Enums: {
       app_role:

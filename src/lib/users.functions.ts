@@ -3,8 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const ROLES = ["super_admin", "admin", "vendedor"] as const;
-const COMPANY_ROLES = ["admin", "vendedor"] as const;
+const ROLES = ["super_admin", "admin", "atendente"] as const;
+const COMPANY_ROLES = ["admin", "atendente"] as const;
 export type AppRole = (typeof ROLES)[number];
 
 type Caller = {
@@ -44,7 +44,7 @@ export const listUsers = createServerFn({ method: "GET" })
 
     let q = supabaseAdmin
       .from("profiles")
-      .select("id, full_name, phone, active, created_at, company_id")
+      .select("id, full_name, phone, active, created_at, company_id, username")
       .order("created_at", { ascending: false });
 
     if (!c.isSuperAdmin) {
@@ -61,34 +61,19 @@ export const listUsers = createServerFn({ method: "GET" })
       .select("user_id, role")
       .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
 
-    const { data: usersList, error: uErr } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
-    if (uErr) throw new Response(uErr.message, { status: 500 });
-
     const { data: companies } = await supabaseAdmin
       .from("companies")
       .select("id, name");
     const companyMap = new Map((companies ?? []).map((x) => [x.id, x.name]));
 
-    // Re-fetch profiles with username
-    const { data: profilesFull } = await supabaseAdmin
-      .from("profiles")
-      .select("id, username")
-      .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-    const usernameMap = new Map((profilesFull ?? []).map((x: any) => [x.id, x.username]));
-
-    return (profiles ?? []).map((p) => {
-      const u = usersList.users.find((x) => x.id === p.id);
+    return (profiles ?? []).map((p: any) => {
       const role = roles?.find((r) => r.user_id === p.id)?.role as AppRole | undefined;
       return {
         id: p.id,
         full_name: p.full_name,
         phone: p.phone,
         active: p.active,
-        email: u?.email ?? "",
-        username: (usernameMap.get(p.id) as string | null) ?? null,
+        username: (p.username as string | null) ?? null,
         role: role ?? null,
         company_id: p.company_id as string | null,
         company_name: p.company_id ? companyMap.get(p.company_id) ?? null : null,
@@ -135,7 +120,6 @@ export const createUser = createServerFn({ method: "POST" })
 
     const username = data.username.toLowerCase();
 
-    // Ensure username is unique
     const { data: existing } = await supabaseAdmin
       .from("profiles")
       .select("id")
@@ -143,7 +127,6 @@ export const createUser = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Response("Usuário já existe", { status: 400 });
 
-    // Synthetic internal email — never shown to end user
     const syntheticEmail = `${username}@ordex.local`;
 
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
@@ -221,6 +204,7 @@ export const setUserRole = createServerFn({ method: "POST" })
   });
 
 // Bootstrap: if no super_admin exists, promote current user to super_admin.
+// Mantido apenas para projetos novos. Será removido na Fase D após o primeiro super_admin existir.
 export const bootstrapSuperAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

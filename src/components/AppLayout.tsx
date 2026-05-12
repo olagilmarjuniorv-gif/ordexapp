@@ -3,19 +3,29 @@ import { LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed, 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
-const baseNav = [
-  { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-  { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
-  { to: "/mesas", label: "Mesas", icon: LayoutGrid },
-  { to: "/cozinha", label: "Cozinha", icon: ChefHat },
-  { to: "/produtos", label: "Produtos", icon: Package },
-  { to: "/clientes", label: "Clientes", icon: Users },
-] as const;
-
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { signOut, profile, isAdmin, isSuperAdmin } = useAuth();
+  const { signOut, profile, isAdmin, isSuperAdmin, isAtendente } = useAuth();
+
+  // Atendente: apenas operação. Sem dashboard executivo.
+  const baseNav = isAtendente
+    ? [
+        { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+        { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+        { to: "/cozinha", label: "Cozinha", icon: ChefHat },
+        { to: "/produtos", label: "Produtos", icon: Package },
+        { to: "/clientes", label: "Clientes", icon: Users },
+      ]
+    : ([
+        { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+        { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+        { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+        { to: "/cozinha", label: "Cozinha", icon: ChefHat },
+        { to: "/produtos", label: "Produtos", icon: Package },
+        { to: "/clientes", label: "Clientes", icon: Users },
+      ] as const);
+
   const adminLinks = [
     ...(isAdmin ? [{ to: "/usuarios", label: "Usuários", icon: ShieldCheck } as const] : []),
     ...(isSuperAdmin ? [{ to: "/empresas", label: "Empresas", icon: Building2 } as const] : []),
@@ -69,7 +79,7 @@ export function AppLayout() {
 
       {/* Mobile top bar */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3 lg:hidden">
-        <Link to="/dashboard" className="flex items-center gap-2">
+        <Link to={isAtendente ? "/pedidos" : "/dashboard"} className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <UtensilsCrossed className="h-4 w-4" />
           </div>

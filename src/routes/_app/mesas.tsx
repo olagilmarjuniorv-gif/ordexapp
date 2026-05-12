@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutGrid, Plus, Loader2, X, Trash2, Clock } from "lucide-react";
+import { LayoutGrid, Plus, Loader2, X, Trash2, Clock, Receipt } from "lucide-react";
 import { listMesas, createMesa, updateMesaStatus, deleteMesa, type MesaStatus } from "@/lib/mesas.functions";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/mesas")({
@@ -59,8 +60,9 @@ function MesasPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["mesas"],
     queryFn: () => fetchFn({}),
-    refetchInterval: 20_000,
   });
+  useRealtimeInvalidate("mesas", [["mesas"]]);
+  useRealtimeInvalidate("pedidos", [["mesas"]]);
 
   const [openModal, setOpenModal] = useState(false);
   const [numero, setNumero] = useState("");
@@ -177,20 +179,22 @@ function MesasPage() {
                     <Clock className="h-3 w-3" /> {time}
                   </p>
                 )}
-                <div className="mt-3 flex gap-1.5">
-                  <button
-                    onClick={() => updateM.mutate({ id: m.id, status: NEXT_STATUS[m.status as MesaStatus] })}
-                    className="flex-1 rounded-lg bg-background/70 px-2 py-1.5 text-[11px] font-semibold hover:bg-background transition"
-                  >
-                    → {STATUS_META[NEXT_STATUS[m.status as MesaStatus]].label}
-                  </button>
-                  {m.status === "livre" && (
+                <div className="mt-3 flex flex-col gap-1.5">
+                  {m.status === "livre" ? (
                     <Link
                       to="/pedidos/novo"
                       search={{ mesa: m.id } as any}
-                      className="flex-1 rounded-lg bg-primary px-2 py-1.5 text-center text-[11px] font-semibold text-primary-foreground"
+                      className="rounded-lg bg-primary px-2 py-1.5 text-center text-[11px] font-semibold text-primary-foreground"
                     >
-                      Pedir
+                      Abrir mesa
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/mesas/$id"
+                      params={{ id: m.id }}
+                      className="inline-flex items-center justify-center gap-1 rounded-lg bg-primary px-2 py-1.5 text-[11px] font-semibold text-primary-foreground"
+                    >
+                      <Receipt className="h-3 w-3" /> Ver comanda
                     </Link>
                   )}
                 </div>
