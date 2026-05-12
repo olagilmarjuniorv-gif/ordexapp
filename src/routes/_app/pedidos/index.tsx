@@ -88,7 +88,7 @@ function PedidosList() {
         </div>
       ) : (
         <ul className="space-y-2">
-          {(data ?? []).map((p: any) => (
+          {filtered.map((p: any) => (
             <li key={p.id}>
               <Link to={`/pedidos/${p.id}`} className="block rounded-xl border border-border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all">
                 <div className="flex items-start gap-3">
@@ -116,12 +116,12 @@ function PedidosList() {
               </Link>
             </li>
           ))}
-          {(data ?? []).length === 0 && (
+          {filtered.length === 0 && (
             <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
                 <ShoppingBag className="h-6 w-6" />
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido ainda.</p>
+              <p className="mt-3 text-sm text-muted-foreground">{onlyMine ? "Você ainda não criou pedidos." : "Nenhum pedido ainda."}</p>
               <Link to="/pedidos/novo" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
                 <Plus className="h-4 w-4" /> Criar pedido
               </Link>
