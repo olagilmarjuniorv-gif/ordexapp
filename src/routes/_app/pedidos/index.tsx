@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { listPedidos } from "@/lib/pedidos.functions";
+import { useAuth } from "@/lib/auth";
 import { Loader2, Plus, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pedidos/")({
@@ -32,10 +34,11 @@ const canalLabel: Record<string, string> = {
   balcao: "Balcão",
   retirada: "Retirada",
   delivery: "Delivery",
-  whatsapp: "WhatsApp",
 };
 
 function PedidosList() {
+  const { user } = useAuth();
+  const [onlyMine, setOnlyMine] = useState(false);
   const fetchFn = useServerFn(listPedidos);
   const { data, isLoading } = useQuery({
     queryKey: ["pedidos"],
