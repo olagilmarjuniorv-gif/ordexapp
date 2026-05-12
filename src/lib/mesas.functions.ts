@@ -33,7 +33,7 @@ export const createMesa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({
-      numero: z.string().trim().min(1),
+      numero: z.string().trim().min(1).max(20),
       capacidade: z.number().int().min(1).max(50).default(4),
     }).parse(d)
   )
@@ -79,6 +79,82 @@ export const deleteMesa = createServerFn({ method: "POST" })
       .from("mesas")
       .delete()
       .eq("id", data.id)
+      .eq("company_id", companyId);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
+
+// ===== Comanda =====
+// Retorna a mesa + todos os pedidos ativos (não cancelados/pagos) com total acumulado.
+export const getComandaMesa = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const companyId = await getCompanyId(context.userId);
+    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+
+    const { data: mesa, error: mErr } = await supabaseAdmin
+      .from("mesas")
+      .select("id, numero, status, capacidade, opened_at")
+      .eq("id", data.mesaId)
+      .eq("company_id", companyId)
+      .single();
+    if (mErr || !mesa) throw new Response("Mesa não encontrada", { status: 404 });
+
+    const { data: pedidos, error: pErr } = await supabaseAdmin
+      .from("pedidos")
+      .select("id, created_at, status, total_amount, items, observacao, paid_at")
+      .eq("company_id", companyId)
+      .eq("mesa_id", data.mesaId)
+      .order("created_at", { ascending: true });
+    if (pErr) throw new Response(pErr.message, { status: 500 });
+
+    const ativos = (pedidos ?? []).filter((p) => p.status !== "cancelado");
+    const naoPagos = ativos.filter((p) => p.status !== "pago");
+    const totalAberto = naoPagos.reduce((s, p) => s + Number(p.total_amount), 0);
+    const totalGeral = ativos.reduce((s, p) => s + Number(p.total_amount), 0);
+
+    return { mesa, pedidos: ativos, totalAberto, totalGeral };
+  });
+
+// Avança a mesa para "conta" (fechamento iniciado, mas ainda não pago)
+export const fecharContaMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const companyId = await getCompanyId(context.userId);
+    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    const { error } = await supabaseAdmin
+      .from("mesas")
+      .update({ status: "conta" })
+      .eq("id", data.mesaId)
+      .eq("company_id", companyId);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
+
+// Marca todos os pedidos da mesa como pagos e libera a mesa (atomic via RPC).
+export const pagarMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    // Usar o client autenticado para que a RPC veja auth.uid()
+    const { supabase } = context;
+    const { error } = await (supabase as any).rpc("pagar_mesa", { _mesa_id: data.mesaId });
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
+
+export const liberarMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const companyId = await getCompanyId(context.userId);
+    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    const { error } = await supabaseAdmin
+      .from("mesas")
+      .update({ status: "livre", opened_at: null })
+      .eq("id", data.mesaId)
       .eq("company_id", companyId);
     if (error) throw new Response(error.message, { status: 500 });
     return { ok: true };
