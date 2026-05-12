@@ -231,15 +231,15 @@ function CompanyDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" />
-        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" />
-        <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" />
-        <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" />
+        <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
+        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" to="/pedidos" />
+        <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" to="/cozinha" />
+        <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" to="/cozinha" />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Mesas abertas" value={data.mesasAbertas} icon={LayoutGrid} tone="bg-primary/10 text-primary" />
-        <StatCard label="Vendas pagas" value={data.vendasConcluidas} icon={BadgeCheck} tone="bg-success/15 text-success" />
+        <StatCard label="Mesas abertas" value={data.mesasAbertas} icon={LayoutGrid} tone="bg-primary/10 text-primary" to="/mesas" />
+        <StatCard label="Vendas pagas" value={data.vendasConcluidas} icon={BadgeCheck} tone="bg-success/15 text-success" to="/pedidos" />
         <StatCard label="Ticket médio" value={formatBRL(data.ticketMedio)} icon={TrendingUp} tone="bg-primary/10 text-primary" />
         <StatCard label="Top item" value={data.topItem?.name ?? "—"} icon={Trophy} tone="bg-warning/20 text-warning-foreground" />
       </div>
