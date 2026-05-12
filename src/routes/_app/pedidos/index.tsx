@@ -37,7 +37,7 @@ const canalLabel: Record<string, string> = {
 };
 
 function PedidosList() {
-  const { user } = useAuth();
+  const { user, isAtendente } = useAuth();
   const [onlyMine, setOnlyMine] = useState(false);
   const fetchFn = useServerFn(listPedidos);
   const { data, isLoading } = useQuery({
@@ -45,19 +45,42 @@ function PedidosList() {
     queryFn: () => fetchFn({}),
   });
 
+  const filtered = (data ?? []).filter((p: any) =>
+    onlyMine && user?.id ? p.user_id === user.id : true,
+  );
+
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Pedidos</h1>
           <p className="text-sm text-muted-foreground">
-            {isLoading ? "Carregando..." : `${(data ?? []).length} no total`}
+            {isLoading ? "Carregando..." : `${filtered.length} ${onlyMine ? "meus" : "no total"}`}
           </p>
         </div>
         <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
           <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo pedido</span>
         </Link>
       </div>
+
+      {(isAtendente || user) && (
+        <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+          <button
+            type="button"
+            onClick={() => setOnlyMine(false)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!onlyMine ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            onClick={() => setOnlyMine(true)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${onlyMine ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+          >
+            Meus pedidos
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12">
