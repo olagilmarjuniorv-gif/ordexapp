@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { audit } from "./audit.server";
 import type { AppRole } from "./users.functions";
 
 type Caller = {
@@ -26,7 +27,7 @@ async function getCaller(userId: string): Promise<Caller> {
 }
 
 export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"] as const;
-export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery", "whatsapp"] as const;
+export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
 export type PedidoStatus = typeof PEDIDO_STATUSES[number];
 
 const pedidoItemSchema = z.object({

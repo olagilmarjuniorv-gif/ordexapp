@@ -2,9 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { audit } from "./audit.server";
 
-const ROLES = ["super_admin", "admin", "atendente"] as const;
-const COMPANY_ROLES = ["admin", "atendente"] as const;
+const ROLES = ["super_admin", "admin", "atendente", "cozinha"] as const;
+const COMPANY_ROLES = ["admin", "atendente", "cozinha"] as const;
 export type AppRole = (typeof ROLES)[number];
 
 type Caller = {
@@ -44,7 +45,7 @@ export const listUsers = createServerFn({ method: "GET" })
 
     let q = supabaseAdmin
       .from("profiles")
-      .select("id, full_name, phone, active, created_at, company_id, username")
+      .select("id, full_name, phone, active, created_at, company_id, username, last_login_at")
       .order("created_at", { ascending: false });
 
     if (!c.isSuperAdmin) {
@@ -77,6 +78,7 @@ export const listUsers = createServerFn({ method: "GET" })
         role: role ?? null,
         company_id: p.company_id as string | null,
         company_name: p.company_id ? companyMap.get(p.company_id) ?? null : null,
+        last_login_at: (p.last_login_at as string | null) ?? null,
       };
     });
   });
@@ -145,6 +147,14 @@ export const createUser = createServerFn({ method: "POST" })
       .from("user_roles")
       .insert({ user_id: uid, role });
     if (rErr) throw new Response(rErr.message, { status: 500 });
+    await audit({
+      companyId,
+      userId: c.userId,
+      action: "user.create",
+      entityType: "user",
+      entityId: uid,
+      description: `Criou usuário ${data.full_name} (${role})`,
+    });
     return { id: uid };
   });
 
