@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { getCompanyDashboardData, getSuperAdminDashboardData } from "@/lib/dashboard.functions";
@@ -174,10 +174,10 @@ function Dashboard() {
   const navigate = useNavigate();
 
   // Atendente não vê dashboard executivo — redireciona para operação.
-  if (isAtendente) {
-    if (typeof window !== "undefined") navigate({ to: "/pedidos" });
-    return null;
-  }
+  useEffect(() => {
+    if (isAtendente) navigate({ to: "/pedidos" });
+  }, [isAtendente, navigate]);
+  if (isAtendente) return null;
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
