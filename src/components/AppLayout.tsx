@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle, LifeBuoy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -49,18 +49,10 @@ export function AppLayout() {
   } else if (isSuperAdmin) {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-      { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
-      { to: "/mesas", label: "Mesas", icon: LayoutGrid },
-      { to: "/cozinha", label: "Cozinha", icon: ChefHat },
-      { to: "/produtos", label: "Produtos", icon: Package },
-      { to: "/categorias", label: "Categorias", icon: Tag },
-      { to: "/adicionais", label: "Adicionais", icon: Layers },
-      { to: "/combos", label: "Combos", icon: Package2 },
-      { to: "/clientes", label: "Clientes", icon: Users },
-      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
-      { to: "/historico", label: "Histórico", icon: History },
-      { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/empresas", label: "Empresas", icon: Building2 },
+      { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
+      { to: "/chamados", label: "Chamados", icon: LifeBuoy },
+      { to: "/historico", label: "Auditoria", icon: History },
     ];
   } else if (isAdmin) {
     nav = [
@@ -74,6 +66,7 @@ export function AppLayout() {
       { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
+      { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
     ];

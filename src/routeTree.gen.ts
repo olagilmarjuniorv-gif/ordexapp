@@ -24,10 +24,13 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCozinhaRouteImport } from './routes/_app/cozinha'
 import { Route as AppCombosRouteImport } from './routes/_app/combos'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
+import { Route as AppChamadosRouteImport } from './routes/_app/chamados'
 import { Route as AppCategoriasRouteImport } from './routes/_app/categorias'
 import { Route as AppAdicionaisRouteImport } from './routes/_app/adicionais'
+import { Route as AppSuporteIndexRouteImport } from './routes/_app/suporte/index'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
 import { Route as AppMesasIndexRouteImport } from './routes/_app/mesas/index'
+import { Route as AppSuporteIdRouteImport } from './routes/_app/suporte/$id'
 import { Route as AppPedidosNovoRouteImport } from './routes/_app/pedidos/novo'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
 import { Route as AppMesasIdRouteImport } from './routes/_app/mesas/$id'
@@ -107,6 +110,11 @@ const AppClientesRoute = AppClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChamadosRoute = AppChamadosRouteImport.update({
+  id: '/chamados',
+  path: '/chamados',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCategoriasRoute = AppCategoriasRouteImport.update({
   id: '/categorias',
   path: '/categorias',
@@ -117,6 +125,11 @@ const AppAdicionaisRoute = AppAdicionaisRouteImport.update({
   path: '/adicionais',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSuporteIndexRoute = AppSuporteIndexRouteImport.update({
+  id: '/suporte/',
+  path: '/suporte/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
   id: '/pedidos/',
   path: '/pedidos/',
@@ -125,6 +138,11 @@ const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
 const AppMesasIndexRoute = AppMesasIndexRouteImport.update({
   id: '/mesas/',
   path: '/mesas/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSuporteIdRoute = AppSuporteIdRouteImport.update({
+  id: '/suporte/$id',
+  path: '/suporte/$id',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPedidosNovoRoute = AppPedidosNovoRouteImport.update({
@@ -156,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
   '/categorias': typeof AppCategoriasRoute
+  '/chamados': typeof AppChamadosRoute
   '/clientes': typeof AppClientesRoute
   '/combos': typeof AppCombosRoute
   '/cozinha': typeof AppCozinhaRoute
@@ -169,8 +188,10 @@ export interface FileRoutesByFullPath {
   '/mesas/$id': typeof AppMesasIdRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
+  '/suporte/$id': typeof AppSuporteIdRoute
   '/mesas/': typeof AppMesasIndexRoute
   '/pedidos/': typeof AppPedidosIndexRoute
+  '/suporte/': typeof AppSuporteIndexRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRoutesByTo {
@@ -180,6 +201,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
   '/categorias': typeof AppCategoriasRoute
+  '/chamados': typeof AppChamadosRoute
   '/clientes': typeof AppClientesRoute
   '/combos': typeof AppCombosRoute
   '/cozinha': typeof AppCozinhaRoute
@@ -193,8 +215,10 @@ export interface FileRoutesByTo {
   '/mesas/$id': typeof AppMesasIdRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
+  '/suporte/$id': typeof AppSuporteIdRoute
   '/mesas': typeof AppMesasIndexRoute
   '/pedidos': typeof AppPedidosIndexRoute
+  '/suporte': typeof AppSuporteIndexRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRoutesById {
@@ -206,6 +230,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_app/adicionais': typeof AppAdicionaisRoute
   '/_app/categorias': typeof AppCategoriasRoute
+  '/_app/chamados': typeof AppChamadosRoute
   '/_app/clientes': typeof AppClientesRoute
   '/_app/combos': typeof AppCombosRoute
   '/_app/cozinha': typeof AppCozinhaRoute
@@ -219,8 +244,10 @@ export interface FileRoutesById {
   '/_app/mesas/$id': typeof AppMesasIdRoute
   '/_app/pedidos/$id': typeof AppPedidosIdRoute
   '/_app/pedidos/novo': typeof AppPedidosNovoRoute
+  '/_app/suporte/$id': typeof AppSuporteIdRoute
   '/_app/mesas/': typeof AppMesasIndexRoute
   '/_app/pedidos/': typeof AppPedidosIndexRoute
+  '/_app/suporte/': typeof AppSuporteIndexRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRouteTypes {
@@ -232,6 +259,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/adicionais'
     | '/categorias'
+    | '/chamados'
     | '/clientes'
     | '/combos'
     | '/cozinha'
@@ -245,8 +273,10 @@ export interface FileRouteTypes {
     | '/mesas/$id'
     | '/pedidos/$id'
     | '/pedidos/novo'
+    | '/suporte/$id'
     | '/mesas/'
     | '/pedidos/'
+    | '/suporte/'
     | '/api/public/webhooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -256,6 +286,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/adicionais'
     | '/categorias'
+    | '/chamados'
     | '/clientes'
     | '/combos'
     | '/cozinha'
@@ -269,8 +300,10 @@ export interface FileRouteTypes {
     | '/mesas/$id'
     | '/pedidos/$id'
     | '/pedidos/novo'
+    | '/suporte/$id'
     | '/mesas'
     | '/pedidos'
+    | '/suporte'
     | '/api/public/webhooks/whatsapp'
   id:
     | '__root__'
@@ -281,6 +314,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_app/adicionais'
     | '/_app/categorias'
+    | '/_app/chamados'
     | '/_app/clientes'
     | '/_app/combos'
     | '/_app/cozinha'
@@ -294,8 +328,10 @@ export interface FileRouteTypes {
     | '/_app/mesas/$id'
     | '/_app/pedidos/$id'
     | '/_app/pedidos/novo'
+    | '/_app/suporte/$id'
     | '/_app/mesas/'
     | '/_app/pedidos/'
+    | '/_app/suporte/'
     | '/api/public/webhooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
@@ -415,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppClientesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chamados': {
+      id: '/_app/chamados'
+      path: '/chamados'
+      fullPath: '/chamados'
+      preLoaderRoute: typeof AppChamadosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/categorias': {
       id: '/_app/categorias'
       path: '/categorias'
@@ -429,6 +472,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdicionaisRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/suporte/': {
+      id: '/_app/suporte/'
+      path: '/suporte'
+      fullPath: '/suporte/'
+      preLoaderRoute: typeof AppSuporteIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pedidos/': {
       id: '/_app/pedidos/'
       path: '/pedidos'
@@ -441,6 +491,13 @@ declare module '@tanstack/react-router' {
       path: '/mesas'
       fullPath: '/mesas/'
       preLoaderRoute: typeof AppMesasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/suporte/$id': {
+      id: '/_app/suporte/$id'
+      path: '/suporte/$id'
+      fullPath: '/suporte/$id'
+      preLoaderRoute: typeof AppSuporteIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/pedidos/novo': {
@@ -477,6 +534,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdicionaisRoute: typeof AppAdicionaisRoute
   AppCategoriasRoute: typeof AppCategoriasRoute
+  AppChamadosRoute: typeof AppChamadosRoute
   AppClientesRoute: typeof AppClientesRoute
   AppCombosRoute: typeof AppCombosRoute
   AppCozinhaRoute: typeof AppCozinhaRoute
@@ -490,13 +548,16 @@ interface AppRouteChildren {
   AppMesasIdRoute: typeof AppMesasIdRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
   AppPedidosNovoRoute: typeof AppPedidosNovoRoute
+  AppSuporteIdRoute: typeof AppSuporteIdRoute
   AppMesasIndexRoute: typeof AppMesasIndexRoute
   AppPedidosIndexRoute: typeof AppPedidosIndexRoute
+  AppSuporteIndexRoute: typeof AppSuporteIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdicionaisRoute: AppAdicionaisRoute,
   AppCategoriasRoute: AppCategoriasRoute,
+  AppChamadosRoute: AppChamadosRoute,
   AppClientesRoute: AppClientesRoute,
   AppCombosRoute: AppCombosRoute,
   AppCozinhaRoute: AppCozinhaRoute,
@@ -510,8 +571,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppMesasIdRoute: AppMesasIdRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
   AppPedidosNovoRoute: AppPedidosNovoRoute,
+  AppSuporteIdRoute: AppSuporteIdRoute,
   AppMesasIndexRoute: AppMesasIndexRoute,
   AppPedidosIndexRoute: AppPedidosIndexRoute,
+  AppSuporteIndexRoute: AppSuporteIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
