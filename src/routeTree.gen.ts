@@ -16,7 +16,6 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUsuariosRouteImport } from './routes/_app/usuarios'
 import { Route as AppProdutosRouteImport } from './routes/_app/produtos'
-import { Route as AppMesasRouteImport } from './routes/_app/mesas'
 import { Route as AppMensagensRouteImport } from './routes/_app/mensagens'
 import { Route as AppHistoricoRouteImport } from './routes/_app/historico'
 import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
@@ -28,6 +27,7 @@ import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppCategoriasRouteImport } from './routes/_app/categorias'
 import { Route as AppAdicionaisRouteImport } from './routes/_app/adicionais'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
+import { Route as AppMesasIndexRouteImport } from './routes/_app/mesas/index'
 import { Route as AppPedidosNovoRouteImport } from './routes/_app/pedidos/novo'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
 import { Route as AppMesasIdRouteImport } from './routes/_app/mesas/$id'
@@ -65,11 +65,6 @@ const AppUsuariosRoute = AppUsuariosRouteImport.update({
 const AppProdutosRoute = AppProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMesasRoute = AppMesasRouteImport.update({
-  id: '/mesas',
-  path: '/mesas',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMensagensRoute = AppMensagensRouteImport.update({
@@ -127,6 +122,11 @@ const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
   path: '/pedidos/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMesasIndexRoute = AppMesasIndexRouteImport.update({
+  id: '/mesas/',
+  path: '/mesas/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPedidosNovoRoute = AppPedidosNovoRouteImport.update({
   id: '/pedidos/novo',
   path: '/pedidos/novo',
@@ -138,9 +138,9 @@ const AppPedidosIdRoute = AppPedidosIdRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppMesasIdRoute = AppMesasIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppMesasRoute,
+  id: '/mesas/$id',
+  path: '/mesas/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiPublicWebhooksWhatsappRoute =
   ApiPublicWebhooksWhatsappRouteImport.update({
@@ -164,12 +164,12 @@ export interface FileRoutesByFullPath {
   '/entregas': typeof AppEntregasRoute
   '/historico': typeof AppHistoricoRoute
   '/mensagens': typeof AppMensagensRoute
-  '/mesas': typeof AppMesasRouteWithChildren
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/mesas/$id': typeof AppMesasIdRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
+  '/mesas/': typeof AppMesasIndexRoute
   '/pedidos/': typeof AppPedidosIndexRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
@@ -188,12 +188,12 @@ export interface FileRoutesByTo {
   '/entregas': typeof AppEntregasRoute
   '/historico': typeof AppHistoricoRoute
   '/mensagens': typeof AppMensagensRoute
-  '/mesas': typeof AppMesasRouteWithChildren
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/mesas/$id': typeof AppMesasIdRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
+  '/mesas': typeof AppMesasIndexRoute
   '/pedidos': typeof AppPedidosIndexRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
@@ -214,12 +214,12 @@ export interface FileRoutesById {
   '/_app/entregas': typeof AppEntregasRoute
   '/_app/historico': typeof AppHistoricoRoute
   '/_app/mensagens': typeof AppMensagensRoute
-  '/_app/mesas': typeof AppMesasRouteWithChildren
   '/_app/produtos': typeof AppProdutosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/mesas/$id': typeof AppMesasIdRoute
   '/_app/pedidos/$id': typeof AppPedidosIdRoute
   '/_app/pedidos/novo': typeof AppPedidosNovoRoute
+  '/_app/mesas/': typeof AppMesasIndexRoute
   '/_app/pedidos/': typeof AppPedidosIndexRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
@@ -240,12 +240,12 @@ export interface FileRouteTypes {
     | '/entregas'
     | '/historico'
     | '/mensagens'
-    | '/mesas'
     | '/produtos'
     | '/usuarios'
     | '/mesas/$id'
     | '/pedidos/$id'
     | '/pedidos/novo'
+    | '/mesas/'
     | '/pedidos/'
     | '/api/public/webhooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
@@ -264,12 +264,12 @@ export interface FileRouteTypes {
     | '/entregas'
     | '/historico'
     | '/mensagens'
-    | '/mesas'
     | '/produtos'
     | '/usuarios'
     | '/mesas/$id'
     | '/pedidos/$id'
     | '/pedidos/novo'
+    | '/mesas'
     | '/pedidos'
     | '/api/public/webhooks/whatsapp'
   id:
@@ -289,12 +289,12 @@ export interface FileRouteTypes {
     | '/_app/entregas'
     | '/_app/historico'
     | '/_app/mensagens'
-    | '/_app/mesas'
     | '/_app/produtos'
     | '/_app/usuarios'
     | '/_app/mesas/$id'
     | '/_app/pedidos/$id'
     | '/_app/pedidos/novo'
+    | '/_app/mesas/'
     | '/_app/pedidos/'
     | '/api/public/webhooks/whatsapp'
   fileRoutesById: FileRoutesById
@@ -357,13 +357,6 @@ declare module '@tanstack/react-router' {
       path: '/produtos'
       fullPath: '/produtos'
       preLoaderRoute: typeof AppProdutosRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/mesas': {
-      id: '/_app/mesas'
-      path: '/mesas'
-      fullPath: '/mesas'
-      preLoaderRoute: typeof AppMesasRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mensagens': {
@@ -443,6 +436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPedidosIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mesas/': {
+      id: '/_app/mesas/'
+      path: '/mesas'
+      fullPath: '/mesas/'
+      preLoaderRoute: typeof AppMesasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pedidos/novo': {
       id: '/_app/pedidos/novo'
       path: '/pedidos/novo'
@@ -459,10 +459,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/mesas/$id': {
       id: '/_app/mesas/$id'
-      path: '/$id'
+      path: '/mesas/$id'
       fullPath: '/mesas/$id'
       preLoaderRoute: typeof AppMesasIdRouteImport
-      parentRoute: typeof AppMesasRoute
+      parentRoute: typeof AppRoute
     }
     '/api/public/webhooks/whatsapp': {
       id: '/api/public/webhooks/whatsapp'
@@ -473,18 +473,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AppMesasRouteChildren {
-  AppMesasIdRoute: typeof AppMesasIdRoute
-}
-
-const AppMesasRouteChildren: AppMesasRouteChildren = {
-  AppMesasIdRoute: AppMesasIdRoute,
-}
-
-const AppMesasRouteWithChildren = AppMesasRoute._addFileChildren(
-  AppMesasRouteChildren,
-)
 
 interface AppRouteChildren {
   AppAdicionaisRoute: typeof AppAdicionaisRoute
@@ -497,11 +485,12 @@ interface AppRouteChildren {
   AppEntregasRoute: typeof AppEntregasRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppMensagensRoute: typeof AppMensagensRoute
-  AppMesasRoute: typeof AppMesasRouteWithChildren
   AppProdutosRoute: typeof AppProdutosRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
+  AppMesasIdRoute: typeof AppMesasIdRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
   AppPedidosNovoRoute: typeof AppPedidosNovoRoute
+  AppMesasIndexRoute: typeof AppMesasIndexRoute
   AppPedidosIndexRoute: typeof AppPedidosIndexRoute
 }
 
@@ -516,11 +505,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppEntregasRoute: AppEntregasRoute,
   AppHistoricoRoute: AppHistoricoRoute,
   AppMensagensRoute: AppMensagensRoute,
-  AppMesasRoute: AppMesasRouteWithChildren,
   AppProdutosRoute: AppProdutosRoute,
   AppUsuariosRoute: AppUsuariosRoute,
+  AppMesasIdRoute: AppMesasIdRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
   AppPedidosNovoRoute: AppPedidosNovoRoute,
+  AppMesasIndexRoute: AppMesasIndexRoute,
   AppPedidosIndexRoute: AppPedidosIndexRoute,
 }
 
@@ -537,3 +527,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
