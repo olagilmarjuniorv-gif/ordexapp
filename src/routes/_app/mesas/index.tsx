@@ -7,7 +7,7 @@ import { listMesas, createMesa, updateMesaStatus, deleteMesa, type MesaStatus } 
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_app/mesas")({
+export const Route = createFileRoute("/_app/mesas/")({
   component: MesasPage,
   head: () => ({ meta: [{ title: "Mesas — ORDEX" }] }),
 });
