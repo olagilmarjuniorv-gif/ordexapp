@@ -174,9 +174,16 @@ function Cozinha() {
                 <ul className="mt-3 space-y-1">
                   {((p.items ?? []) as any[]).map((it, i) => (
                     <li key={i} className={`leading-tight ${tv ? "text-xl" : "text-lg"} font-semibold`}>
-                      {it.quantity}× {it.name}
+                      {it.quantity}× {it.kind === "combo" && "🍔 "}{it.name}
+                      {Array.isArray(it.adicionais) && it.adicionais.length > 0 && (
+                        <ul className="mt-0.5 ml-4 space-y-0.5">
+                          {it.adicionais.map((a: any, ai: number) => (
+                            <li key={ai} className="text-xs text-muted-foreground font-normal">+ {a.name}</li>
+                          ))}
+                        </ul>
+                      )}
                       {it.observacao ? (
-                        <span className="block text-xs text-muted-foreground font-normal">{it.observacao}</span>
+                        <span className="block text-xs text-muted-foreground font-normal italic">{it.observacao}</span>
                       ) : null}
                     </li>
                   ))}
