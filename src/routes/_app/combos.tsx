@@ -78,7 +78,7 @@ function CombosPage() {
       {editing && (
         <ComboDialog initial={editing === "new" ? null : editing} produtos={produtos as any[]} loading={saveM.isPending}
           onClose={() => setEditing(null)}
-          onSubmit={(d) => saveM.mutate({ id: editing === "new" ? undefined : editing.id, ...d })} />
+          onSubmit={(d: any) => saveM.mutate({ id: editing === "new" ? undefined : editing.id, ...d })} />
       )}
     </div>
   );

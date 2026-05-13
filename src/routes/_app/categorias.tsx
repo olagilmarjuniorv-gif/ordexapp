@@ -67,7 +67,7 @@ function CategoriasPage() {
       {editing && (
         <CategoriaDialog initial={editing === "new" ? null : editing} loading={saveM.isPending}
           onClose={() => setEditing(null)}
-          onSubmit={(d) => saveM.mutate({ id: editing === "new" ? undefined : editing.id, ...d })} />
+          onSubmit={(d: any) => saveM.mutate({ id: editing === "new" ? undefined : editing.id, ...d })} />
       )}
     </div>
   );

@@ -100,12 +100,12 @@ function AdicionaisPage() {
       {editingGrupo && (
         <GrupoDialog initial={editingGrupo === "new" ? null : editingGrupo} loading={saveGrupoM.isPending}
           onClose={() => setEditingGrupo(null)}
-          onSubmit={(d) => saveGrupoM.mutate({ id: editingGrupo === "new" ? undefined : editingGrupo.id, ...d })} />
+          onSubmit={(d: any) => saveGrupoM.mutate({ id: editingGrupo === "new" ? undefined : editingGrupo.id, ...d })} />
       )}
       {editingOpcao && (
         <OpcaoDialog grupo_id={editingOpcao.grupo_id} initial={editingOpcao.opcao} loading={saveOpM.isPending}
           onClose={() => setEditingOpcao(null)}
-          onSubmit={(d) => saveOpM.mutate({ ...d, grupo_id: editingOpcao.grupo_id, id: editingOpcao.opcao?.id })} />
+          onSubmit={(d: any) => saveOpM.mutate({ ...d, grupo_id: editingOpcao.grupo_id, id: editingOpcao.opcao?.id })} />
       )}
     </div>
   );
