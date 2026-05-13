@@ -279,7 +279,7 @@ function NovoPedido() {
       {picker && (
         <AdicionaisPicker produto={picker.produto} grupos={picker.grupos}
           onClose={() => setPicker(null)}
-          onConfirm={(adic) => { addProduto(picker.produto, adic); setPicker(null); }} />
+          onConfirm={(adic: any) => { addProduto(picker.produto, adic); setPicker(null); }} />
       )}
     </div>
   );
