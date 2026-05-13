@@ -22,7 +22,10 @@ import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
 import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCozinhaRouteImport } from './routes/_app/cozinha'
+import { Route as AppCombosRouteImport } from './routes/_app/combos'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
+import { Route as AppCategoriasRouteImport } from './routes/_app/categorias'
+import { Route as AppAdicionaisRouteImport } from './routes/_app/adicionais'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
 import { Route as AppPedidosNovoRouteImport } from './routes/_app/pedidos/novo'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
@@ -92,9 +95,24 @@ const AppCozinhaRoute = AppCozinhaRouteImport.update({
   path: '/cozinha',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCombosRoute = AppCombosRouteImport.update({
+  id: '/combos',
+  path: '/combos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppClientesRoute = AppClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCategoriasRoute = AppCategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdicionaisRoute = AppAdicionaisRouteImport.update({
+  id: '/adicionais',
+  path: '/adicionais',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPedidosIndexRoute = AppPedidosIndexRouteImport.update({
@@ -123,7 +141,10 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/adicionais': typeof AppAdicionaisRoute
+  '/categorias': typeof AppCategoriasRoute
   '/clientes': typeof AppClientesRoute
+  '/combos': typeof AppCombosRoute
   '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
@@ -142,7 +163,10 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/adicionais': typeof AppAdicionaisRoute
+  '/categorias': typeof AppCategoriasRoute
   '/clientes': typeof AppClientesRoute
+  '/combos': typeof AppCombosRoute
   '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
@@ -163,7 +187,10 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_app/adicionais': typeof AppAdicionaisRoute
+  '/_app/categorias': typeof AppCategoriasRoute
   '/_app/clientes': typeof AppClientesRoute
+  '/_app/combos': typeof AppCombosRoute
   '/_app/cozinha': typeof AppCozinhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
@@ -184,7 +211,10 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/adicionais'
+    | '/categorias'
     | '/clientes'
+    | '/combos'
     | '/cozinha'
     | '/dashboard'
     | '/empresas'
@@ -203,7 +233,10 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/adicionais'
+    | '/categorias'
     | '/clientes'
+    | '/combos'
     | '/cozinha'
     | '/dashboard'
     | '/empresas'
@@ -223,7 +256,10 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/_app/adicionais'
+    | '/_app/categorias'
     | '/_app/clientes'
+    | '/_app/combos'
     | '/_app/cozinha'
     | '/_app/dashboard'
     | '/_app/empresas'
@@ -339,11 +375,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCozinhaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/combos': {
+      id: '/_app/combos'
+      path: '/combos'
+      fullPath: '/combos'
+      preLoaderRoute: typeof AppCombosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/clientes': {
       id: '/_app/clientes'
       path: '/clientes'
       fullPath: '/clientes'
       preLoaderRoute: typeof AppClientesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/categorias': {
+      id: '/_app/categorias'
+      path: '/categorias'
+      fullPath: '/categorias'
+      preLoaderRoute: typeof AppCategoriasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/adicionais': {
+      id: '/_app/adicionais'
+      path: '/adicionais'
+      fullPath: '/adicionais'
+      preLoaderRoute: typeof AppAdicionaisRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/pedidos/': {
@@ -390,7 +447,10 @@ const AppMesasRouteWithChildren = AppMesasRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAdicionaisRoute: typeof AppAdicionaisRoute
+  AppCategoriasRoute: typeof AppCategoriasRoute
   AppClientesRoute: typeof AppClientesRoute
+  AppCombosRoute: typeof AppCombosRoute
   AppCozinhaRoute: typeof AppCozinhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
@@ -405,7 +465,10 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdicionaisRoute: AppAdicionaisRoute,
+  AppCategoriasRoute: AppCategoriasRoute,
   AppClientesRoute: AppClientesRoute,
+  AppCombosRoute: AppCombosRoute,
   AppCozinhaRoute: AppCozinhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
