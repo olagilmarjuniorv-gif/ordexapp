@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -57,6 +57,7 @@ export function AppLayout() {
       { to: "/adicionais", label: "Adicionais", icon: Layers },
       { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/empresas", label: "Empresas", icon: Building2 },
@@ -72,6 +73,7 @@ export function AppLayout() {
       { to: "/adicionais", label: "Adicionais", icon: Layers },
       { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
     ];
