@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -53,6 +53,9 @@ export function AppLayout() {
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/cozinha", label: "Cozinha", icon: ChefHat },
       { to: "/produtos", label: "Produtos", icon: Package },
+      { to: "/categorias", label: "Categorias", icon: Tag },
+      { to: "/adicionais", label: "Adicionais", icon: Layers },
+      { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
@@ -65,15 +68,15 @@ export function AppLayout() {
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/cozinha", label: "Cozinha", icon: ChefHat },
       { to: "/produtos", label: "Produtos", icon: Package },
+      { to: "/categorias", label: "Categorias", icon: Tag },
+      { to: "/adicionais", label: "Adicionais", icon: Layers },
+      { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
     ];
   } else {
-    // Sem role definida ainda: navegação mínima.
-    nav = [
-      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-    ];
+    nav = [{ to: "/dashboard", label: "Início", icon: LayoutDashboard }];
   }
 
   const homePath = isAtendente ? "/pedidos" : "/dashboard";
