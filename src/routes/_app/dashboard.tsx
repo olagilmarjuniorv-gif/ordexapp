@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { getCompanyDashboardData, getSuperAdminDashboardData } from "@/lib/dashboard.functions";
+import { listPedidos } from "@/lib/pedidos.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
