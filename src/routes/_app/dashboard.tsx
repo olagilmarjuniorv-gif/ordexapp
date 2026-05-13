@@ -126,46 +126,122 @@ function CanalBars({ data }: { data: { canal: string; count: number }[] }) {
 }
 
 function SuperAdminDashboard() {
-  const [granularity, setGranularity] = useState<Granularity>("month");
-  const fetchFn = useServerFn(getSuperAdminDashboardData);
-  const range = getPeriodRange(granularity);
+  const fetchFn = useServerFn(getSaasOverview);
   const { data, isLoading, error } = useQuery({
-    queryKey: ["super-admin-dashboard", granularity],
-    queryFn: () => fetchFn({ data: { granularity, ...range } }),
+    queryKey: ["saas-overview"],
+    queryFn: () => fetchFn({}),
   });
 
   if (isLoading && !data) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (error || !data) return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
 
+  const growthPositive = data.weeklyGrowthPct >= 0;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Super administrador</p>
-          <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel global</h1>
+          <p className="text-sm text-muted-foreground inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Plataforma ORDEX</p>
+          <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel SaaS</h1>
+          <p className="text-xs text-muted-foreground mt-1">Gestão das empresas clientes</p>
         </div>
-        <PeriodTabs value={granularity} onChange={setGranularity} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Faturamento" value={formatBRL(data.totalSalesValue)} icon={TrendingUp} tone="bg-success/15 text-success" />
-        <StatCard label="Pedidos" value={data.pedidosNoPeriodo} icon={ShoppingBag} tone="bg-info/15 text-info" />
-        <StatCard label="Ticket médio" value={formatBRL(data.ticketMedio)} icon={BadgeCheck} tone="bg-primary/10 text-primary" />
-        <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" />
+        <StatCard label="Empresas totais" value={data.totalCompanies} icon={Building2} tone="bg-primary/10 text-primary" to="/empresas" />
+        <StatCard label="Empresas ativas" value={data.activeCompanies} icon={BadgeCheck} tone="bg-success/15 text-success" to="/empresas" />
+        <StatCard label="Empresas inativas" value={data.inactiveCompanies} icon={TrendingDown} tone="bg-muted text-muted-foreground" to="/empresas" />
+        <StatCard label="Chamados abertos" value={data.openTickets} icon={MessageSquare} tone="bg-rose-100 text-rose-600" to="/chamados" />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <StatCard label="Empresas ativas" value={`${data.activeCompanies}/${data.totalCompanies}`} icon={Building2} tone="bg-primary/10 text-primary" />
-        <StatCard label="Usuários totais" value={data.totalUsers} icon={Users} tone="bg-info/15 text-info" />
-        <StatCard label="Item mais vendido" value={data.topItem?.name ?? "—"} icon={Trophy} tone="bg-warning/20 text-warning-foreground" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Usuários totais" value={data.totalUsers} icon={Users} tone="bg-info/15 text-info" to="/usuarios" />
+        <StatCard label="Ativos (7 dias)" value={data.activeUsersWeek} icon={Activity} tone="bg-emerald-100 text-emerald-700" />
+        <StatCard label="Pedidos plataforma" value={data.totalPedidos} icon={ShoppingBag} tone="bg-primary/10 text-primary" />
+        <StatCard
+          label="Crescimento semanal"
+          value={`${growthPositive ? "+" : ""}${data.weeklyGrowthPct}%`}
+          icon={growthPositive ? TrendingUp : TrendingDown}
+          tone={growthPositive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-600"}
+        />
       </div>
 
-      <ChartSection chart={data.chart} granularity={granularity} onChange={setGranularity} loading={isLoading} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+          <header className="flex items-center justify-between mb-3">
+            <h2 className="font-display font-semibold inline-flex items-center gap-2"><Trophy className="h-4 w-4" /> Empresas com maior uso</h2>
+          </header>
+          {data.topCompanies.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Sem dados.</p>
+          ) : (
+            <ul className="space-y-2">
+              {data.topCompanies.map((c) => (
+                <li key={c.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+                  <span className="font-medium truncate">{c.name}</span>
+                  <span className="tabular-nums text-muted-foreground">{c.pedidos_total} pedidos · <span className="text-foreground">{c.pedidos_semana}</span> semana</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      <section className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <h2 className="font-display font-semibold mb-3">Pedidos por canal</h2>
-        <CanalBars data={data.porCanal} />
-      </section>
+        <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+          <header className="flex items-center justify-between mb-3">
+            <h2 className="font-display font-semibold inline-flex items-center gap-2"><AlarmClock className="h-4 w-4" /> Sem uso recente (7 dias)</h2>
+          </header>
+          {data.idleCompanies.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Todas as empresas com atividade na semana 🎉</p>
+          ) : (
+            <ul className="space-y-2">
+              {data.idleCompanies.map((c) => (
+                <li key={c.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+                  <span className="font-medium truncate">{c.name}</span>
+                  <span className="text-xs text-muted-foreground">{c.pedidos_total} total</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+          <h2 className="font-display font-semibold mb-3 inline-flex items-center gap-2"><Building2 className="h-4 w-4" /> Últimas empresas criadas</h2>
+          {data.recentCompanies.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma empresa criada.</p>
+          ) : (
+            <ul className="space-y-2">
+              {data.recentCompanies.map((c) => (
+                <li key={c.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+                  <span className="font-medium truncate inline-flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${c.active ? "bg-emerald-500" : "bg-zinc-400"}`} />
+                    {c.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{new Date(c.created_at).toLocaleDateString("pt-BR")}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+          <h2 className="font-display font-semibold mb-3 inline-flex items-center gap-2"><Clock className="h-4 w-4" /> Últimos logins</h2>
+          {data.recentLogins.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Sem logins registrados.</p>
+          ) : (
+            <ul className="space-y-2">
+              {data.recentLogins.map((u) => (
+                <li key={u.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+                  <span className="font-medium truncate">{u.full_name || "—"}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {u.last_login_at ? new Date(u.last_login_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
       <div className="flex gap-3 flex-wrap">
         <Link to="/empresas" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-95">
@@ -173,6 +249,9 @@ function SuperAdminDashboard() {
         </Link>
         <Link to="/usuarios" className="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted">
           <ShieldCheck className="h-4 w-4" /> Usuários
+        </Link>
+        <Link to="/chamados" className="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm font-semibold hover:bg-muted">
+          <MessageSquare className="h-4 w-4" /> Chamados
         </Link>
       </div>
     </div>
