@@ -139,7 +139,7 @@ function Produtos() {
         <ProdutoDialog initial={editing === "new" ? null : editing} categorias={categorias as any[]}
           loading={saveM.isPending}
           onClose={() => setEditing(null)}
-          onSubmit={(d) => saveM.mutate({ id: editing === "new" ? undefined : editing.id, ...d })} />
+          onSubmit={(d: any) => saveM.mutate({ id: editing === "new" ? undefined : editing.id, ...d })} />
       )}
     </div>
   );
