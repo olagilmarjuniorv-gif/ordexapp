@@ -287,6 +287,42 @@ export type Database = {
         }
         Relationships: []
       }
+      mensagens: {
+        Row: {
+          body: string
+          cliente_id: string | null
+          company_id: string
+          created_at: string
+          direction: string
+          id: string
+          pedido_id: string | null
+          raw_payload: Json
+          status: string
+        }
+        Insert: {
+          body: string
+          cliente_id?: string | null
+          company_id: string
+          created_at?: string
+          direction: string
+          id?: string
+          pedido_id?: string | null
+          raw_payload?: Json
+          status?: string
+        }
+        Update: {
+          body?: string
+          cliente_id?: string | null
+          company_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          pedido_id?: string | null
+          raw_payload?: Json
+          status?: string
+        }
+        Relationships: []
+      }
       mesas: {
         Row: {
           capacidade: number
