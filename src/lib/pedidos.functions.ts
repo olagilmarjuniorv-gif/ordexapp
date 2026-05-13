@@ -30,12 +30,20 @@ export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"
 export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
 export type PedidoStatus = typeof PEDIDO_STATUSES[number];
 
+const adicionalSchema = z.object({
+  name: z.string(),
+  price: z.number().min(0),
+});
+
 const pedidoItemSchema = z.object({
-  product_id: z.string().uuid(),
+  product_id: z.string().uuid().optional(),
+  combo_id: z.string().uuid().optional(),
+  kind: z.enum(["produto", "combo"]).default("produto"),
   name: z.string().optional(),
   quantity: z.number().min(1),
   price: z.number().min(0).optional(),
   observacao: z.string().optional(),
+  adicionais: z.array(adicionalSchema).default([]),
 });
 
 const createSchema = z.object({
