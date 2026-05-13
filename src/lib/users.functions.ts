@@ -184,21 +184,6 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Bootstrap: if no super_admin exists, promote current user to super_admin.
-// Mantido apenas para projetos novos. Será removido na Fase D após o primeiro super_admin existir.
-export const bootstrapSuperAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { count, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id", { count: "exact", head: true })
-      .eq("role", "super_admin");
-    if (error) throw new Response(error.message, { status: 500 });
-    if ((count ?? 0) > 0) return { promoted: false };
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", context.userId);
-    const { error: insErr } = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: context.userId, role: "super_admin" });
-    if (insErr) throw new Response(insErr.message, { status: 500 });
-    return { promoted: true };
-  });
+// bootstrapSuperAdmin removido na Fase D.
+// Para promover um super_admin manualmente, rodar SQL:
+//   INSERT INTO public.user_roles (user_id, role) VALUES ('<USER_UUID>', 'super_admin');
