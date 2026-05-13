@@ -95,25 +95,45 @@ export const createPedido = createServerFn({ method: "POST" })
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
 
-    const productIds = data.items.map((i) => i.product_id);
-    const { data: produtos, error: prodErr } = await supabaseAdmin
-      .from("produtos")
-      .select("id, name, price")
-      .in("id", productIds)
-      .eq("company_id", caller.companyId);
+    const productIds = data.items.filter((i) => i.kind === "produto" && i.product_id).map((i) => i.product_id!) as string[];
+    const comboIds = data.items.filter((i) => i.kind === "combo" && i.combo_id).map((i) => i.combo_id!) as string[];
+
+    const [{ data: produtos, error: prodErr }, { data: combos }] = await Promise.all([
+      productIds.length
+        ? supabaseAdmin.from("produtos").select("id, name, price").in("id", productIds).eq("company_id", caller.companyId)
+        : Promise.resolve({ data: [] as any[], error: null as any }),
+      comboIds.length
+        ? supabaseAdmin.from("combos").select("id, name, price").in("id", comboIds).eq("company_id", caller.companyId)
+        : Promise.resolve({ data: [] as any[], error: null as any }),
+    ]);
 
     if (prodErr) throw new Response("Falha ao validar produtos", { status: 500 });
-    if (!produtos || produtos.length !== new Set(productIds).size) {
+    if (productIds.length && (!produtos || produtos.length !== new Set(productIds).size)) {
       throw new Response("Produto inválido", { status: 400 });
     }
 
-    const priceMap = new Map(produtos.map((p) => [p.id, { price: Number(p.price), name: p.name }]));
+    const refMap = new Map<string, { price: number; name: string }>();
+    (produtos ?? []).forEach((p: any) => refMap.set(p.id, { price: Number(p.price), name: p.name }));
+    (combos ?? []).forEach((c: any) => refMap.set(c.id, { price: Number(c.price), name: c.name }));
+
     let total_amount = 0;
     const items = data.items.map((i) => {
-      const ref = priceMap.get(i.product_id)!;
-      const price = i.price ?? ref.price;
+      const refKey = (i.kind === "combo" ? i.combo_id : i.product_id)!;
+      const ref = refMap.get(refKey);
+      if (!ref) throw new Response("Item inválido", { status: 400 });
+      const adicTotal = (i.adicionais ?? []).reduce((a, x) => a + Number(x.price ?? 0), 0);
+      const price = (i.price ?? ref.price) + adicTotal;
       total_amount += i.quantity * price;
-      return { product_id: i.product_id, name: ref.name, quantity: i.quantity, price, observacao: i.observacao ?? null };
+      return {
+        kind: i.kind,
+        product_id: i.product_id ?? null,
+        combo_id: i.combo_id ?? null,
+        name: ref.name,
+        quantity: i.quantity,
+        price,
+        observacao: i.observacao ?? null,
+        adicionais: i.adicionais ?? [],
+      };
     });
 
     const { data: created, error: insErr } = await supabaseAdmin
