@@ -436,6 +436,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pedidos_mesa_id_fkey"
+            columns: ["mesa_id"]
+            isOneToOne: false
+            referencedRelation: "mesas"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pedidos_orcamento_id_fkey"
             columns: ["orcamento_id"]
             isOneToOne: false

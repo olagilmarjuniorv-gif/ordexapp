@@ -1,8 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { getCompanyDashboardData, getSuperAdminDashboardData } from "@/lib/dashboard.functions";
+import { listPedidos } from "@/lib/pedidos.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
@@ -179,13 +180,6 @@ function SuperAdminDashboard() {
 
 function Dashboard() {
   const { isSuperAdmin, isAtendente, companyId, loading } = useAuth();
-  const navigate = useNavigate();
-
-  // Atendente não vê dashboard executivo — redireciona para operação.
-  useEffect(() => {
-    if (isAtendente) navigate({ to: "/pedidos" });
-  }, [isAtendente, navigate]);
-  if (isAtendente) return null;
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -194,7 +188,96 @@ function Dashboard() {
   if (!companyId) {
     return <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">Sua conta ainda não está vinculada a uma empresa. Contate o administrador.</div>;
   }
+  if (isAtendente) return <AtendenteDashboard />;
   return <CompanyDashboard />;
+}
+
+function AtendenteDashboard() {
+  const fetchFn = useServerFn(getCompanyDashboardData);
+  const range = getPeriodRange("day");
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["dashboard-atendente"],
+    queryFn: () => fetchFn({ data: { granularity: "day", ...range } }),
+  });
+  useRealtimeInvalidate("pedidos", [["dashboard-atendente"], ["pedidos"]]);
+  useRealtimeInvalidate("mesas", [["dashboard-atendente"]]);
+
+  const fetchPedidos = useServerFn(listPedidos);
+  const { data: pedidos = [] } = useQuery({ queryKey: ["pedidos"], queryFn: () => fetchPedidos({}) });
+
+  if (isLoading && !data) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if (error || !data) return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
+
+  const ativos = (pedidos as any[]).filter((p) => ["novo", "preparo", "pronto"].includes(p.status));
+  const fechados = (pedidos as any[]).filter((p) => ["pago", "cancelado"].includes(p.status)).slice(0, 20);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">Operação de hoje 🍔</p>
+          <h1 className="font-display text-2xl lg:text-3xl font-bold">Meu painel</h1>
+        </div>
+        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card">
+          <Plus className="h-4 w-4" /> Novo pedido
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" to="/pedidos" />
+        <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" to="/pedidos" />
+        <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" to="/pedidos" />
+        <StatCard label="Mesas abertas" value={data.mesasAbertas} icon={LayoutGrid} tone="bg-primary/10 text-primary" to="/mesas" />
+      </div>
+
+      <section className="rounded-xl border border-border bg-card shadow-card">
+        <header className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="font-display font-semibold">Pedidos em aberto</h2>
+          <Link to="/pedidos" className="text-xs text-primary inline-flex items-center gap-1">Ver todos <ArrowUpRight className="h-3 w-3" /></Link>
+        </header>
+        <ul className="divide-y divide-border">
+          {ativos.length === 0 && <li className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido em aberto.</li>}
+          {ativos.map((o: any) => (
+            <li key={o.id}>
+              <Link to="/pedidos/$id" params={{ id: o.id }} className="flex items-center gap-3 p-4 hover:bg-muted/40">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary text-xs font-bold">
+                  {o.mesa?.numero ? `M${o.mesa.numero}` : `#${String(o.id).slice(0, 3).toUpperCase()}`}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{o.cliente?.name ?? (o.mesa_id ? `Mesa ${o.mesa?.numero ?? ""}` : canalLabel[o.canal] ?? "Balcão")}</p>
+                  <p className="text-xs text-muted-foreground">{statusLabel[o.status]} · {canalLabel[o.canal] ?? o.canal}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card shadow-card">
+        <header className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="font-display font-semibold">Pedidos fechados (recentes)</h2>
+        </header>
+        <ul className="divide-y divide-border">
+          {fechados.length === 0 && <li className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido fechado ainda.</li>}
+          {fechados.map((o: any) => (
+            <li key={o.id}>
+              <Link to="/pedidos/$id" params={{ id: o.id }} className="flex items-center gap-3 p-4 hover:bg-muted/40">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground text-xs font-bold">
+                  {o.mesa?.numero ? `M${o.mesa.numero}` : `#${String(o.id).slice(0, 3).toUpperCase()}`}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{o.cliente?.name ?? (o.mesa_id ? `Mesa ${o.mesa?.numero ?? ""}` : canalLabel[o.canal] ?? "Balcão")}</p>
+                  <p className="text-xs text-muted-foreground">{statusLabel[o.status]} · {canalLabel[o.canal] ?? o.canal}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR")}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
 }
 
 function CompanyDashboard() {
