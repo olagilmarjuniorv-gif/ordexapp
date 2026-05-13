@@ -36,21 +36,64 @@ const canalLabel: Record<string, string> = {
   delivery: "Delivery",
 };
 
+const LATE_MIN = 25;
+
+type StatusFilter = "todos" | "abertos" | "preparo" | "pronto" | "pago" | "atrasados";
+
+const FILTERS: { id: StatusFilter; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "abertos", label: "Abertos" },
+  { id: "preparo", label: "Em preparo" },
+  { id: "pronto", label: "Prontos" },
+  { id: "pago", label: "Pagos" },
+  { id: "atrasados", label: "Atrasados" },
+];
+
 function PedidosList() {
   const { user, isAtendente } = useAuth();
   const [onlyMine, setOnlyMine] = useState(false);
+  const [filter, setFilter] = useState<StatusFilter>("todos");
   const fetchFn = useServerFn(listPedidos);
   const { data, isLoading } = useQuery({
     queryKey: ["pedidos"],
     queryFn: () => fetchFn({}),
   });
 
-  const filtered = (data ?? []).filter((p: any) =>
-    onlyMine && user?.id ? p.user_id === user.id : true,
-  );
+  const all = (data ?? []) as any[];
+  const now = Date.now();
+
+  const filtered = all.filter((p) => {
+    if (onlyMine && user?.id && p.user_id !== user.id) return false;
+    const ageMin = (now - new Date(p.created_at).getTime()) / 60_000;
+    switch (filter) {
+      case "todos":
+        return true;
+      case "abertos":
+        return ["novo", "preparo", "pronto"].includes(p.status);
+      case "preparo":
+        return p.status === "preparo";
+      case "pronto":
+        return p.status === "pronto";
+      case "pago":
+        return p.status === "pago";
+      case "atrasados":
+        return ["novo", "preparo", "pronto"].includes(p.status) && ageMin >= LATE_MIN;
+      default:
+        return true;
+    }
+  });
+
+  const counts = {
+    todos: all.length,
+    abertos: all.filter((p) => ["novo", "preparo", "pronto"].includes(p.status)).length,
+    preparo: all.filter((p) => p.status === "preparo").length,
+    pronto: all.filter((p) => p.status === "pronto").length,
+    pago: all.filter((p) => p.status === "pago").length,
+    atrasados: all.filter((p) => ["novo", "preparo", "pronto"].includes(p.status) && (now - new Date(p.created_at).getTime()) / 60_000 >= LATE_MIN).length,
+  } as Record<StatusFilter, number>;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Pedidos</h1>
@@ -61,6 +104,32 @@ function PedidosList() {
         <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
           <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo pedido</span>
         </Link>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {FILTERS.map((f) => {
+          const active = filter === f.id;
+          const isLate = f.id === "atrasados" && counts.atrasados > 0;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilter(f.id)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                active
+                  ? "bg-foreground text-background"
+                  : isLate
+                  ? "bg-rose-50 text-rose-700 border border-rose-200"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted border border-transparent"
+              }`}
+            >
+              {f.label}
+              <span className={`tabular-nums rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-background/20" : "bg-background/60"}`}>
+                {counts[f.id]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {(isAtendente || user) && (
@@ -88,43 +157,45 @@ function PedidosList() {
         </div>
       ) : (
         <ul className="space-y-2">
-          {filtered.map((p: any) => (
-            <li key={p.id}>
-              <Link to={`/pedidos/${p.id}`} className="block rounded-xl border border-border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                    <ShoppingBag className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-medium leading-tight truncate">
-                        {p.cliente?.name ?? (p.mesa_id ? "Mesa" : "Balcão")}
-                      </p>
-                      <p className="font-display font-semibold text-primary tabular-nums shrink-0">
-                        {formatBRL(p.total_amount)}
-                      </p>
+          {filtered.map((p: any) => {
+            const ageMin = (now - new Date(p.created_at).getTime()) / 60_000;
+            const late = ["novo", "preparo", "pronto"].includes(p.status) && ageMin >= LATE_MIN;
+            return (
+              <li key={p.id}>
+                <Link to={`/pedidos/${p.id}`} className={`block rounded-xl border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all ${late ? "border-rose-300" : "border-border"}`}>
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                      <ShoppingBag className="h-5 w-5" />
                     </div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${statusColor[p.status] ?? "bg-muted text-muted-foreground"}`}>
-                        {statusLabel[p.status] ?? p.status}
-                      </span>
-                      <span>{canalLabel[p.canal] ?? p.canal}</span>
-                      <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium leading-tight truncate">
+                          {p.cliente?.name ?? (p.mesa_id ? "Mesa" : "Balcão")}
+                        </p>
+                        <p className="font-display font-semibold text-primary tabular-nums shrink-0">
+                          {formatBRL(p.total_amount)}
+                        </p>
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${statusColor[p.status] ?? "bg-muted text-muted-foreground"}`}>
+                          {statusLabel[p.status] ?? p.status}
+                        </span>
+                        <span>{canalLabel[p.canal] ?? p.canal}</span>
+                        <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
+                        {late && <span className="text-rose-600 font-semibold">ATRASADO</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            );
+          })}
           {filtered.length === 0 && (
             <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
                 <ShoppingBag className="h-6 w-6" />
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{onlyMine ? "Você ainda não criou pedidos." : "Nenhum pedido ainda."}</p>
-              <Link to="/pedidos/novo" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
-                <Plus className="h-4 w-4" /> Criar pedido
-              </Link>
+              <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido neste filtro.</p>
             </div>
           )}
         </ul>
