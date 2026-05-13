@@ -3,39 +3,10 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { audit } from "./audit.server";
+import { getCaller, assertAdminish, ROLES, COMPANY_ROLES, type AppRole } from "./auth.server";
 
-const ROLES = ["super_admin", "admin", "atendente", "cozinha"] as const;
-const COMPANY_ROLES = ["admin", "atendente", "cozinha"] as const;
-export type AppRole = (typeof ROLES)[number];
-
-type Caller = {
-  userId: string;
-  role: AppRole | null;
-  companyId: string | null;
-  isSuperAdmin: boolean;
-  isCompanyAdmin: boolean;
-};
-
-async function getCaller(userId: string): Promise<Caller> {
-  const [{ data: r }, { data: p }] = await Promise.all([
-    supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-    supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle(),
-  ]);
-  const role = (r?.role as AppRole | undefined) ?? null;
-  return {
-    userId,
-    role,
-    companyId: (p?.company_id as string | null) ?? null,
-    isSuperAdmin: role === "super_admin",
-    isCompanyAdmin: role === "admin",
-  };
-}
-
-function assertAdminish(c: Caller) {
-  if (!c.isSuperAdmin && !c.isCompanyAdmin) {
-    throw new Response("Acesso negado", { status: 403 });
-  }
-}
+export { ROLES, COMPANY_ROLES };
+export type { AppRole };
 
 export const listUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -213,21 +184,6 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Bootstrap: if no super_admin exists, promote current user to super_admin.
-// Mantido apenas para projetos novos. Será removido na Fase D após o primeiro super_admin existir.
-export const bootstrapSuperAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { count, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id", { count: "exact", head: true })
-      .eq("role", "super_admin");
-    if (error) throw new Response(error.message, { status: 500 });
-    if ((count ?? 0) > 0) return { promoted: false };
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", context.userId);
-    const { error: insErr } = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: context.userId, role: "super_admin" });
-    if (insErr) throw new Response(insErr.message, { status: 500 });
-    return { promoted: true };
-  });
+// bootstrapSuperAdmin removido na Fase D.
+// Para promover um super_admin manualmente, rodar SQL:
+//   INSERT INTO public.user_roles (user_id, role) VALUES ('<USER_UUID>', 'super_admin');

@@ -1,13 +1,12 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listUsers,
   createUser,
   setUserActive,
   setUserRole,
-  bootstrapSuperAdmin,
   type AppRole,
 } from "@/lib/users.functions";
 import { listCompanies } from "@/lib/companies.functions";
@@ -28,22 +27,7 @@ const ROLE_LABEL: Record<AppRole, string> = {
 };
 
 function UsersPage() {
-  const { isAdmin, isSuperAdmin, role, loading: authLoading, refreshProfile, user } = useAuth();
-  const bootstrap = useServerFn(bootstrapSuperAdmin);
-
-  // Auto-promote first user as super_admin if none exists
-  useEffect(() => {
-    if (authLoading || !user) return;
-    if (role !== null) return;
-    bootstrap({})
-      .then((r: { promoted: boolean }) => {
-        if (r.promoted) {
-          toast.success("Você foi definido como administrador geral");
-          refreshProfile();
-        }
-      })
-      .catch(() => {});
-  }, [authLoading, user, role, bootstrap, refreshProfile]);
+  const { isAdmin, isSuperAdmin, role, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return (

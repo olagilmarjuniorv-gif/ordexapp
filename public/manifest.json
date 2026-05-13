@@ -1,0 +1,18 @@
+{
+  "name": "ORDEX — Sistema operacional food",
+  "short_name": "ORDEX",
+  "description": "Pedidos, mesas, cozinha e WhatsApp em tempo real.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
