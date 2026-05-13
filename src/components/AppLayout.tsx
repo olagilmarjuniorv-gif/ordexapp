@@ -79,7 +79,7 @@ export function AppLayout() {
     nav = [{ to: "/dashboard", label: "Início", icon: LayoutDashboard }];
   }
 
-  const homePath = isAtendente ? "/pedidos" : "/dashboard";
+  const homePath = "/dashboard";
 
   const handleLogout = async () => {
     await signOut();
