@@ -3,30 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import type { AppRole } from "./users.functions";
-
-type Caller = {
-  userId: string;
-  role: AppRole | null;
-  companyId: string | null;
-  isSuperAdmin: boolean;
-  isCompanyAdmin: boolean;
-};
-
-async function getCaller(userId: string): Promise<Caller> {
-  const [{ data: r }, { data: p }] = await Promise.all([
-    supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-    supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle(),
-  ]);
-  const role = (r?.role as AppRole | undefined) ?? null;
-  return {
-    userId,
-    role,
-    companyId: (p?.company_id as string | null) ?? null,
-    isSuperAdmin: role === "super_admin",
-    isCompanyAdmin: role === "admin",
-  };
-}
+import { getCaller } from "./auth.server";
 
 export const listClientes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

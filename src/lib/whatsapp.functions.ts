@@ -3,20 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { dispatchWhatsapp, persistMessage, templateForStatus } from "./whatsapp.server";
-
-async function getCaller(userId: string) {
-  const [{ data: r }, { data: p }] = await Promise.all([
-    supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-    supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle(),
-  ]);
-  const role = (r?.role as string | undefined) ?? null;
-  return {
-    role,
-    companyId: (p?.company_id as string | null) ?? null,
-    isSuperAdmin: role === "super_admin",
-    isAdmin: role === "admin",
-  };
-}
+import { getCaller } from "./auth.server";
 
 export const listMensagens = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
