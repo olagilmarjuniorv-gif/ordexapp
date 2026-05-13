@@ -202,10 +202,7 @@ function AtendenteDashboard() {
   useRealtimeInvalidate("pedidos", [["dashboard-atendente"], ["pedidos"]]);
   useRealtimeInvalidate("mesas", [["dashboard-atendente"]]);
 
-  const fetchPedidos = useServerFn(
-    // lazy import to avoid top-of-file change
-    (require("@/lib/pedidos.functions") as typeof import("@/lib/pedidos.functions")).listPedidos,
-  );
+  const fetchPedidos = useServerFn(listPedidos);
   const { data: pedidos = [] } = useQuery({ queryKey: ["pedidos"], queryFn: () => fetchPedidos({}) });
 
   if (isLoading && !data) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
