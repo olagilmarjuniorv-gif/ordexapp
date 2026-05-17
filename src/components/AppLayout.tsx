@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle, LifeBuoy,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle, LifeBuoy, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
