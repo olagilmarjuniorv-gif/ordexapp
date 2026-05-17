@@ -173,28 +173,28 @@ function MesasPage() {
                 key={m.id}
                 className={`group relative rounded-2xl border-2 ${meta.ring} ${meta.bg} p-4 transition hover:shadow-md`}
               >
-                <div className="absolute top-2 right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
-                  {isAdmin && (
+                {isAdmin && (
+                  <div className="absolute top-1.5 right-1.5 flex gap-1">
                     <button
                       onClick={() => setEditing({ id: m.id, numero: m.numero, capacidade: m.capacidade ?? 4 })}
-                      className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                      className="rounded-md bg-background/80 backdrop-blur p-1.5 text-foreground/70 hover:text-foreground hover:bg-background shadow-sm border border-border/50"
                       aria-label="Renomear mesa"
+                      title="Renomear mesa"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                  )}
-                  {isAdmin && (
                     <button
                       onClick={() => {
                         if (confirm(`Excluir ${m.numero}?`)) deleteM.mutate(m.id);
                       }}
-                      className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                      className="rounded-md bg-background/80 backdrop-blur p-1.5 text-foreground/70 hover:text-destructive hover:bg-background shadow-sm border border-border/50"
                       aria-label="Excluir mesa"
+                      title="Excluir mesa"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className="flex items-baseline justify-between">
                   <span className="text-xs text-muted-foreground">Mesa</span>
                   <span className={`text-[10px] font-semibold uppercase tracking-wider ${meta.text}`}>{meta.label}</span>
