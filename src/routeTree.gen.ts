@@ -27,6 +27,7 @@ import { Route as AppCombosRouteImport } from './routes/_app/combos'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppChamadosRouteImport } from './routes/_app/chamados'
 import { Route as AppCategoriasRouteImport } from './routes/_app/categorias'
+import { Route as AppCardapioRouteImport } from './routes/_app/cardapio'
 import { Route as AppAdicionaisRouteImport } from './routes/_app/adicionais'
 import { Route as AppSuporteIndexRouteImport } from './routes/_app/suporte/index'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
@@ -126,6 +127,11 @@ const AppCategoriasRoute = AppCategoriasRouteImport.update({
   path: '/categorias',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCardapioRoute = AppCardapioRouteImport.update({
+  id: '/cardapio',
+  path: '/cardapio',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdicionaisRoute = AppAdicionaisRouteImport.update({
   id: '/adicionais',
   path: '/adicionais',
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
+  '/cardapio': typeof AppCardapioRoute
   '/categorias': typeof AppCategoriasRoute
   '/chamados': typeof AppChamadosRoute
   '/clientes': typeof AppClientesRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
+  '/cardapio': typeof AppCardapioRoute
   '/categorias': typeof AppCategoriasRoute
   '/chamados': typeof AppChamadosRoute
   '/clientes': typeof AppClientesRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/adicionais': typeof AppAdicionaisRoute
+  '/_app/cardapio': typeof AppCardapioRoute
   '/_app/categorias': typeof AppCategoriasRoute
   '/_app/chamados': typeof AppChamadosRoute
   '/_app/clientes': typeof AppClientesRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/adicionais'
+    | '/cardapio'
     | '/categorias'
     | '/chamados'
     | '/clientes'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/adicionais'
+    | '/cardapio'
     | '/categorias'
     | '/chamados'
     | '/clientes'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_app/adicionais'
+    | '/_app/cardapio'
     | '/_app/categorias'
     | '/_app/chamados'
     | '/_app/clientes'
@@ -484,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCategoriasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/cardapio': {
+      id: '/_app/cardapio'
+      path: '/cardapio'
+      fullPath: '/cardapio'
+      preLoaderRoute: typeof AppCardapioRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/adicionais': {
       id: '/_app/adicionais'
       path: '/adicionais'
@@ -552,6 +571,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdicionaisRoute: typeof AppAdicionaisRoute
+  AppCardapioRoute: typeof AppCardapioRoute
   AppCategoriasRoute: typeof AppCategoriasRoute
   AppChamadosRoute: typeof AppChamadosRoute
   AppClientesRoute: typeof AppClientesRoute
@@ -576,6 +596,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdicionaisRoute: AppAdicionaisRoute,
+  AppCardapioRoute: AppCardapioRoute,
   AppCategoriasRoute: AppCategoriasRoute,
   AppChamadosRoute: AppChamadosRoute,
   AppClientesRoute: AppClientesRoute,

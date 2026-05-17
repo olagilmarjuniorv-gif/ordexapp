@@ -50,6 +50,24 @@ export const upsertCategoria = createServerFn({ method: "POST" })
     return { id: created.id };
   });
 
+export const reorderCategorias = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(d)
+  )
+  .handler(async ({ context, data }) => {
+    const company = await getCompany(context.userId);
+    if (!company) throw new Response("Sem empresa", { status: 403 });
+    await Promise.all(
+      data.ids.map((id, idx) =>
+        supabaseAdmin.from("categorias")
+          .update({ sort_order: idx })
+          .eq("id", id).eq("company_id", company)
+      )
+    );
+    return { ok: true };
+  });
+
 export const deleteCategoria = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
