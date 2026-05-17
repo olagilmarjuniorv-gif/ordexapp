@@ -173,15 +173,28 @@ function MesasPage() {
                 key={m.id}
                 className={`group relative rounded-2xl border-2 ${meta.ring} ${meta.bg} p-4 transition hover:shadow-md`}
               >
-                <button
-                  onClick={() => {
-                    if (confirm(`Excluir mesa ${m.numero}?`)) deleteM.mutate(m.id);
-                  }}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition rounded-md p-1 text-muted-foreground hover:bg-background"
-                  aria-label="Excluir mesa"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
+                  {isAdmin && (
+                    <button
+                      onClick={() => setEditing({ id: m.id, numero: m.numero, capacidade: m.capacidade ?? 4 })}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                      aria-label="Renomear mesa"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        if (confirm(`Excluir ${m.numero}?`)) deleteM.mutate(m.id);
+                      }}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                      aria-label="Excluir mesa"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-xs text-muted-foreground">Mesa</span>
                   <span className={`text-[10px] font-semibold uppercase tracking-wider ${meta.text}`}>{meta.label}</span>
