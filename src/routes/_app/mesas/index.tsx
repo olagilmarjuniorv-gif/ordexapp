@@ -99,6 +99,16 @@ function MesasPage() {
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
+  const renameM = useMutation({
+    mutationFn: (input: { id: string; numero: string; capacidade: number }) => renameFn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["mesas"] });
+      setEditing(null);
+      toast.success("Mesa atualizada");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
   const mesas = data ?? [];
   const counts = {
     livre: mesas.filter((m: any) => m.status === "livre").length,
