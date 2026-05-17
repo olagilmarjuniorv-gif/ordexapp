@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPedido, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X } from "lucide-react";
+import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pedidos/$id")({
   component: PedidoDetail,
