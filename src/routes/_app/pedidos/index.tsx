@@ -182,10 +182,20 @@ function PedidosList() {
                         </span>
                         <span>{canalLabel[p.canal] ?? p.canal}</span>
                         {p.external_provider === "ifood" && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">iFood</span>
+                          <span
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700"
+                            title={`iFood${p.external_order_id ? ` · #${p.external_order_id}` : ""}${p.imported_at ? ` · importado ${new Date(p.imported_at).toLocaleString("pt-BR")}` : ""}`}
+                          >
+                            iFood
+                          </span>
                         )}
                         {p.external_provider && p.external_provider !== "ifood" && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">Externo</span>
+                          <span
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700"
+                            title={`Externo · ${p.external_provider}${p.external_order_id ? ` · #${p.external_order_id}` : ""}`}
+                          >
+                            Externo
+                          </span>
                         )}
                         <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
                         {late && <span className="text-rose-600 font-semibold">ATRASADO</span>}
