@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle, LifeBuoy, Plug,
+  LayoutDashboard, Users, ShoppingBag, LogOut, UtensilsCrossed,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -61,10 +61,7 @@ export function AppLayout() {
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/cozinha", label: "Cozinha", icon: ChefHat },
-      { to: "/produtos", label: "Produtos", icon: Package },
-      { to: "/categorias", label: "Categorias", icon: Tag },
-      { to: "/adicionais", label: "Adicionais", icon: Layers },
-      { to: "/combos", label: "Combos", icon: Package2 },
+      { to: "/cardapio", label: "Cardápio", icon: BookOpen },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
