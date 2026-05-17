@@ -52,6 +52,7 @@ export function AppLayout() {
       { to: "/empresas", label: "Empresas", icon: Building2 },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/chamados", label: "Chamados", icon: LifeBuoy },
+      { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/historico", label: "Auditoria", icon: History },
     ];
   } else if (isAdmin) {
