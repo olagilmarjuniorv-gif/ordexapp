@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutGrid, Plus, Loader2, X, Trash2, Clock, Receipt } from "lucide-react";
-import { listMesas, createMesa, updateMesaStatus, deleteMesa, type MesaStatus } from "@/lib/mesas.functions";
+import { LayoutGrid, Plus, Loader2, X, Trash2, Clock, Receipt, Pencil } from "lucide-react";
+import { listMesas, createMesa, updateMesa, updateMesaStatus, deleteMesa, type MesaStatus } from "@/lib/mesas.functions";
+import { useAuth } from "@/lib/auth";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { toast } from "sonner";
 
@@ -52,10 +53,12 @@ function elapsed(opened_at: string | null) {
 
 function MesasPage() {
   const qc = useQueryClient();
+  const { isAdmin } = useAuth();
   const fetchFn = useServerFn(listMesas);
   const createFn = useServerFn(createMesa);
   const updateFn = useServerFn(updateMesaStatus);
   const deleteFn = useServerFn(deleteMesa);
+  const renameFn = useServerFn(updateMesa);
 
   const { data, isLoading } = useQuery({
     queryKey: ["mesas"],
@@ -65,6 +68,7 @@ function MesasPage() {
   useRealtimeInvalidate("pedidos", [["mesas"]]);
 
   const [openModal, setOpenModal] = useState(false);
+  const [editing, setEditing] = useState<{ id: string; numero: string; capacidade: number } | null>(null);
   const [numero, setNumero] = useState("");
   const [capacidade, setCapacidade] = useState(4);
 
@@ -91,6 +95,16 @@ function MesasPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["mesas"] });
       toast.success("Mesa removida");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
+  const renameM = useMutation({
+    mutationFn: (input: { id: string; numero: string; capacidade: number }) => renameFn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["mesas"] });
+      setEditing(null);
+      toast.success("Mesa atualizada");
     },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
@@ -159,15 +173,28 @@ function MesasPage() {
                 key={m.id}
                 className={`group relative rounded-2xl border-2 ${meta.ring} ${meta.bg} p-4 transition hover:shadow-md`}
               >
-                <button
-                  onClick={() => {
-                    if (confirm(`Excluir mesa ${m.numero}?`)) deleteM.mutate(m.id);
-                  }}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition rounded-md p-1 text-muted-foreground hover:bg-background"
-                  aria-label="Excluir mesa"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
+                  {isAdmin && (
+                    <button
+                      onClick={() => setEditing({ id: m.id, numero: m.numero, capacidade: m.capacidade ?? 4 })}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                      aria-label="Renomear mesa"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        if (confirm(`Excluir ${m.numero}?`)) deleteM.mutate(m.id);
+                      }}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                      aria-label="Excluir mesa"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-xs text-muted-foreground">Mesa</span>
                   <span className={`text-[10px] font-semibold uppercase tracking-wider ${meta.text}`}>{meta.label}</span>
@@ -246,6 +273,48 @@ function MesasPage() {
                 className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
               >
                 {createM.isPending ? "Salvando..." : "Adicionar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+          <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl bg-background border border-border shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="font-display font-semibold">Editar mesa</h2>
+              <button onClick={() => setEditing(null)} className="text-muted-foreground"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Nome / identificação</label>
+                <input
+                  autoFocus
+                  value={editing.numero}
+                  onChange={(e) => setEditing({ ...editing, numero: e.target.value })}
+                  placeholder="ex: Mesa 12, Balcão, Deck 2"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Capacidade</label>
+                <input
+                  type="number" min={1} max={50}
+                  value={editing.capacidade}
+                  onChange={(e) => setEditing({ ...editing, capacidade: Math.max(1, Number(e.target.value) || 1) })}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tabular-nums"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 p-4 border-t border-border">
+              <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-border px-3 py-2 text-sm font-medium">Cancelar</button>
+              <button
+                disabled={!editing.numero.trim() || renameM.isPending}
+                onClick={() => renameM.mutate({ id: editing.id, numero: editing.numero.trim(), capacidade: editing.capacidade })}
+                className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {renameM.isPending ? "Salvando..." : "Salvar"}
               </button>
             </div>
           </div>

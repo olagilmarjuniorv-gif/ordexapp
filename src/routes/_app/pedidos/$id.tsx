@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPedido, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X } from "lucide-react";
+import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pedidos/$id")({
   component: PedidoDetail,
@@ -55,16 +55,50 @@ function PedidoDetail() {
 
       <div className="bg-card border rounded-2xl p-6 space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-bold">Pedido #{id.slice(0, 6)}</h1>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-2xl font-bold">Pedido #{id.slice(0, 6)}</h1>
+              {pedido.external_provider === "ifood" && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white">iFood</span>
+              )}
+              {pedido.external_provider && pedido.external_provider !== "ifood" && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500 text-white">{pedido.external_provider}</span>
+              )}
+              {pedido.external_order_id && (
+                <span className="text-xs text-muted-foreground">#{pedido.external_order_id}</span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {pedido.mesa_id ? "Mesa" : "Origem"}: {canalLabel[pedido.canal] ?? pedido.canal}
+            </p>
             <p className="text-sm text-muted-foreground">
               {pedido.cliente?.name ? `Cliente: ${pedido.cliente.name}` : "Sem cliente vinculado"}
+              {pedido.cliente?.phone ? ` · ${pedido.cliente.phone}` : ""}
             </p>
-            <p className="text-sm text-muted-foreground">Canal: {canalLabel[pedido.canal] ?? pedido.canal}</p>
+            {pedido.cliente?.address && (
+              <p className="text-sm text-muted-foreground">Endereço: {pedido.cliente.address}</p>
+            )}
             <p className="text-sm text-muted-foreground">Aberto em: {new Date(pedido.created_at).toLocaleString("pt-BR")}</p>
           </div>
-          <div>
+          <div className="flex flex-col items-end gap-2">
             <p className="text-sm font-bold text-right uppercase tracking-wide">{pedido.status}</p>
+            <a
+              href={`/imprimir/pedido/${id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+            >
+              <Printer className="h-3.5 w-3.5" /> Imprimir
+            </a>
+            {pedido.mesa_id && (
+              <Link
+                to="/mesas/$id"
+                params={{ id: pedido.mesa_id }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+              >
+                <Receipt className="h-3.5 w-3.5" /> Ver comanda
+              </Link>
+            )}
           </div>
         </div>
 

@@ -71,6 +71,30 @@ export const updateMesaStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      numero: z.string().trim().min(1).max(40),
+      capacidade: z.number().int().min(1).max(50).optional(),
+    }).parse(d)
+  )
+  .handler(async ({ context, data }) => {
+    const companyId = await getCompanyId(context.userId);
+    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    const patch: { numero: string; capacidade?: number } = { numero: data.numero };
+    if (data.capacidade) patch.capacidade = data.capacidade;
+    const { error } = await supabaseAdmin
+      .from("mesas")
+      .update(patch)
+      .eq("id", data.id)
+      .eq("company_id", companyId);
+    if (error) throw new Response(error.message, { status: 500 });
+    await audit({ companyId, userId: context.userId, action: "mesa.update", entityType: "mesa", entityId: data.id, description: `Mesa renomeada para "${data.numero}"` });
+    return { ok: true };
+  });
+
 export const deleteMesa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
