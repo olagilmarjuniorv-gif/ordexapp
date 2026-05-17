@@ -157,11 +157,11 @@ function IfoodCard({ integ, onChange }: { integ: any; onChange: () => void }) {
             </button>
           </div>
 
-          {logsQ.data && logsQ.data.length > 0 && (
+          {Array.isArray(logsQ.data) && logsQ.data.length > 0 && (
             <div className="pt-2 border-t border-border">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Últimos eventos</p>
               <ul className="space-y-1 max-h-40 overflow-auto">
-                {logsQ.data.map((l: any) => (
+                {(logsQ.data as any[]).map((l: any) => (
                   <li key={l.id} className="text-xs flex gap-2">
                     <span className={`shrink-0 ${l.level === "error" ? "text-rose-600" : l.level === "warn" ? "text-amber-600" : "text-muted-foreground"}`}>
                       {new Date(l.created_at).toLocaleTimeString("pt-BR")}

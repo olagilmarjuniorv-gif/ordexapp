@@ -22,6 +22,7 @@ import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
 import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCozinhaRouteImport } from './routes/_app/cozinha'
+import { Route as AppConectoresRouteImport } from './routes/_app/conectores'
 import { Route as AppCombosRouteImport } from './routes/_app/combos'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppChamadosRouteImport } from './routes/_app/chamados'
@@ -98,6 +99,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppCozinhaRoute = AppCozinhaRouteImport.update({
   id: '/cozinha',
   path: '/cozinha',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConectoresRoute = AppConectoresRouteImport.update({
+  id: '/conectores',
+  path: '/conectores',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCombosRoute = AppCombosRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/chamados': typeof AppChamadosRoute
   '/clientes': typeof AppClientesRoute
   '/combos': typeof AppCombosRoute
+  '/conectores': typeof AppConectoresRoute
   '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/chamados': typeof AppChamadosRoute
   '/clientes': typeof AppClientesRoute
   '/combos': typeof AppCombosRoute
+  '/conectores': typeof AppConectoresRoute
   '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/_app/chamados': typeof AppChamadosRoute
   '/_app/clientes': typeof AppClientesRoute
   '/_app/combos': typeof AppCombosRoute
+  '/_app/conectores': typeof AppConectoresRoute
   '/_app/cozinha': typeof AppCozinhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/chamados'
     | '/clientes'
     | '/combos'
+    | '/conectores'
     | '/cozinha'
     | '/dashboard'
     | '/empresas'
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/chamados'
     | '/clientes'
     | '/combos'
+    | '/conectores'
     | '/cozinha'
     | '/dashboard'
     | '/empresas'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/_app/chamados'
     | '/_app/clientes'
     | '/_app/combos'
+    | '/_app/conectores'
     | '/_app/cozinha'
     | '/_app/dashboard'
     | '/_app/empresas'
@@ -437,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCozinhaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/conectores': {
+      id: '/_app/conectores'
+      path: '/conectores'
+      fullPath: '/conectores'
+      preLoaderRoute: typeof AppConectoresRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/combos': {
       id: '/_app/combos'
       path: '/combos'
@@ -537,6 +556,7 @@ interface AppRouteChildren {
   AppChamadosRoute: typeof AppChamadosRoute
   AppClientesRoute: typeof AppClientesRoute
   AppCombosRoute: typeof AppCombosRoute
+  AppConectoresRoute: typeof AppConectoresRoute
   AppCozinhaRoute: typeof AppCozinhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
@@ -560,6 +580,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChamadosRoute: AppChamadosRoute,
   AppClientesRoute: AppClientesRoute,
   AppCombosRoute: AppCombosRoute,
+  AppConectoresRoute: AppConectoresRoute,
   AppCozinhaRoute: AppCozinhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
