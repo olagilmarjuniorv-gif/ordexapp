@@ -170,7 +170,8 @@ function PedidosList() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-medium leading-tight truncate">
-                          {p.cliente?.name ?? (p.mesa_id ? "Mesa" : "Balcão")}
+                          {p.mesa?.numero ? `Mesa ${p.mesa.numero}` : (p.cliente?.name ?? canalLabel[p.canal] ?? p.canal)}
+                          {p.cliente?.name && p.mesa?.numero ? <span className="text-muted-foreground font-normal"> · {p.cliente.name}</span> : null}
                         </p>
                         <p className="font-display font-semibold text-primary tabular-nums shrink-0">
                           {formatBRL(p.total_amount)}
@@ -181,6 +182,7 @@ function PedidosList() {
                           {statusLabel[p.status] ?? p.status}
                         </span>
                         <span>{canalLabel[p.canal] ?? p.canal}</span>
+                        {p.cliente?.phone && <span className="tabular-nums">{p.cliente.phone}</span>}
                         {p.external_provider === "ifood" && (
                           <span
                             className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700"
@@ -200,6 +202,9 @@ function PedidosList() {
                         <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
                         {late && <span className="text-rose-600 font-semibold">ATRASADO</span>}
                       </div>
+                      {p.observacao && (
+                        <p className="mt-1 text-xs italic text-muted-foreground truncate">"{p.observacao}"</p>
+                      )}
                     </div>
                   </div>
                 </Link>
