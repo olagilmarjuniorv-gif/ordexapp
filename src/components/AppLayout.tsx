@@ -66,6 +66,7 @@ export function AppLayout() {
       { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
+      { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
