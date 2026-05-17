@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutGrid, Plus, Loader2, X, Trash2, Clock, Receipt } from "lucide-react";
-import { listMesas, createMesa, updateMesaStatus, deleteMesa, type MesaStatus } from "@/lib/mesas.functions";
+import { LayoutGrid, Plus, Loader2, X, Trash2, Clock, Receipt, Pencil } from "lucide-react";
+import { listMesas, createMesa, updateMesa, updateMesaStatus, deleteMesa, type MesaStatus } from "@/lib/mesas.functions";
+import { useAuth } from "@/lib/auth";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { toast } from "sonner";
 
