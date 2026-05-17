@@ -83,7 +83,7 @@ function CardapioPage() {
         <div>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Cardápio</h1>
           <p className="text-sm text-muted-foreground">
-            {(produtos as Produto[]).length} produtos · {(categorias as Categoria[]).length} categorias · {(combos as Combo[]).length} combos
+            {(produtos as Produto[]).length} produtos · {(categorias as Categoria[]).length} categorias · {(combos as unknown as Combo[]).length} combos
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -148,11 +148,11 @@ function CardapioPage() {
             <ProdutoGrid
               loading={loadingP}
               produtos={list}
-              combos={combos as Combo[]}
+              combos={combos as unknown as Combo[]}
               onEdit={(p) => setEditingProd(p)}
             />
           ) : (
-            <ComboGrid combos={combos as Combo[]} onEdit={(c) => setEditingCombo(c)} />
+            <ComboGrid combos={combos as unknown as Combo[]} onEdit={(c) => setEditingCombo(c)} />
           )}
         </div>
       </div>
