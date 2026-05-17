@@ -125,6 +125,24 @@ function ComandaPage() {
             <Plus className="h-4 w-4" /> Adicionar
           </Link>
         </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a
+            href={`/imprimir/mesa/${mesa.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+          >
+            <Printer className="h-3.5 w-3.5" /> Imprimir comanda
+          </a>
+          <a
+            href={`/imprimir/mesa/${mesa.id}?modo=fechamento`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+          >
+            <Printer className="h-3.5 w-3.5" /> Imprimir fechamento
+          </a>
+        </div>
       </div>
 
       <section className="space-y-2">
