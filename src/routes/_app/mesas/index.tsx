@@ -53,10 +53,12 @@ function elapsed(opened_at: string | null) {
 
 function MesasPage() {
   const qc = useQueryClient();
+  const { isAdmin } = useAuth();
   const fetchFn = useServerFn(listMesas);
   const createFn = useServerFn(createMesa);
   const updateFn = useServerFn(updateMesaStatus);
   const deleteFn = useServerFn(deleteMesa);
+  const renameFn = useServerFn(updateMesa);
 
   const { data, isLoading } = useQuery({
     queryKey: ["mesas"],
@@ -66,6 +68,7 @@ function MesasPage() {
   useRealtimeInvalidate("pedidos", [["mesas"]]);
 
   const [openModal, setOpenModal] = useState(false);
+  const [editing, setEditing] = useState<{ id: string; numero: string; capacidade: number } | null>(null);
   const [numero, setNumero] = useState("");
   const [capacidade, setCapacidade] = useState(4);
 
