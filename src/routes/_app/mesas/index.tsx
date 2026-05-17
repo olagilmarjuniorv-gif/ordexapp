@@ -278,6 +278,48 @@ function MesasPage() {
           </div>
         </div>
       )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+          <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl bg-background border border-border shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="font-display font-semibold">Editar mesa</h2>
+              <button onClick={() => setEditing(null)} className="text-muted-foreground"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Nome / identificação</label>
+                <input
+                  autoFocus
+                  value={editing.numero}
+                  onChange={(e) => setEditing({ ...editing, numero: e.target.value })}
+                  placeholder="ex: Mesa 12, Balcão, Deck 2"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Capacidade</label>
+                <input
+                  type="number" min={1} max={50}
+                  value={editing.capacidade}
+                  onChange={(e) => setEditing({ ...editing, capacidade: Math.max(1, Number(e.target.value) || 1) })}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tabular-nums"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 p-4 border-t border-border">
+              <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-border px-3 py-2 text-sm font-medium">Cancelar</button>
+              <button
+                disabled={!editing.numero.trim() || renameM.isPending}
+                onClick={() => renameM.mutate({ id: editing.id, numero: editing.numero.trim(), capacidade: editing.capacidade })}
+                className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {renameM.isPending ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
