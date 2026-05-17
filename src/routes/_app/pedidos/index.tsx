@@ -181,6 +181,12 @@ function PedidosList() {
                           {statusLabel[p.status] ?? p.status}
                         </span>
                         <span>{canalLabel[p.canal] ?? p.canal}</span>
+                        {p.external_provider === "ifood" && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">iFood</span>
+                        )}
+                        {p.external_provider && p.external_provider !== "ifood" && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">Externo</span>
+                        )}
                         <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
                         {late && <span className="text-rose-600 font-semibold">ATRASADO</span>}
                       </div>

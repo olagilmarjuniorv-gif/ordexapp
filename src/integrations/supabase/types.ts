@@ -287,6 +287,98 @@ export type Database = {
         }
         Relationships: []
       }
+      integracao_logs: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          integration_id: string
+          level: string
+          message: string
+          payload: Json
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          integration_id: string
+          level?: string
+          message: string
+          payload?: Json
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          integration_id?: string
+          level?: string
+          message?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integracao_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integracoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integracoes: {
+        Row: {
+          access_token: string | null
+          active: boolean
+          company_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          last_success_at: string | null
+          last_sync_at: string | null
+          merchant_id: string | null
+          provider: string
+          refresh_token: string | null
+          settings: Json
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          active?: boolean
+          company_id: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_success_at?: string | null
+          last_sync_at?: string | null
+          merchant_id?: string | null
+          provider: string
+          refresh_token?: string | null
+          settings?: Json
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_success_at?: string | null
+          last_sync_at?: string | null
+          merchant_id?: string | null
+          provider?: string
+          refresh_token?: string | null
+          settings?: Json
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mensagens: {
         Row: {
           body: string
@@ -413,7 +505,11 @@ export type Database = {
           client_id: string | null
           company_id: string
           created_at: string
+          external_order_id: string | null
+          external_payload: Json | null
+          external_provider: string | null
           id: string
+          imported_at: string | null
           items: Json
           mesa_id: string | null
           observacao: string | null
@@ -429,7 +525,11 @@ export type Database = {
           client_id?: string | null
           company_id: string
           created_at?: string
+          external_order_id?: string | null
+          external_payload?: Json | null
+          external_provider?: string | null
           id?: string
+          imported_at?: string | null
           items?: Json
           mesa_id?: string | null
           observacao?: string | null
@@ -445,7 +545,11 @@ export type Database = {
           client_id?: string | null
           company_id?: string
           created_at?: string
+          external_order_id?: string | null
+          external_payload?: Json | null
+          external_provider?: string | null
           id?: string
+          imported_at?: string | null
           items?: Json
           mesa_id?: string | null
           observacao?: string | null

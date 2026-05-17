@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, Package, LogOut, UtensilsCrossed,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle, LifeBuoy,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, Tag, Layers, Package2, MessageCircle, LifeBuoy, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -52,6 +52,7 @@ export function AppLayout() {
       { to: "/empresas", label: "Empresas", icon: Building2 },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/chamados", label: "Chamados", icon: LifeBuoy },
+      { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/historico", label: "Auditoria", icon: History },
     ];
   } else if (isAdmin) {
@@ -66,6 +67,7 @@ export function AppLayout() {
       { to: "/combos", label: "Combos", icon: Package2 },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
+      { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },

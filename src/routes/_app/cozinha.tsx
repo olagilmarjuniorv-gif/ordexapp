@@ -191,7 +191,12 @@ function Cozinha() {
                       #{p.id.slice(0, 4).toUpperCase()} · {p.cliente?.name ?? ""}
                     </p>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase rounded px-2 py-0.5 ${t.pill}`}>{p.status}</span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-[10px] font-bold uppercase rounded px-2 py-0.5 ${t.pill}`}>{p.status}</span>
+                    {p.external_provider === "ifood" && (
+                      <span className="text-[10px] font-bold rounded px-1.5 py-0.5 bg-red-500 text-white">iFood</span>
+                    )}
+                  </div>
                 </div>
                 <ul className="mt-3 space-y-1">
                   {((p.items ?? []) as any[]).map((it, i) => (
