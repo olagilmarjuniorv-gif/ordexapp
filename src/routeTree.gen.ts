@@ -33,6 +33,7 @@ import { Route as AppSuporteIndexRouteImport } from './routes/_app/suporte/index
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
 import { Route as AppMesasIndexRouteImport } from './routes/_app/mesas/index'
 import { Route as ImprimirPedidoIdRouteImport } from './routes/imprimir/pedido.$id'
+import { Route as ImprimirMesaIdRouteImport } from './routes/imprimir/mesa.$id'
 import { Route as AppSuporteIdRouteImport } from './routes/_app/suporte/$id'
 import { Route as AppPedidosNovoRouteImport } from './routes/_app/pedidos/novo'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
@@ -158,6 +159,11 @@ const ImprimirPedidoIdRoute = ImprimirPedidoIdRouteImport.update({
   path: '/imprimir/pedido/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImprimirMesaIdRoute = ImprimirMesaIdRouteImport.update({
+  id: '/imprimir/mesa/$id',
+  path: '/imprimir/mesa/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSuporteIdRoute = AppSuporteIdRouteImport.update({
   id: '/suporte/$id',
   path: '/suporte/$id',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
   '/suporte/$id': typeof AppSuporteIdRoute
+  '/imprimir/mesa/$id': typeof ImprimirMesaIdRoute
   '/imprimir/pedido/$id': typeof ImprimirPedidoIdRoute
   '/mesas/': typeof AppMesasIndexRoute
   '/pedidos/': typeof AppPedidosIndexRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
   '/suporte/$id': typeof AppSuporteIdRoute
+  '/imprimir/mesa/$id': typeof ImprimirMesaIdRoute
   '/imprimir/pedido/$id': typeof ImprimirPedidoIdRoute
   '/mesas': typeof AppMesasIndexRoute
   '/pedidos': typeof AppPedidosIndexRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/_app/pedidos/$id': typeof AppPedidosIdRoute
   '/_app/pedidos/novo': typeof AppPedidosNovoRoute
   '/_app/suporte/$id': typeof AppSuporteIdRoute
+  '/imprimir/mesa/$id': typeof ImprimirMesaIdRoute
   '/imprimir/pedido/$id': typeof ImprimirPedidoIdRoute
   '/_app/mesas/': typeof AppMesasIndexRoute
   '/_app/pedidos/': typeof AppPedidosIndexRoute
@@ -303,6 +312,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/pedidos/novo'
     | '/suporte/$id'
+    | '/imprimir/mesa/$id'
     | '/imprimir/pedido/$id'
     | '/mesas/'
     | '/pedidos/'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/pedidos/$id'
     | '/pedidos/novo'
     | '/suporte/$id'
+    | '/imprimir/mesa/$id'
     | '/imprimir/pedido/$id'
     | '/mesas'
     | '/pedidos'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/_app/pedidos/$id'
     | '/_app/pedidos/novo'
     | '/_app/suporte/$id'
+    | '/imprimir/mesa/$id'
     | '/imprimir/pedido/$id'
     | '/_app/mesas/'
     | '/_app/pedidos/'
@@ -377,6 +389,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ImprimirMesaIdRoute: typeof ImprimirMesaIdRoute
   ImprimirPedidoIdRoute: typeof ImprimirPedidoIdRoute
   ApiPublicWebhooksWhatsappRoute: typeof ApiPublicWebhooksWhatsappRoute
 }
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImprimirPedidoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/imprimir/mesa/$id': {
+      id: '/imprimir/mesa/$id'
+      path: '/imprimir/mesa/$id'
+      fullPath: '/imprimir/mesa/$id'
+      preLoaderRoute: typeof ImprimirMesaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/suporte/$id': {
       id: '/_app/suporte/$id'
       path: '/suporte/$id'
@@ -647,9 +667,20 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ImprimirMesaIdRoute: ImprimirMesaIdRoute,
   ImprimirPedidoIdRoute: ImprimirPedidoIdRoute,
   ApiPublicWebhooksWhatsappRoute: ApiPublicWebhooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
