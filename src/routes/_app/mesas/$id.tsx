@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Receipt, DollarSign, Unlock, Plus, Loader2, Clock } from "lucide-react";
+import { ArrowLeft, Receipt, DollarSign, Unlock, Plus, Loader2, Clock, Printer } from "lucide-react";
 import {
   getComandaMesa,
   fecharContaMesa,
