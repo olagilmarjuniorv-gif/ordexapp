@@ -82,17 +82,21 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex">
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex shadow-elevated">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent" />
+        <div className="relative flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-glow-brand">
             <UtensilsCrossed className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <p className="font-display text-base font-semibold leading-none truncate">ORDEX</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate">{profile?.full_name || role || "Operação"}</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate flex items-center gap-1.5">
+              <span className="realtime-dot" />
+              {profile?.full_name || role || "Operação"}
+            </p>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
+        <nav className="relative flex-1 space-y-1 p-3 overflow-y-auto">
           {nav.map((n) => {
             const active = path.startsWith(n.to);
             return (
@@ -100,20 +104,23 @@ export function AppLayout() {
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-card"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-accent text-sidebar-primary-foreground shadow-glow-brand"
+                    : "text-sidebar-foreground/75 hover:bg-white/5 hover:text-sidebar-foreground"
                 )}
               >
-                <n.icon className="h-4.5 w-4.5" />
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-r bg-sidebar-primary" />
+                )}
+                <n.icon className={cn("h-4.5 w-4.5 transition-transform", active && "text-sidebar-primary scale-110")} />
                 {n.label}
               </Link>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent">
+        <div className="relative p-3 border-t border-sidebar-border">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-white/5 hover:text-sidebar-foreground transition-colors">
             <LogOut className="h-4 w-4" />
             Sair
           </button>
