@@ -10,8 +10,8 @@ export function SalesChart({ data }: { data: ChartPoint[] }) {
         <BarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
           <defs>
             <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(140 70% 70%)" stopOpacity={1} />
-              <stop offset="100%" stopColor="hsl(140 60% 55%)" stopOpacity={0.85} />
+              <stop offset="0%" stopColor="#3B82F6" stopOpacity={1} />
+              <stop offset="100%" stopColor="#2563EB" stopOpacity={0.9} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" vertical={false} />
