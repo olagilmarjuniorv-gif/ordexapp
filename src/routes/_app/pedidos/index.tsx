@@ -23,11 +23,11 @@ const statusLabel: Record<string, string> = {
   cancelado: "Cancelado",
 };
 const statusColor: Record<string, string> = {
-  novo: "bg-sky-100 text-sky-700",
-  preparo: "bg-amber-100 text-amber-700",
-  pronto: "bg-emerald-100 text-emerald-700",
-  pago: "bg-zinc-200 text-zinc-700",
-  cancelado: "bg-rose-100 text-rose-700",
+  novo: "bg-realtime/15 text-realtime",
+  preparo: "bg-warning/20 text-warning-foreground",
+  pronto: "bg-success/15 text-success",
+  pago: "bg-muted text-muted-foreground",
+  cancelado: "bg-destructive/15 text-destructive",
 };
 const canalLabel: Record<string, string> = {
   salao: "Salão",
