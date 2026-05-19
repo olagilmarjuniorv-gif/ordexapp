@@ -66,12 +66,12 @@ function StatCard({ label, value, icon: Icon, tone, to }: { label: string; value
   );
   if (to) {
     return (
-      <Link to={to} className="rounded-xl border border-border bg-card p-4 shadow-card hover:border-primary/40 hover:shadow-elevated transition-all">
+      <Link to={to} className="card-premium p-4 block">
         {inner}
       </Link>
     );
   }
-  return <div className="rounded-xl border border-border bg-card p-4 shadow-card">{inner}</div>;
+  return <div className="card-premium p-4">{inner}</div>;
 }
 
 function ChartSection({ chart, granularity, onChange, loading }: {
