@@ -201,7 +201,7 @@ function PedidosList() {
                           </span>
                         )}
                         <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
-                        {late && <span className="text-rose-600 font-semibold">ATRASADO</span>}
+                        {late && <span className="text-destructive font-semibold">ATRASADO</span>}
                       </div>
                       {p.observacao && (
                         <p className="mt-1 text-xs italic text-muted-foreground truncate">"{p.observacao}"</p>
