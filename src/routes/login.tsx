@@ -65,6 +65,9 @@ function LoginPage() {
           <span className="font-display text-lg font-semibold">ORDEX</span>
         </div>
         <div className="space-y-4 max-w-md">
+          <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-primary-foreground/70">
+            <span className="realtime-dot" /> Operação em tempo real
+          </p>
           <h1 className="font-display text-4xl font-bold leading-tight">
             Transforme pedidos em vendas reais.
           </h1>
