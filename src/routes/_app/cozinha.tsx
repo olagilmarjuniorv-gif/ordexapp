@@ -129,7 +129,7 @@ function Cozinha() {
           </div>
           <div>
             <h1 className={`font-display ${tv ? "text-3xl" : "text-2xl lg:text-3xl"} font-bold`}>Cozinha</h1>
-            <p className={`text-sm ${subText}`}>{ativos.length} pedidos ativos · tempo real</p>
+            <p className={`text-sm ${subText} inline-flex items-center gap-1.5`}><span className="realtime-dot" />{ativos.length} pedidos ativos · tempo real</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
