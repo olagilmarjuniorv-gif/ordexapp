@@ -97,11 +97,12 @@ function PedidosList() {
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Pedidos</h1>
-          <p className="text-sm text-muted-foreground">
-            {isLoading ? "Carregando..." : `${filtered.length} ${onlyMine ? "meus" : "no total"}`}
+          <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
+            <span className="realtime-dot" />
+            {isLoading ? "Carregando..." : `${filtered.length} ${onlyMine ? "meus" : "no total"} · tempo real`}
           </p>
         </div>
-        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
+        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-cta px-3 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all">
           <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo pedido</span>
         </Link>
       </div>
