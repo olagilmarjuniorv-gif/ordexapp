@@ -54,8 +54,9 @@ function ConectoresPage() {
     <div className="space-y-5">
       <header>
         <h1 className="font-display text-2xl lg:text-3xl font-bold">Conectores</h1>
-        <p className="text-sm text-muted-foreground">
-          Conecte plataformas externas para receber pedidos automaticamente.
+        <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
+          <span className="realtime-dot" />
+          Conecte plataformas externas para receber pedidos automaticamente · auto-sync 30s
         </p>
       </header>
 
