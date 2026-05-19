@@ -180,7 +180,7 @@ function Cozinha() {
             return (
               <div
                 key={p.id}
-                className={`rounded-2xl border-2 p-4 transition ${t.wrap} ${cardText} ${late ? "ring-2 ring-rose-500/70" : ""}`}
+                className={`rounded-2xl border-2 p-4 transition order-enter ${t.wrap} ${cardText} ${late ? "ring-2 ring-destructive/70" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
