@@ -10,7 +10,7 @@ const quoteStyles: Record<QuoteStatus, string> = {
 };
 
 const orderStyles: Record<OrderStatus, string> = {
-  novo: "bg-info/15 text-info",
+  novo: "bg-realtime/15 text-realtime",
   separando: "bg-warning/20 text-warning-foreground",
   pronto: "bg-primary-soft text-primary",
   entregue: "bg-success/15 text-success",
