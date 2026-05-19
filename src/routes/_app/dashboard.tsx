@@ -416,8 +416,7 @@ function CompanyDashboard() {
 
       <Link
         to="/pedidos/novo"
-        className="sm:hidden flex items-center justify-between rounded-xl p-4 text-primary-foreground shadow-elevated"
-        style={{ background: "var(--gradient-primary)" }}
+        className="sm:hidden flex items-center justify-between rounded-xl p-4 text-cta-foreground shadow-glow-cta bg-gradient-cta"
       >
         <div>
           <p className="text-xs opacity-80">Atalho rápido</p>
