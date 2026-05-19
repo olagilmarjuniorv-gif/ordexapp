@@ -386,7 +386,7 @@ function CompanyDashboard() {
           <PeriodTabs value={granularity} onChange={setGranularity} />
           <Link
             to="/pedidos/novo"
-            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-95"
+            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all"
           >
             <Plus className="h-4 w-4" /> Novo pedido
           </Link>
