@@ -66,12 +66,12 @@ function StatCard({ label, value, icon: Icon, tone, to }: { label: string; value
   );
   if (to) {
     return (
-      <Link to={to} className="rounded-xl border border-border bg-card p-4 shadow-card hover:border-primary/40 hover:shadow-elevated transition-all">
+      <Link to={to} className="card-premium p-4 block">
         {inner}
       </Link>
     );
   }
-  return <div className="rounded-xl border border-border bg-card p-4 shadow-card">{inner}</div>;
+  return <div className="card-premium p-4">{inner}</div>;
 }
 
 function ChartSection({ chart, granularity, onChange, loading }: {
@@ -298,7 +298,7 @@ function AtendenteDashboard() {
           <p className="text-sm text-muted-foreground">Operação de hoje 🍔</p>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Meu painel</h1>
         </div>
-        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card">
+        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all">
           <Plus className="h-4 w-4" /> Novo pedido
         </Link>
       </div>
@@ -386,7 +386,7 @@ function CompanyDashboard() {
           <PeriodTabs value={granularity} onChange={setGranularity} />
           <Link
             to="/pedidos/novo"
-            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-card hover:opacity-95"
+            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all"
           >
             <Plus className="h-4 w-4" /> Novo pedido
           </Link>
@@ -416,8 +416,7 @@ function CompanyDashboard() {
 
       <Link
         to="/pedidos/novo"
-        className="sm:hidden flex items-center justify-between rounded-xl p-4 text-primary-foreground shadow-elevated"
-        style={{ background: "var(--gradient-primary)" }}
+        className="sm:hidden flex items-center justify-between rounded-xl p-4 text-cta-foreground shadow-glow-cta bg-gradient-cta"
       >
         <div>
           <p className="text-xs opacity-80">Atalho rápido</p>

@@ -34,10 +34,10 @@ const AUTO_SYNC_MS = 30_000;
 const STALE_MS = 5 * 60_000;
 
 const statusBadge: Record<string, { label: string; cls: string; icon: any }> = {
-  desconectado: { label: "Desconectado", cls: "bg-zinc-200 text-zinc-700", icon: Power },
-  conectado: { label: "Conectado", cls: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
-  sincronizando: { label: "Sincronizando", cls: "bg-sky-100 text-sky-700", icon: RefreshCw },
-  erro: { label: "Erro", cls: "bg-rose-100 text-rose-700", icon: AlertCircle },
+  desconectado: { label: "Desconectado", cls: "bg-muted text-muted-foreground", icon: Power },
+  conectado: { label: "Conectado", cls: "bg-success/15 text-success", icon: CheckCircle2 },
+  sincronizando: { label: "Sincronizando", cls: "bg-realtime/15 text-realtime", icon: RefreshCw },
+  erro: { label: "Erro", cls: "bg-destructive/15 text-destructive", icon: AlertCircle },
 };
 
 function ConectoresPage() {
@@ -54,8 +54,9 @@ function ConectoresPage() {
     <div className="space-y-5">
       <header>
         <h1 className="font-display text-2xl lg:text-3xl font-bold">Conectores</h1>
-        <p className="text-sm text-muted-foreground">
-          Conecte plataformas externas para receber pedidos automaticamente.
+        <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
+          <span className="realtime-dot" />
+          Conecte plataformas externas para receber pedidos automaticamente · auto-sync 30s
         </p>
       </header>
 
@@ -89,11 +90,11 @@ function computeHealth(integ: any): Health {
 function healthMeta(h: Health) {
   switch (h) {
     case "green":
-      return { cls: "bg-emerald-500", label: "Saudável" };
+      return { cls: "bg-success", label: "Saudável" };
     case "yellow":
-      return { cls: "bg-amber-500", label: "Sem sync recente" };
+      return { cls: "bg-warning", label: "Sem sync recente" };
     case "red":
-      return { cls: "bg-rose-500", label: "Erro / atenção" };
+      return { cls: "bg-destructive", label: "Erro / atenção" };
   }
 }
 

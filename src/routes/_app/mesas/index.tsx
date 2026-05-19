@@ -16,24 +16,24 @@ export const Route = createFileRoute("/_app/mesas/")({
 const STATUS_META: Record<MesaStatus, { label: string; ring: string; bg: string; text: string; dot: string }> = {
   livre: {
     label: "Livre",
-    ring: "border-emerald-200",
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    dot: "bg-emerald-500",
+    ring: "border-success/30",
+    bg: "bg-success/5",
+    text: "text-success",
+    dot: "bg-success",
   },
   ocupada: {
     label: "Ocupada",
-    ring: "border-amber-200",
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    dot: "bg-amber-500",
+    ring: "border-warning/40",
+    bg: "bg-warning/10",
+    text: "text-warning-foreground",
+    dot: "bg-warning",
   },
   conta: {
     label: "Conta",
-    ring: "border-sky-200",
-    bg: "bg-sky-50",
-    text: "text-sky-700",
-    dot: "bg-sky-500",
+    ring: "border-primary/30",
+    bg: "bg-primary-soft",
+    text: "text-primary",
+    dot: "bg-primary",
   },
 };
 
@@ -127,7 +127,7 @@ function MesasPage() {
         </div>
         <button
           onClick={() => setOpenModal(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card"
+          className="inline-flex items-center gap-2 rounded-lg bg-cta px-3 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all"
         >
           <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nova mesa</span>
         </button>

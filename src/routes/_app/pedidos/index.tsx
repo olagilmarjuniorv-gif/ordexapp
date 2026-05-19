@@ -23,11 +23,11 @@ const statusLabel: Record<string, string> = {
   cancelado: "Cancelado",
 };
 const statusColor: Record<string, string> = {
-  novo: "bg-sky-100 text-sky-700",
-  preparo: "bg-amber-100 text-amber-700",
-  pronto: "bg-emerald-100 text-emerald-700",
-  pago: "bg-zinc-200 text-zinc-700",
-  cancelado: "bg-rose-100 text-rose-700",
+  novo: "bg-realtime/15 text-realtime",
+  preparo: "bg-warning/20 text-warning-foreground",
+  pronto: "bg-success/15 text-success",
+  pago: "bg-muted text-muted-foreground",
+  cancelado: "bg-destructive/15 text-destructive",
 };
 const canalLabel: Record<string, string> = {
   salao: "Salão",
@@ -97,11 +97,12 @@ function PedidosList() {
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Pedidos</h1>
-          <p className="text-sm text-muted-foreground">
-            {isLoading ? "Carregando..." : `${filtered.length} ${onlyMine ? "meus" : "no total"}`}
+          <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
+            <span className="realtime-dot" />
+            {isLoading ? "Carregando..." : `${filtered.length} ${onlyMine ? "meus" : "no total"} · tempo real`}
           </p>
         </div>
-        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-card">
+        <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-cta px-3 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all">
           <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo pedido</span>
         </Link>
       </div>
@@ -117,9 +118,9 @@ function PedidosList() {
               onClick={() => setFilter(f.id)}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                 active
-                  ? "bg-foreground text-background"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : isLate
-                  ? "bg-rose-50 text-rose-700 border border-rose-200"
+                  ? "bg-destructive/10 text-destructive border border-destructive/30"
                   : "bg-muted/60 text-muted-foreground hover:bg-muted border border-transparent"
               }`}
             >
@@ -161,10 +162,10 @@ function PedidosList() {
             const ageMin = (now - new Date(p.created_at).getTime()) / 60_000;
             const late = ["novo", "preparo", "pronto"].includes(p.status) && ageMin >= LATE_MIN;
             return (
-              <li key={p.id}>
-                <Link to={`/pedidos/${p.id}`} className={`block rounded-xl border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all ${late ? "border-rose-300" : "border-border"}`}>
+              <li key={p.id} className="order-enter">
+                <Link to={`/pedidos/${p.id}`} className={`block card-premium p-3.5 ${late ? "!border-destructive/50" : ""}`}>
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${p.status === "novo" ? "bg-realtime/15 text-realtime" : "bg-primary-soft text-primary"}`}>
                       <ShoppingBag className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -200,7 +201,7 @@ function PedidosList() {
                           </span>
                         )}
                         <span className="tabular-nums">{new Date(p.created_at).toLocaleString("pt-BR")}</span>
-                        {late && <span className="text-rose-600 font-semibold">ATRASADO</span>}
+                        {late && <span className="text-destructive font-semibold">ATRASADO</span>}
                       </div>
                       {p.observacao && (
                         <p className="mt-1 text-xs italic text-muted-foreground truncate">"{p.observacao}"</p>

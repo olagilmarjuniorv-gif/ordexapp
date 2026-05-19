@@ -65,6 +65,9 @@ function LoginPage() {
           <span className="font-display text-lg font-semibold">ORDEX</span>
         </div>
         <div className="space-y-4 max-w-md">
+          <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-primary-foreground/70">
+            <span className="realtime-dot" /> Operação em tempo real
+          </p>
           <h1 className="font-display text-4xl font-bold leading-tight">
             Transforme pedidos em vendas reais.
           </h1>
@@ -115,7 +118,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-elevated hover:opacity-95 disabled:opacity-70"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow-brand hover:brightness-110 disabled:opacity-70 transition-all"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               Entrar

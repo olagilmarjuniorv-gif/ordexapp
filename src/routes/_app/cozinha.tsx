@@ -129,7 +129,7 @@ function Cozinha() {
           </div>
           <div>
             <h1 className={`font-display ${tv ? "text-3xl" : "text-2xl lg:text-3xl"} font-bold`}>Cozinha</h1>
-            <p className={`text-sm ${subText}`}>{ativos.length} pedidos ativos · tempo real</p>
+            <p className={`text-sm ${subText} inline-flex items-center gap-1.5`}><span className="realtime-dot" />{ativos.length} pedidos ativos · tempo real</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ function Cozinha() {
             return (
               <div
                 key={p.id}
-                className={`rounded-2xl border-2 p-4 transition ${t.wrap} ${cardText} ${late ? "ring-2 ring-rose-500/70" : ""}`}
+                className={`rounded-2xl border-2 p-4 transition order-enter ${t.wrap} ${cardText} ${late ? "ring-2 ring-destructive/70" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
