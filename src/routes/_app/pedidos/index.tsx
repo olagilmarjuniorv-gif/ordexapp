@@ -118,9 +118,9 @@ function PedidosList() {
               onClick={() => setFilter(f.id)}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                 active
-                  ? "bg-foreground text-background"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : isLate
-                  ? "bg-rose-50 text-rose-700 border border-rose-200"
+                  ? "bg-destructive/10 text-destructive border border-destructive/30"
                   : "bg-muted/60 text-muted-foreground hover:bg-muted border border-transparent"
               }`}
             >
