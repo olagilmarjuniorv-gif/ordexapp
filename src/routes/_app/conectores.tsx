@@ -34,10 +34,10 @@ const AUTO_SYNC_MS = 30_000;
 const STALE_MS = 5 * 60_000;
 
 const statusBadge: Record<string, { label: string; cls: string; icon: any }> = {
-  desconectado: { label: "Desconectado", cls: "bg-zinc-200 text-zinc-700", icon: Power },
-  conectado: { label: "Conectado", cls: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
-  sincronizando: { label: "Sincronizando", cls: "bg-sky-100 text-sky-700", icon: RefreshCw },
-  erro: { label: "Erro", cls: "bg-rose-100 text-rose-700", icon: AlertCircle },
+  desconectado: { label: "Desconectado", cls: "bg-muted text-muted-foreground", icon: Power },
+  conectado: { label: "Conectado", cls: "bg-success/15 text-success", icon: CheckCircle2 },
+  sincronizando: { label: "Sincronizando", cls: "bg-realtime/15 text-realtime", icon: RefreshCw },
+  erro: { label: "Erro", cls: "bg-destructive/15 text-destructive", icon: AlertCircle },
 };
 
 function ConectoresPage() {
