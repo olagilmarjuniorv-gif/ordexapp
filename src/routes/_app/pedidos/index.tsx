@@ -162,10 +162,10 @@ function PedidosList() {
             const ageMin = (now - new Date(p.created_at).getTime()) / 60_000;
             const late = ["novo", "preparo", "pronto"].includes(p.status) && ageMin >= LATE_MIN;
             return (
-              <li key={p.id}>
-                <Link to={`/pedidos/${p.id}`} className={`block rounded-xl border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all ${late ? "border-rose-300" : "border-border"}`}>
+              <li key={p.id} className="order-enter">
+                <Link to={`/pedidos/${p.id}`} className={`block card-premium p-3.5 ${late ? "!border-destructive/50" : ""}`}>
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${p.status === "novo" ? "bg-realtime/15 text-realtime" : "bg-primary-soft text-primary"}`}>
                       <ShoppingBag className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
