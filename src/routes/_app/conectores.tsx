@@ -89,11 +89,11 @@ function computeHealth(integ: any): Health {
 function healthMeta(h: Health) {
   switch (h) {
     case "green":
-      return { cls: "bg-emerald-500", label: "Saudável" };
+      return { cls: "bg-success", label: "Saudável" };
     case "yellow":
-      return { cls: "bg-amber-500", label: "Sem sync recente" };
+      return { cls: "bg-warning", label: "Sem sync recente" };
     case "red":
-      return { cls: "bg-rose-500", label: "Erro / atenção" };
+      return { cls: "bg-destructive", label: "Erro / atenção" };
   }
 }
 
