@@ -123,11 +123,8 @@ export function AppLayout() {
       </aside>
 
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3 lg:hidden">
-        <Link to={homePath} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <UtensilsCrossed className="h-4 w-4" />
-          </div>
-          <span className="font-display font-semibold">ORDEX</span>
+        <Link to={homePath} className="flex items-baseline">
+          <span className="brand-wordmark text-xl text-foreground">pedz</span>
         </Link>
         <button onClick={handleLogout} className="text-sm text-muted-foreground">Sair</button>
       </header>
