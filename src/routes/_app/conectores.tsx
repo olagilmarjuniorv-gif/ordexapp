@@ -219,6 +219,11 @@ function WhatsappCard() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+
 
 type Health = "green" | "yellow" | "red";
 
