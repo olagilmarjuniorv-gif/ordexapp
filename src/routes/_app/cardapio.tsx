@@ -23,7 +23,7 @@ import { qk } from "@/lib/query-keys";
 
 export const Route = createFileRoute("/_app/cardapio")({
   component: CardapioPage,
-  head: () => ({ meta: [{ title: "Cardápio — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Cardápio — pedz" }] }),
 });
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);

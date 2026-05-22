@@ -9,7 +9,7 @@ import { Loader2, Plus, Pencil, Trash2, Package2, X } from "lucide-react";
 
 export const Route = createFileRoute("/_app/combos")({
   component: CombosPage,
-  head: () => ({ meta: [{ title: "Combos — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Combos — pedz" }] }),
 });
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);

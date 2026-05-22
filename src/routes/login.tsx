@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Hammer, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { resolveLoginEmail } from "@/lib/auth.functions";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Entrar — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Entrar — pedz" }] }),
 });
 
 function LoginPage() {
@@ -58,11 +58,8 @@ function LoginPage() {
         className="relative hidden lg:flex flex-col justify-between p-10 text-primary-foreground"
         style={{ background: "var(--gradient-hero)" }}
       >
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur">
-            <Hammer className="h-5 w-5" />
-          </div>
-          <span className="font-display text-lg font-semibold">ORDEX</span>
+        <div className="flex items-baseline">
+          <span className="brand-wordmark text-2xl text-white">pedz</span>
         </div>
         <div className="space-y-4 max-w-md">
           <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-primary-foreground/70">
@@ -75,16 +72,13 @@ function LoginPage() {
             Organize seus clientes, acompanhe pedidos e venda mais com rapidez e praticidade.
           </p>
         </div>
-        <p className="text-xs text-primary-foreground/60">© ORDEX</p>
+        <p className="text-xs text-primary-foreground/60">© pedz</p>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-10 bg-background">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Hammer className="h-5 w-5" />
-            </div>
-            <span className="font-display text-lg font-semibold">ORDEX</span>
+          <div className="lg:hidden flex items-baseline mb-8">
+            <span className="brand-wordmark text-2xl text-foreground">pedz</span>
           </div>
 
           <h2 className="font-display text-2xl font-bold">Acessar painel</h2>

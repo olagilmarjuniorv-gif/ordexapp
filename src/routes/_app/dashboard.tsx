@@ -14,7 +14,7 @@ import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/peri
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Painel — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Painel — pedz" }] }),
 });
 
 const canalLabel: Record<string, string> = {
@@ -141,7 +141,7 @@ function SuperAdminDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Plataforma ORDEX</p>
+          <p className="text-sm text-muted-foreground inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Plataforma pedz</p>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel SaaS</h1>
           <p className="text-xs text-muted-foreground mt-1">Gestão das empresas clientes</p>
         </div>

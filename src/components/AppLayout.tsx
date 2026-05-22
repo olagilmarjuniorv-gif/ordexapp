@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Users, ShoppingBag, LogOut, UtensilsCrossed,
+  LayoutDashboard, Users, ShoppingBag, LogOut, 
   ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,11 +17,9 @@ export function AppLayout() {
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <ChefHat className="h-4 w-4" />
-            </div>
-            <span className="font-display font-semibold">ORDEX · Cozinha</span>
+          <div className="flex items-baseline gap-2">
+            <span className="brand-wordmark text-xl text-foreground">pedz</span>
+            <span className="text-sm text-muted-foreground">· cozinha</span>
           </div>
           <button
             onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
@@ -84,13 +82,10 @@ export function AppLayout() {
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex shadow-elevated">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent" />
-        <div className="relative flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-glow-brand">
-            <UtensilsCrossed className="h-5 w-5" />
-          </div>
+        <div className="relative flex items-center px-5 py-5 border-b border-sidebar-border">
           <div className="min-w-0">
-            <p className="font-display text-base font-semibold leading-none truncate">ORDEX</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate flex items-center gap-1.5">
+            <p className="brand-wordmark text-2xl text-white leading-none truncate">pedz</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-2 truncate flex items-center gap-1.5">
               <span className="realtime-dot" />
               {profile?.full_name || role || "Operação"}
             </p>
@@ -128,11 +123,8 @@ export function AppLayout() {
       </aside>
 
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3 lg:hidden">
-        <Link to={homePath} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <UtensilsCrossed className="h-4 w-4" />
-          </div>
-          <span className="font-display font-semibold">ORDEX</span>
+        <Link to={homePath} className="flex items-baseline">
+          <span className="brand-wordmark text-xl text-foreground">pedz</span>
         </Link>
         <button onClick={handleLogout} className="text-sm text-muted-foreground">Sair</button>
       </header>

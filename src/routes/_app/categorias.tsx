@@ -8,7 +8,7 @@ import { Loader2, Plus, Pencil, Trash2, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/_app/categorias")({
   component: CategoriasPage,
-  head: () => ({ meta: [{ title: "Categorias — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Categorias — pedz" }] }),
 });
 
 type Cat = { id: string; name: string; sort_order: number; active: boolean };

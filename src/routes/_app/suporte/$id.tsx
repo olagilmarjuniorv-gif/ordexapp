@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/suporte/$id")({
   component: TicketDetail,
-  head: () => ({ meta: [{ title: "Chamado — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Chamado — pedz" }] }),
 });
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
