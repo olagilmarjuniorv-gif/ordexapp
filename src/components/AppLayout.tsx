@@ -82,13 +82,10 @@ export function AppLayout() {
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex shadow-elevated">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent" />
-        <div className="relative flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-glow-brand">
-            <UtensilsCrossed className="h-5 w-5" />
-          </div>
+        <div className="relative flex items-center px-5 py-5 border-b border-sidebar-border">
           <div className="min-w-0">
-            <p className="font-display text-base font-semibold leading-none truncate">ORDEX</p>
-            <p className="text-[11px] text-sidebar-foreground/60 mt-1 truncate flex items-center gap-1.5">
+            <p className="brand-wordmark text-2xl text-white leading-none truncate">pedz</p>
+            <p className="text-[11px] text-sidebar-foreground/60 mt-2 truncate flex items-center gap-1.5">
               <span className="realtime-dot" />
               {profile?.full_name || role || "Operação"}
             </p>
