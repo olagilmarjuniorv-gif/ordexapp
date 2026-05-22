@@ -77,11 +77,8 @@ function LoginPage() {
 
       <div className="flex items-center justify-center p-6 lg:p-10 bg-background">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Hammer className="h-5 w-5" />
-            </div>
-            <span className="font-display text-lg font-semibold">pedz</span>
+          <div className="lg:hidden flex items-baseline mb-8">
+            <span className="brand-wordmark text-2xl text-foreground">pedz</span>
           </div>
 
           <h2 className="font-display text-2xl font-bold">Acessar painel</h2>
