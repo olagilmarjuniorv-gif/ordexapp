@@ -75,6 +75,7 @@ function ConectoresPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <IfoodCard integ={integ} onChange={() => qc.invalidateQueries({ queryKey: ["integracoes"] })} />
+          <WhatsappCard />
           <ComingSoonCard name="Rappi" />
           <ComingSoonCard name="Delivery Much" />
         </div>
@@ -82,6 +83,142 @@ function ConectoresPage() {
     </div>
   );
 }
+
+function WhatsappCard() {
+  const getConn = useServerFn(getWhatsappConexao);
+  const getStats = useServerFn(getWhatsappStats);
+  const connect = useServerFn(connectWhatsapp);
+  const disconnect = useServerFn(disconnectWhatsapp);
+  const sync = useServerFn(syncWhatsappNow);
+  const qc = useQueryClient();
+
+  const connQ = useQuery({
+    queryKey: ["whatsapp-conexao"],
+    queryFn: () => getConn({}),
+    refetchInterval: 30_000,
+  });
+  const statsQ = useQuery({
+    queryKey: ["whatsapp-stats"],
+    queryFn: () => getStats({}),
+    refetchInterval: 30_000,
+  });
+
+  const [phone, setPhone] = useState("");
+  const [waba, setWaba] = useState("");
+
+  const conn = connQ.data as any;
+  const status = conn?.active ? conn?.status ?? "desconectado" : "desconectado";
+  const meta = statusBadge[status] ?? statusBadge.desconectado;
+  const Icon = meta.icon;
+
+  const connectMut = useMutation({
+    mutationFn: () =>
+      connect({ data: { phone_number: phone.trim(), whatsapp_business_id: waba.trim() || undefined } }),
+    onSuccess: () => {
+      toast.success("WhatsApp conectado");
+      qc.invalidateQueries({ queryKey: ["whatsapp-conexao"] });
+      qc.invalidateQueries({ queryKey: ["whatsapp-stats"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro ao conectar"),
+  });
+  const disconnectMut = useMutation({
+    mutationFn: () => disconnect({ data: { id: conn.id } }),
+    onSuccess: () => {
+      toast.success("Desconectado");
+      qc.invalidateQueries({ queryKey: ["whatsapp-conexao"] });
+    },
+  });
+  const syncMut = useMutation({
+    mutationFn: () => sync({ data: { id: conn.id } }),
+    onSuccess: () => {
+      toast.success("Sincronizado");
+      qc.invalidateQueries({ queryKey: ["whatsapp-conexao"] });
+      qc.invalidateQueries({ queryKey: ["whatsapp-stats"] });
+    },
+  });
+
+  return (
+    <div className="card-premium rounded-xl border border-border bg-card p-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center">
+            <MessageCircle className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <p className="font-semibold leading-tight">WhatsApp</p>
+              {conn?.active && <span className="realtime-dot" />}
+            </div>
+            <p className="text-xs text-muted-foreground">Business · Meta Cloud API</p>
+          </div>
+        </div>
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium ${meta.cls}`}>
+          <Icon className="h-3 w-3" /> {meta.label}
+        </span>
+      </div>
+
+      {!conn || !conn.active ? (
+        <div className="space-y-2">
+          <div className="rounded-md border border-dashed border-border bg-muted/30 p-2 text-[11px] text-muted-foreground">
+            Estrutura preparada. A integração oficial com Meta Cloud API será habilitada em breve.
+          </div>
+          <label className="text-xs font-medium text-muted-foreground">Número WhatsApp Business</label>
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+55 11 99999-9999"
+            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+          />
+          <label className="text-xs font-medium text-muted-foreground">WhatsApp Business ID (opcional)</label>
+          <input
+            value={waba}
+            onChange={(e) => setWaba(e.target.value)}
+            placeholder="ex: 1234567890"
+            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+          />
+          <button
+            disabled={!phone.trim() || connectMut.isPending}
+            onClick={() => connectMut.mutate()}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-cta px-3 py-2 text-sm font-semibold text-cta-foreground shadow-glow-cta disabled:opacity-60"
+          >
+            <Plug className="h-4 w-4" /> {connectMut.isPending ? "Conectando..." : "Conectar"}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2 text-sm">
+          <Row label="Número" value={conn.phone_number ?? "—"} />
+          <Row label="WABA ID" value={conn.whatsapp_business_id ?? "—"} />
+          <Row label="Conectado em" value={conn.connected_at ? new Date(conn.connected_at).toLocaleString("pt-BR") : "—"} />
+          <Row label="Última sync" value={conn.last_sync_at ? new Date(conn.last_sync_at).toLocaleString("pt-BR") : "—"} />
+          <Row label="Mensagens hoje" value={String(statsQ.data?.messagesToday ?? 0)} />
+          <Row label="Conversas" value={String(statsQ.data?.conversations ?? 0)} />
+
+          {conn.last_error && (
+            <div className="rounded-md bg-rose-50 border border-rose-200 px-2 py-1.5 text-xs text-rose-700">
+              <span className="font-semibold">Erro: </span>{conn.last_error}
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => syncMut.mutate()}
+              disabled={syncMut.isPending}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncMut.isPending ? "animate-spin" : ""}`} />
+              Sincronizar
+            </button>
+            <button
+              onClick={() => disconnectMut.mutate()}
+              disabled={disconnectMut.isPending}
+              className="inline-flex items-center justify-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
+              title="Desconectar"
+            >
+              <Power className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
 type Health = "green" | "yellow" | "red";
 
