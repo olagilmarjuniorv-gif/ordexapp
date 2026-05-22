@@ -12,6 +12,13 @@ import {
   syncIfoodNow,
 } from "@/lib/ifood.functions";
 import {
+  connectWhatsapp,
+  disconnectWhatsapp,
+  getWhatsappConexao,
+  getWhatsappStats,
+  syncWhatsappNow,
+} from "@/lib/whatsapp-conexao.functions";
+import {
   Loader2,
   Plug,
   RefreshCw,
@@ -23,6 +30,7 @@ import {
   ExternalLink,
   HelpCircle,
   CircleDot,
+  MessageCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/conectores")({
