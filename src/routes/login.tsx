@@ -58,11 +58,8 @@ function LoginPage() {
         className="relative hidden lg:flex flex-col justify-between p-10 text-primary-foreground"
         style={{ background: "var(--gradient-hero)" }}
       >
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur">
-            <Hammer className="h-5 w-5" />
-          </div>
-          <span className="font-display text-lg font-semibold">pedz</span>
+        <div className="flex items-baseline">
+          <span className="brand-wordmark text-2xl text-white">pedz</span>
         </div>
         <div className="space-y-4 max-w-md">
           <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-primary-foreground/70">
