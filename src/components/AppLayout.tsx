@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Users, ShoppingBag, LogOut, UtensilsCrossed,
+  LayoutDashboard, Users, ShoppingBag, LogOut, 
   ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";

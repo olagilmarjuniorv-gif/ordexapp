@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Hammer, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { resolveLoginEmail } from "@/lib/auth.functions";
