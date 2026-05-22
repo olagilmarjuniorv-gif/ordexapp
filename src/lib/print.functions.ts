@@ -12,7 +12,7 @@ async function loadCompanyAndAtendente(companyId: string, userId: string | null)
       : Promise.resolve({ data: null }),
   ]);
   return {
-    company: company ?? { name: "ORDEX", phone: null },
+    company: company ?? { name: "pedz", phone: null },
     atendenteName: (atendente?.full_name as string | undefined) ?? null,
   };
 }

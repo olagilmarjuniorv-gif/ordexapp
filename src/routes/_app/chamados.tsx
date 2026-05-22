@@ -7,7 +7,7 @@ import { listTickets } from "@/lib/tickets.functions";
 
 export const Route = createFileRoute("/_app/chamados")({
   component: ChamadosPage,
-  head: () => ({ meta: [{ title: "Chamados — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Chamados — pedz" }] }),
 });
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {

@@ -21,7 +21,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_app/pedidos/novo")({
   component: NovoPedido,
   validateSearch: (s) => searchSchema.parse(s),
-  head: () => ({ meta: [{ title: "Novo pedido — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Novo pedido — pedz" }] }),
 });
 
 type Canal = typeof PEDIDO_CANAIS[number];

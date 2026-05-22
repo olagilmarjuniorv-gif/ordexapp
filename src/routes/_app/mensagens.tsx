@@ -7,7 +7,7 @@ import { MessageCircle, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/mensagens")({
   component: MensagensPage,
-  head: () => ({ meta: [{ title: "Mensagens — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Mensagens — pedz" }] }),
 });
 
 function MensagensPage() {

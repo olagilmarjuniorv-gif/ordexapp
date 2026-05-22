@@ -1,6 +1,6 @@
 {
-  "name": "ORDEX — Sistema operacional food",
-  "short_name": "ORDEX",
+  "name": "pedz — Sistema operacional food",
+  "short_name": "pedz",
   "description": "Pedidos, mesas, cozinha e WhatsApp em tempo real.",
   "start_url": "/dashboard",
   "scope": "/",

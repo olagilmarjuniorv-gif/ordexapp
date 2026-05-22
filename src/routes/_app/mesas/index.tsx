@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/mesas/")({
   component: MesasPage,
-  head: () => ({ meta: [{ title: "Mesas — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Mesas — pedz" }] }),
 });
 
 const STATUS_META: Record<MesaStatus, { label: string; ring: string; bg: string; text: string; dot: string }> = {

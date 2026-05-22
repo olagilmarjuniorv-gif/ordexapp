@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/suporte/")({
   component: SuportePage,
-  head: () => ({ meta: [{ title: "Suporte — ORDEX" }] }),
+  head: () => ({ meta: [{ title: "Suporte — pedz" }] }),
 });
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
