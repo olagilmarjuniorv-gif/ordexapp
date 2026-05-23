@@ -11,7 +11,7 @@ import { Loader2, Plus, Pencil, Trash2, Layers, X } from "lucide-react";
 
 export const Route = createFileRoute("/_app/adicionais")({
   component: AdicionaisPage,
-  head: () => ({ meta: [{ title: "Adicionais — pedz" }] }),
+  head: () => ({ meta: [{ title: "Adicionais — SaiuPedido" }] }),
 });
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);

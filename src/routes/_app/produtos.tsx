@@ -17,7 +17,7 @@ import {
 
 export const Route = createFileRoute("/_app/produtos")({
   component: Produtos,
-  head: () => ({ meta: [{ title: "Produtos — pedz" }] }),
+  head: () => ({ meta: [{ title: "Produtos — SaiuPedido" }] }),
 });
 
 type Produto = {

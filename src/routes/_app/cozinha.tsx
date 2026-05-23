@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/cozinha")({
   component: Cozinha,
-  head: () => ({ meta: [{ title: "Cozinha — pedz" }] }),
+  head: () => ({ meta: [{ title: "Cozinha — SaiuPedido" }] }),
 });
 
 const LATE_MIN = 25;

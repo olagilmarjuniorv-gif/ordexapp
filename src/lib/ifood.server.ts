@@ -37,7 +37,7 @@ export type NormalizedIfoodOrder = {
 };
 
 /**
- * Transforms an iFood order payload into pedz standard shape.
+ * Transforms an iFood order payload into SaiuPedido standard shape.
  * Tolerant to missing fields — iFood payloads change format between
  * marketplaces (delivery vs balcão vs retirada).
  */

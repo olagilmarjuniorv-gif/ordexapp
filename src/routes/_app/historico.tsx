@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/historico")({
   component: HistoricoPage,
-  head: () => ({ meta: [{ title: "Histórico — pedz" }] }),
+  head: () => ({ meta: [{ title: "Histórico — SaiuPedido" }] }),
 });
 
 const ACTION_LABEL: Record<string, string> = {

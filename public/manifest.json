@@ -1,6 +1,6 @@
 {
-  "name": "pedz — Sistema operacional food",
-  "short_name": "pedz",
+  "name": "SaiuPedido — Sistema operacional food",
+  "short_name": "SaiuPedido",
   "description": "Pedidos, mesas, cozinha e WhatsApp em tempo real.",
   "start_url": "/dashboard",
   "scope": "/",

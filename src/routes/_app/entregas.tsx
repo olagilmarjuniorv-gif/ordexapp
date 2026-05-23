@@ -3,7 +3,7 @@ import { Truck } from "lucide-react";
 
 export const Route = createFileRoute("/_app/entregas")({
   component: Entregas,
-  head: () => ({ meta: [{ title: "Entregas — pedz" }] }),
+  head: () => ({ meta: [{ title: "Entregas — SaiuPedido" }] }),
 });
 
 function Entregas() {

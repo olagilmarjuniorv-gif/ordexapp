@@ -18,7 +18,7 @@ export function AppLayout() {
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3">
           <div className="flex items-baseline gap-2">
-            <span className="brand-wordmark text-xl text-foreground">pedz</span>
+            <span className="brand-wordmark text-xl text-foreground">SaiuPedido</span>
             <span className="text-sm text-muted-foreground">· cozinha</span>
           </div>
           <button
@@ -84,7 +84,7 @@ export function AppLayout() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent" />
         <div className="relative flex items-center px-5 py-5 border-b border-sidebar-border">
           <div className="min-w-0">
-            <p className="brand-wordmark text-2xl text-white leading-none truncate">pedz</p>
+            <p className="brand-wordmark text-2xl text-white leading-none truncate">SaiuPedido</p>
             <p className="text-[11px] text-sidebar-foreground/60 mt-2 truncate flex items-center gap-1.5">
               <span className="realtime-dot" />
               {profile?.full_name || role || "Operação"}
@@ -124,7 +124,7 @@ export function AppLayout() {
 
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3 lg:hidden">
         <Link to={homePath} className="flex items-baseline">
-          <span className="brand-wordmark text-xl text-foreground">pedz</span>
+          <span className="brand-wordmark text-xl text-foreground">SaiuPedido</span>
         </Link>
         <button onClick={handleLogout} className="text-sm text-muted-foreground">Sair</button>
       </header>

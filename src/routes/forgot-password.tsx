@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
-  head: () => ({ meta: [{ title: "Recuperar senha — pedz" }] }),
+  head: () => ({ meta: [{ title: "Recuperar senha — SaiuPedido" }] }),
 });
 
 function ForgotPasswordPage() {
@@ -35,7 +35,7 @@ function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-sm">
         <div className="flex items-baseline mb-8">
-          <span className="brand-wordmark text-2xl text-foreground">pedz</span>
+          <span className="brand-wordmark text-2xl text-foreground">SaiuPedido</span>
         </div>
 
         <h2 className="font-display text-2xl font-bold">Recuperar senha</h2>

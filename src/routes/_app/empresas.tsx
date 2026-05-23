@@ -14,7 +14,7 @@ import { Loader2, Building2, Plus, Power, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/_app/empresas")({
   component: EmpresasPage,
-  head: () => ({ meta: [{ title: "Empresas — pedz" }] }),
+  head: () => ({ meta: [{ title: "Empresas — SaiuPedido" }] }),
 });
 
 type Company = {

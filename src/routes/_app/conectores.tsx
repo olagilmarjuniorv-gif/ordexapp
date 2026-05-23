@@ -35,7 +35,7 @@ import {
 
 export const Route = createFileRoute("/_app/conectores")({
   component: ConectoresPage,
-  head: () => ({ meta: [{ title: "Conectores — pedz" }] }),
+  head: () => ({ meta: [{ title: "Conectores — SaiuPedido" }] }),
 });
 
 const AUTO_SYNC_MS = 30_000;
@@ -422,8 +422,8 @@ function IfoodCard({ integ, onChange }: { integ: any; onChange: () => void }) {
 function IfoodWizard() {
   const steps = [
     "Crie um app no Portal do Desenvolvedor iFood",
-    "Copie o client_id e cadastre no pedz (secret)",
-    "Copie o client_secret e cadastre no pedz (secret)",
+    "Copie o client_id e cadastre no SaiuPedido (secret)",
+    "Copie o client_secret e cadastre no SaiuPedido (secret)",
     "Pegue o merchant_id da sua loja iFood",
     "Cole o merchant_id abaixo e clique em Conectar",
   ];
