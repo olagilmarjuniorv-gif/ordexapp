@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/mesas/$id")({
   component: ComandaPage,
-  head: () => ({ meta: [{ title: "Comanda — pedz" }] }),
+  head: () => ({ meta: [{ title: "Comanda — SaiuPedido" }] }),
 });
 
 const STATUS_LABEL: Record<string, string> = {

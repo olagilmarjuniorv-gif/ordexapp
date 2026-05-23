@@ -234,7 +234,7 @@
     100% { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* pedz wordmark — text-only brand */
+  /* SaiuPedido wordmark — text-only brand */
   .brand-wordmark {
     font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
     font-weight: 700;

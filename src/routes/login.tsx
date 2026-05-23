@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Entrar — pedz" }] }),
+  head: () => ({ meta: [{ title: "Entrar — SaiuPedido" }] }),
 });
 
 function LoginPage() {
@@ -59,7 +59,7 @@ function LoginPage() {
         style={{ background: "var(--gradient-hero)" }}
       >
         <div className="flex items-baseline">
-          <span className="brand-wordmark text-2xl text-white">pedz</span>
+          <span className="brand-wordmark text-2xl text-white">SaiuPedido</span>
         </div>
         <div className="space-y-4 max-w-md">
           <p className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-primary-foreground/70">
@@ -72,13 +72,13 @@ function LoginPage() {
             Organize seus clientes, acompanhe pedidos e venda mais com rapidez e praticidade.
           </p>
         </div>
-        <p className="text-xs text-primary-foreground/60">© pedz</p>
+        <p className="text-xs text-primary-foreground/60">© SaiuPedido</p>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-10 bg-background">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-baseline mb-8">
-            <span className="brand-wordmark text-2xl text-foreground">pedz</span>
+            <span className="brand-wordmark text-2xl text-foreground">SaiuPedido</span>
           </div>
 
           <h2 className="font-display text-2xl font-bold">Acessar painel</h2>

@@ -6,7 +6,7 @@ export const Route = createFileRoute("/")({
   component: IndexRedirect,
   head: () => ({
     meta: [
-      { title: "pedz — Sistema operacional para hamburguerias e deliverys" },
+      { title: "SaiuPedido — Sistema operacional para hamburguerias e deliverys" },
       { name: "description", content: "Centralize pedidos do salão, balcão, retirada, delivery e WhatsApp em tempo real, com cozinha integrada e operação rápida." },
     ],
   }),
