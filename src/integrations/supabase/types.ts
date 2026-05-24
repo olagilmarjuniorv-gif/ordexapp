@@ -823,6 +823,7 @@ export type Database = {
           last_error: string | null
           last_sync_at: string | null
           phone_number: string | null
+          phone_number_id: string | null
           settings: Json
           status: string
           updated_at: string
@@ -838,6 +839,7 @@ export type Database = {
           last_error?: string | null
           last_sync_at?: string | null
           phone_number?: string | null
+          phone_number_id?: string | null
           settings?: Json
           status?: string
           updated_at?: string
@@ -853,6 +855,7 @@ export type Database = {
           last_error?: string | null
           last_sync_at?: string | null
           phone_number?: string | null
+          phone_number_id?: string | null
           settings?: Json
           status?: string
           updated_at?: string
