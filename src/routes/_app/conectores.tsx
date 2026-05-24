@@ -17,6 +17,7 @@ import {
   getWhatsappConexao,
   getWhatsappStats,
   syncWhatsappNow,
+  testWhatsappConnection,
 } from "@/lib/whatsapp-conexao.functions";
 import {
   Loader2,
@@ -90,6 +91,7 @@ function WhatsappCard() {
   const connect = useServerFn(connectWhatsapp);
   const disconnect = useServerFn(disconnectWhatsapp);
   const sync = useServerFn(syncWhatsappNow);
+  const test = useServerFn(testWhatsappConnection);
   const qc = useQueryClient();
 
   const connQ = useQuery({
@@ -104,7 +106,8 @@ function WhatsappCard() {
   });
 
   const [phone, setPhone] = useState("");
-  const [waba, setWaba] = useState("");
+  const [phoneId, setPhoneId] = useState("1096010960269172");
+  const [waba, setWaba] = useState("3277288662451691");
 
   const conn = connQ.data as any;
   const status = conn?.active ? conn?.status ?? "desconectado" : "desconectado";
@@ -113,7 +116,13 @@ function WhatsappCard() {
 
   const connectMut = useMutation({
     mutationFn: () =>
-      connect({ data: { phone_number: phone.trim(), whatsapp_business_id: waba.trim() || undefined } }),
+      connect({
+        data: {
+          phone_number: phone.trim(),
+          phone_number_id: phoneId.trim() || undefined,
+          whatsapp_business_id: waba.trim() || undefined,
+        },
+      }),
     onSuccess: () => {
       toast.success("WhatsApp conectado");
       qc.invalidateQueries({ queryKey: ["whatsapp-conexao"] });
@@ -135,6 +144,15 @@ function WhatsappCard() {
       qc.invalidateQueries({ queryKey: ["whatsapp-conexao"] });
       qc.invalidateQueries({ queryKey: ["whatsapp-stats"] });
     },
+  });
+  const testMut = useMutation({
+    mutationFn: () => test({ data: { id: conn.id } }),
+    onSuccess: (r: any) => {
+      if (r?.ok) toast.success(`Conexão OK · ${r.display_phone_number ?? ""}`);
+      else toast.error(r?.error ?? "Falha ao testar");
+      qc.invalidateQueries({ queryKey: ["whatsapp-conexao"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro no teste"),
   });
 
   return (
@@ -160,7 +178,7 @@ function WhatsappCard() {
       {!conn || !conn.active ? (
         <div className="space-y-2">
           <div className="rounded-md border border-dashed border-border bg-muted/30 p-2 text-[11px] text-muted-foreground">
-            Estrutura preparada. A integração oficial com Meta Cloud API será habilitada em breve.
+            Conecte sua conta WhatsApp Business (Meta Cloud API). O token fica armazenado no servidor.
           </div>
           <label className="text-xs font-medium text-muted-foreground">Número WhatsApp Business</label>
           <input
@@ -169,12 +187,19 @@ function WhatsappCard() {
             placeholder="+55 11 99999-9999"
             className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
           />
-          <label className="text-xs font-medium text-muted-foreground">WhatsApp Business ID (opcional)</label>
+          <label className="text-xs font-medium text-muted-foreground">Phone Number ID</label>
+          <input
+            value={phoneId}
+            onChange={(e) => setPhoneId(e.target.value)}
+            placeholder="ex: 1096010960269172"
+            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm font-mono"
+          />
+          <label className="text-xs font-medium text-muted-foreground">WhatsApp Business Account ID</label>
           <input
             value={waba}
             onChange={(e) => setWaba(e.target.value)}
-            placeholder="ex: 1234567890"
-            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+            placeholder="ex: 3277288662451691"
+            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm font-mono"
           />
           <button
             disabled={!phone.trim() || connectMut.isPending}
@@ -187,11 +212,25 @@ function WhatsappCard() {
       ) : (
         <div className="space-y-2 text-sm">
           <Row label="Número" value={conn.phone_number ?? "—"} />
-          <Row label="WABA ID" value={conn.whatsapp_business_id ?? "—"} />
+          <Row label="Phone Number ID" value={conn.phone_number_id ?? "—"} />
+          <Row label="Business Account ID" value={conn.whatsapp_business_id ?? "—"} />
           <Row label="Conectado em" value={conn.connected_at ? new Date(conn.connected_at).toLocaleString("pt-BR") : "—"} />
           <Row label="Última sync" value={conn.last_sync_at ? new Date(conn.last_sync_at).toLocaleString("pt-BR") : "—"} />
+          <Row label="Conversas (hoje)" value={`${statsQ.data?.conversationsToday ?? 0} / ${statsQ.data?.conversations ?? 0}`} />
           <Row label="Mensagens hoje" value={String(statsQ.data?.messagesToday ?? 0)} />
-          <Row label="Conversas" value={String(statsQ.data?.conversations ?? 0)} />
+          <Row
+            label="Última mensagem"
+            value={
+              statsQ.data?.lastInboundAt
+                ? `${new Date(statsQ.data.lastInboundAt).toLocaleString("pt-BR")}`
+                : "—"
+            }
+          />
+          {statsQ.data?.lastInboundPreview && (
+            <div className="rounded-md bg-muted/40 border border-border px-2 py-1.5 text-xs text-foreground/80 italic">
+              "{statsQ.data.lastInboundPreview}"
+            </div>
+          )}
 
           {conn.last_error && (
             <div className="rounded-md bg-rose-50 border border-rose-200 px-2 py-1.5 text-xs text-rose-700">
@@ -199,7 +238,15 @@ function WhatsappCard() {
             </div>
           )}
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              onClick={() => testMut.mutate()}
+              disabled={testMut.isPending}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-realtime/10 text-realtime border border-realtime/30 px-3 py-2 text-sm font-semibold disabled:opacity-60"
+            >
+              <CheckCircle2 className={`h-4 w-4 ${testMut.isPending ? "animate-pulse" : ""}`} />
+              {testMut.isPending ? "Testando..." : "Testar conexão"}
+            </button>
             <button
               onClick={() => syncMut.mutate()}
               disabled={syncMut.isPending}

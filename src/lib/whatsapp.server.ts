@@ -1,7 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const META_TOKEN = process.env.WHATSAPP_META_TOKEN;
-const META_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const META_GRAPH = "https://graph.facebook.com/v20.0";
 
 export type SendResult = {
@@ -15,28 +13,88 @@ function cleanPhone(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
-export async function dispatchWhatsapp(toPhone: string, body: string): Promise<SendResult> {
-  if (!META_TOKEN || !META_PHONE_ID) {
-    return { ok: true, mocked: true, status: "mocked", raw: { to: toPhone, body } };
+function maskToken(t?: string | null): string {
+  if (!t) return "—";
+  if (t.length <= 8) return "****";
+  return `${t.slice(0, 4)}…${t.slice(-4)}`;
+}
+
+/**
+ * Envia mensagem via Meta Cloud API.
+ * Usa phone_number_id passado (multiempresa) ou fallback para env.
+ */
+export async function sendWhatsappCloud(opts: {
+  phoneNumberId: string;
+  to: string;
+  body: string;
+  token: string;
+}): Promise<SendResult> {
+  const { phoneNumberId, to, body, token } = opts;
+  if (!token || !phoneNumberId) {
+    return { ok: true, mocked: true, status: "mocked", raw: { to, body } };
   }
   try {
-    const res = await fetch(`${META_GRAPH}/${META_PHONE_ID}/messages`, {
+    const res = await fetch(`${META_GRAPH}/${phoneNumberId}/messages`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${META_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
-        to: cleanPhone(toPhone),
+        to: cleanPhone(to),
         type: "text",
-        text: { body },
+        text: { body, preview_url: false },
       }),
     });
     const raw = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.error("[whatsapp] send failed", res.status, JSON.stringify(raw)?.slice(0, 500));
+    }
     return { ok: res.ok, mocked: false, status: res.ok ? "sent" : "failed", raw };
   } catch (e: any) {
+    console.error("[whatsapp] send exception", e?.message);
     return { ok: false, mocked: false, status: "failed", raw: { error: e?.message ?? String(e) } };
+  }
+}
+
+/**
+ * Dispatch genérico (compatibilidade): usa env padrão se nenhuma conexão for fornecida.
+ */
+export async function dispatchWhatsapp(toPhone: string, body: string): Promise<SendResult> {
+  const token = process.env.WHATSAPP_META_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneNumberId) {
+    return { ok: true, mocked: true, status: "mocked", raw: { to: toPhone, body } };
+  }
+  return sendWhatsappCloud({ phoneNumberId, to: toPhone, body, token });
+}
+
+/**
+ * Valida token e phone_number_id chamando o endpoint do número Meta.
+ */
+export async function pingMetaPhoneNumber(opts: {
+  phoneNumberId: string;
+  token: string;
+}): Promise<{ ok: boolean; status: number; display_phone_number?: string; verified_name?: string; error?: string }> {
+  try {
+    const res = await fetch(
+      `${META_GRAPH}/${opts.phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`,
+      { headers: { Authorization: `Bearer ${opts.token}` } },
+    );
+    const raw = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.error("[whatsapp] ping failed", res.status, `token=${maskToken(opts.token)}`);
+      return { ok: false, status: res.status, error: raw?.error?.message ?? "ping failed" };
+    }
+    return {
+      ok: true,
+      status: res.status,
+      display_phone_number: raw?.display_phone_number,
+      verified_name: raw?.verified_name,
+    };
+  } catch (e: any) {
+    return { ok: false, status: 0, error: e?.message ?? String(e) };
   }
 }
 
@@ -74,3 +132,6 @@ export function templateForStatus(status: string, ctx: { clienteName?: string; m
       return null;
   }
 }
+
+export const WELCOME_MESSAGE =
+  "Olá! Seja bem-vindo ao SaiuPedido. Para fazer seu pedido, envie uma mensagem com o item desejado ou aguarde o atendimento.";
