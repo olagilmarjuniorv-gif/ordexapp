@@ -1,158 +1,102 @@
-# Plano de Consolidação — ORDEX Food
+## Motor Conversacional WhatsApp — SaiuPedido
 
-Escopo enorme. Vou executar em **4 fases sequenciais**, cada uma validada antes da próxima. Você aprova este plano e eu sigo executando fase por fase, reportando ao final de cada uma.
-
----
-
-## Análise de Impacto e Riscos
-
-**Risco alto:**
-- Trocar `vendedor` → `atendente` mexe no enum `app_role` no Postgres. Enum não aceita rename trivial — exige `ALTER TYPE ADD VALUE 'atendente'`, migração de dados em `user_roles`, depois remoção do valor antigo (que requer recriar o tipo). Vou fazer em duas migrations seguras.
-- Realtime via Supabase Channels exige `ALTER PUBLICATION supabase_realtime` + `REPLICA IDENTITY FULL` em `pedidos`, `mesas`. Se não fizer isso, eventos vêm vazios.
-- Remover `orcamentos`, `stock`, `minStock`, `orcamento_id` é destrutivo. Preciso garantir que nada no código referencia mais.
-- PWA dentro do iframe da Lovable causa cache stale. Vou implementar **manifest-only** (instalável, sem service worker) — é o que a documentação Lovable recomenda quando não há offline.
-- WhatsApp real (webhook + API) exige conta Meta Business + secret. Vou só preparar arquitetura (tabela `mensagens`, edge function stub), não conectar.
-
-**Risco médio:**
-- Remover `bootstrapSuperAdmin` deixa projetos novos sem caminho de promoção. Vou substituir por seed manual via SQL documentado.
-- Adicionais/combos UI completa é grande superfície. Vou entregar UI funcional simples, não polished.
+Construir o motor de pedidos via WhatsApp com máquina de estados multiempresa, integrado às tabelas já existentes (`produtos`, `categorias`, `pedidos`, `whatsapp_conexoes`, `whatsapp_conversas`, `whatsapp_mensagens`).
 
 ---
 
-## FASE A — Operacional (prioridade absoluta)
+### 1. Migração de banco
 
-### A1. Role `atendente`
-- Migration 1: `ALTER TYPE app_role ADD VALUE 'atendente'`; UPDATE `user_roles` SET role='atendente' WHERE role='vendedor'.
-- Migration 2: recriar enum sem `vendedor` (drop default → swap → restore).
-- Atualizar `users.functions.ts` (ROLES, COMPANY_ROLES), `auth.tsx`, `usuarios.tsx`, seeds, validações Zod.
-- Adicionar flag `canSeeFinancials` no contexto de auth = `isAdmin`.
-- Esconder em `dashboard.tsx`: faturamento, ticket médio, vendas totais, top item — para `atendente`.
-- AppLayout: ocultar `/empresas`, `/usuarios` para atendente.
+Criar 4 tabelas novas + RLS multiempresa:
 
-### A2. Cozinha operacional
-- Botões inline nos cards: **Iniciar preparo** / **Marcar pronto** / **Pago** (configurável).
-- Realtime via Supabase Channels (substituir polling 15s).
-- Animação `framer-motion` ao chegar pedido novo.
-- Destaque rosa pulsante para atrasados (>25min).
-- Ordenação: pronto > atrasado > novo > preparo, dentro de cada por tempo.
-- Som opcional (Web Audio API, toggle persistido em localStorage).
-- Modo TV/fullscreen + dark mode dedicado (rota `/cozinha?tv=1`).
+- **`whatsapp_sessoes`** — uma por (empresa + telefone). Campos: `company_id`, `customer_phone`, `estado_atual` (text), `carrinho` (jsonb), `contexto` (jsonb — última categoria/produto sendo selecionado), `atendente_assumiu` (bool), `last_event_at`, `expires_at`.
+- **`whatsapp_carrinhos`** — histórico de carrinhos finalizados (auditoria). Campos: `sessao_id`, `company_id`, `status`, `valor_total`, `observacoes`, `pedido_id`.
+- **`whatsapp_carrinho_itens`** — itens de cada carrinho. Campos: `carrinho_id`, `produto_id`, `quantidade`, `valor_unitario`, `observacoes`.
+- **`whatsapp_fluxos`** — configuração por empresa. Campos: `company_id` (unique), `mensagem_boas_vindas`, `mensagem_fechamento`, `mensagem_sem_atendimento`, `ativo`.
 
-### A3. Comanda por mesa
-- Nova rota `/_app/mesas/$id` (comanda).
-- Função `getComandaMesa(mesaId)`: lista pedidos ativos + total + opened_at.
-- Botões: **Fechar conta** (status `conta`), **Marcar como pago** (todos pedidos → `pago` + paid_at), **Liberar mesa** (status `livre`, opened_at=null).
-- Função `pagarMesa(mesaId)` em transação.
-- Estrutura preparada para split futuro (campo `split_count` opcional na mesa).
+RLS: todas com `company_id = get_user_company(auth.uid())` + super_admin.
 
-### A4. Realtime
-- Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE pedidos, mesas`.
-- Hook `useRealtimePedidos()`, `useRealtimeMesas()` que invalida queries TanStack.
-- Remover `refetchInterval` de cozinha, mesas, dashboard, pedidos.
-
-### A5. Fluxo rápido de pedido
-- Filtro por categoria (chips horizontais).
-- Carrinho lateral fixo (drawer em mobile).
-- Criação inline de cliente (modal compacto) e produto (apenas admin).
-- Observação rápida por item.
-- Botão "Enviar pedido" sticky bottom.
+Adicionar `realtime` para `pedidos` (se já não tem) e nas novas tabelas relevantes.
 
 ---
 
-## FASE B — Catálogo Food
+### 2. Máquina de estados (`src/lib/whatsapp-engine.server.ts`)
 
-### B1. Categorias UI
-- Rota `/_app/categorias` (CRUD simples).
-- `produtos.tsx`: select de categoria, filtro por categoria, drag para sort_order.
+Estados:
+```
+aguardando_inicio → escolhendo_categoria → escolhendo_produto
+  → escolhendo_adicionais → escolhendo_quantidade → escrevendo_observacao
+  → confirmando_pedido → escolhendo_pagamento → pedido_finalizado
+  → conversa_encerrada
+aguardando_atendente (sai do fluxo automático)
+```
 
-### B2. Adicionais
-- Rota `/_app/adicionais` (grupos + opções).
-- Vincular grupos a produto via `produto_grupos_adicionais`.
-- Modal no fluxo de pedido: ao adicionar produto com adicionais, abrir picker.
-- Item do pedido carrega `adicionais: [{name, price}]` e soma no preço.
+Funções principais:
+- `getOrCreateSession(companyId, phone)` — busca/cria sessão.
+- `processInboundMessage({ companyId, conexaoId, phone, text })` — roteia para handler do estado atual, retorna `{ reply, nextState }`.
+- `handlers[estado]` — um por estado, lê texto + carrinho e produz transição.
+- `triggerHumanHandoff(sessao)` — palavras-chave: `atendente`, `ajuda`, `falar com alguém`, `humano`.
+- `resetIfTimeout(sessao)` — se `last_event_at` > 30 min, encerra.
+- `finalizePedido(sessao)` — cria registro em `pedidos` com `items` montados a partir do carrinho, canal `delivery`, retorna número curto.
 
-### B3. Combos
-- Rota `/_app/combos`.
-- `combo_itens` já existe. UI para criar combo com produtos vinculados.
-- Combos aparecem no grid de produtos do pedido com badge "COMBO".
-
-### B4. Disponibilidade rápida
-- Toggle `available` direto no card de produto (atendente pode usar).
-- Server fn `toggleProdutoAvailable`.
-
-### B5. Imagens
-- Bucket Storage `produto-images` público.
-- Upload no form de produto, preview, thumb no grid.
-
----
-
-## FASE C — WhatsApp (arquitetura)
-
-### C1. Tabelas
-- `mensagens` (id, company_id, cliente_id, pedido_id?, direction, body, status, raw_payload jsonb, created_at).
-- RLS multi-tenant igual padrão.
-
-### C2. Edge function stubs
-- `/api/public/webhooks/whatsapp` (POST, valida signature placeholder, persiste em `mensagens`).
-- Service `whatsapp.functions.ts` com `sendMessage(clientePhone, body)` retornando mock até secret existir.
-
-### C3. WhatsappButton
-- Corrigir tokens (`bg-whatsapp` não existe). Adicionar em `styles.css`: `--whatsapp: oklch(0.72 0.17 145)` e `--whatsapp-foreground`.
-- Mensagens automáticas por status (templates configuráveis depois).
+Navegação:
+- Categoria: lista `categorias` ativas da empresa, mostra numerado.
+- Produto: lista produtos da categoria escolhida.
+- Adicionais: por enquanto pular (estrutura preparada — texto "sem adicionais" se grupo vazio).
+- Quantidade: parse de número (default 1).
+- Observação: aceita texto livre ou "pular".
+- Confirmação: mostra resumo + total, aguarda "sim/não/adicionar mais".
 
 ---
 
-## FASE D — Limpeza & finalização
+### 3. Webhook integration
 
-### D1. Remover legado
-- Migration: DROP `orcamentos`, DROP `pedidos.orcamento_id`, DROP `produtos.stock`, DROP `produtos.minStock`.
-- Remover qualquer referência em código.
-
-### D2. Refatoração
-- Extrair `getCaller()` para `src/lib/auth.server.ts` único.
-- Tipos compartilhados em `src/lib/types.ts`.
-- QueryKeys constantes em `src/lib/query-keys.ts`.
-
-### D3. Segurança
-- Remover `bootstrapSuperAdmin`. Documentar seed manual.
-- Configurar `password_hibp_enabled: true` via configure_auth.
-- Validações Zod fortalecidas em todos inputs.
-
-### D4. PWA (manifest-only)
-- `public/manifest.json` + ícones + `<link rel="manifest">`.
-- `display: standalone`, theme_color, background_color.
-- **Sem service worker** (causa stale no preview Lovable).
-
-### D5. UX final
-- Tipografia display: trocar Inter por algo mais character-driven (Bricolage Grotesque ou Space Grotesk para display).
-- Ajustes de densidade no AppLayout para feel "operacional".
+Atualizar `src/routes/api/public/webhooks/whatsapp.ts`:
+- Após persistir mensagem inbound, chamar `processInboundMessage`.
+- Enviar `reply` via `sendWhatsappCloud` (substitui o `WELCOME_MESSAGE` fixo atual).
+- Persistir mensagem outbound.
 
 ---
 
-## Ordem de execução e checkpoints
+### 4. Server functions (frontend)
 
-1. **Fase A** completa → reporto + você valida no preview.
-2. **Fase B** completa → reporto.
-3. **Fase C** completa → reporto.
-4. **Fase D** completa → relatório final consolidado.
+`src/lib/whatsapp-sessoes.functions.ts`:
+- `listSessoes` — sessões ativas da empresa.
+- `assumirAtendimento(sessaoId)` — marca `atendente_assumiu=true`.
+- `liberarAtendimento(sessaoId)` — volta para fluxo automático.
+- `enviarMensagemManual(sessaoId, body)` — atendente envia texto pelo painel.
 
-Cada fase termina com: build verde, smoke test no preview, lista de arquivos alterados.
-
-## Detalhes técnicos
-
-**Migrations previstas:** ~8 (atendente fase 1+2, realtime publication, mesas split_count, mensagens table, drop legado, storage bucket).
-
-**Tabelas novas:** `mensagens`.
-**Tabelas removidas:** `orcamentos`.
-**Colunas removidas:** `pedidos.orcamento_id`, `produtos.stock`, `produtos.minStock`.
-**Enums alterados:** `app_role` (remove `vendedor`, add `atendente`).
-**Realtime habilitado em:** `pedidos`, `mesas`.
-
-**Rotas novas:** `/categorias`, `/adicionais`, `/combos`, `/mesas/$id` (comanda), `/cozinha` com modo TV.
-**Rotas removidas:** nenhuma além das já feitas (orcamentos).
-
-**Estimativa:** Fase A é ~60% do trabalho. Vou começar por ela imediatamente após sua aprovação.
+`src/lib/whatsapp-fluxos.functions.ts`:
+- `getFluxo` / `upsertFluxo` — config de mensagens.
 
 ---
 
-**Confirma para eu iniciar pela Fase A?**
+### 5. Painel operacional
+
+Página existente `_app/pedidos/index.tsx` já mostra pedidos. Garantir realtime via `useRealtimeInvalidate("pedidos", [...])`. Adicionar colunas Kanban: novos / preparo / pronto / pago / cancelado (já existem como status).
+
+Página existente `_app/mensagens.tsx` — adicionar listagem de sessões WhatsApp ativas + botão "assumir atendimento" + envio manual.
+
+---
+
+### 6. Segurança
+
+- Tokens lidos apenas server-side via `whatsapp_conexoes.access_token` ou env.
+- RLS validada com `get_user_company`.
+- Webhook valida assinatura HMAC SHA-256 (já implementado).
+
+---
+
+### Arquivos a criar/editar
+
+**Criar:**
+- `supabase/migrations/XXX_whatsapp_engine.sql`
+- `src/lib/whatsapp-engine.server.ts`
+- `src/lib/whatsapp-sessoes.functions.ts`
+- `src/lib/whatsapp-fluxos.functions.ts`
+
+**Editar:**
+- `src/routes/api/public/webhooks/whatsapp.ts` — chamar engine
+- `src/routes/_app/mensagens.tsx` — painel sessões WhatsApp
+- `src/routes/_app/pedidos/index.tsx` — garantir realtime (se faltando)
+
+Sem foco em design — UI funcional usando componentes existentes (card-premium, badges).
