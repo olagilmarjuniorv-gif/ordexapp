@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listPedidos } from "@/lib/pedidos.functions";
 import { useAuth } from "@/lib/auth";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { Loader2, Plus, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pedidos/")({
@@ -58,6 +59,9 @@ function PedidosList() {
     queryKey: ["pedidos"],
     queryFn: () => fetchFn({}),
   });
+
+  useRealtimeInvalidate("pedidos", [["pedidos"]]);
+
 
   const all = (data ?? []) as any[];
   const now = Date.now();

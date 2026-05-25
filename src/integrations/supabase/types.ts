@@ -812,6 +812,91 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_carrinho_itens: {
+        Row: {
+          carrinho_id: string
+          created_at: string
+          id: string
+          nome: string
+          observacoes: string | null
+          produto_id: string | null
+          quantidade: number
+          valor_unitario: number
+        }
+        Insert: {
+          carrinho_id: string
+          created_at?: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          produto_id?: string | null
+          quantidade?: number
+          valor_unitario?: number
+        }
+        Update: {
+          carrinho_id?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          produto_id?: string | null
+          quantidade?: number
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_carrinho_itens_carrinho_id_fkey"
+            columns: ["carrinho_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_carrinhos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_carrinhos: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          observacoes: string | null
+          pedido_id: string | null
+          sessao_id: string
+          status: string
+          updated_at: string
+          valor_total: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          pedido_id?: string | null
+          sessao_id: string
+          status?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          pedido_id?: string | null
+          sessao_id?: string
+          status?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_carrinhos_sessao_id_fkey"
+            columns: ["sessao_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_sessoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_conexoes: {
         Row: {
           access_token: string | null
@@ -913,6 +998,39 @@ export type Database = {
           },
         ]
       }
+      whatsapp_fluxos: {
+        Row: {
+          ativo: boolean
+          company_id: string
+          created_at: string
+          id: string
+          mensagem_boas_vindas: string
+          mensagem_fechamento: string
+          mensagem_sem_atendimento: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          company_id: string
+          created_at?: string
+          id?: string
+          mensagem_boas_vindas?: string
+          mensagem_fechamento?: string
+          mensagem_sem_atendimento?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          company_id?: string
+          created_at?: string
+          id?: string
+          mensagem_boas_vindas?: string
+          mensagem_fechamento?: string
+          mensagem_sem_atendimento?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_mensagens: {
         Row: {
           company_id: string
@@ -959,6 +1077,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_sessoes: {
+        Row: {
+          atendente_assumiu: boolean
+          carrinho: Json
+          company_id: string
+          conexao_id: string | null
+          contexto: Json
+          created_at: string
+          customer_phone: string
+          estado_atual: string
+          expires_at: string | null
+          id: string
+          last_event_at: string
+          updated_at: string
+        }
+        Insert: {
+          atendente_assumiu?: boolean
+          carrinho?: Json
+          company_id: string
+          conexao_id?: string | null
+          contexto?: Json
+          created_at?: string
+          customer_phone: string
+          estado_atual?: string
+          expires_at?: string | null
+          id?: string
+          last_event_at?: string
+          updated_at?: string
+        }
+        Update: {
+          atendente_assumiu?: boolean
+          carrinho?: Json
+          company_id?: string
+          conexao_id?: string | null
+          contexto?: Json
+          created_at?: string
+          customer_phone?: string
+          estado_atual?: string
+          expires_at?: string | null
+          id?: string
+          last_event_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
