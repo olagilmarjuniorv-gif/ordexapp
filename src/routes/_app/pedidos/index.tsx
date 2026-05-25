@@ -60,6 +60,9 @@ function PedidosList() {
     queryFn: () => fetchFn({}),
   });
 
+  useRealtimeInvalidate("pedidos", [["pedidos"]]);
+
+
   const all = (data ?? []) as any[];
   const now = Date.now();
 
