@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { sendWhatsappCloud, WELCOME_MESSAGE } from "@/lib/whatsapp.server";
+import { sendWhatsappCloud } from "@/lib/whatsapp.server";
+import { processInboundMessage } from "@/lib/whatsapp-engine.server";
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "saiupedido-dev-verify";
 const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
