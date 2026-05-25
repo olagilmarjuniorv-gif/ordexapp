@@ -56,7 +56,7 @@ function MensagensPage() {
   });
 
   useRealtimeInvalidate("whatsapp_sessoes", [["whatsapp-sessoes"]]);
-  useRealtimeInvalidate("whatsapp_mensagens", [["mensagens"]]);
+  useRealtimeInvalidate("mensagens", [["mensagens"]]);
 
   const [activeReply, setActiveReply] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
