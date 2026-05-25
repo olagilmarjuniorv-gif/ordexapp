@@ -179,27 +179,42 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
                   raw: m,
                 });
 
-                // Resposta inicial automática (boas-vindas)
+                // Processa via motor conversacional
                 if (resolved.token && resolved.phoneNumberId) {
-                  const res = await sendWhatsappCloud({
-                    phoneNumberId: resolved.phoneNumberId,
-                    to: from,
-                    body: WELCOME_MESSAGE,
-                    token: resolved.token,
-                  });
-                  await saveMensagem({
-                    companyId: resolved.companyId,
-                    conversaId,
-                    direction: "out",
-                    content: WELCOME_MESSAGE,
-                    status: res.ok ? "sent" : "failed",
-                    raw: res.raw,
-                  });
-                  if (!res.ok) {
-                    await supabaseAdmin
-                      .from("whatsapp_conexoes")
-                      .update({ last_error: String(res.raw?.error?.message ?? "send failed").slice(0, 300) })
-                      .eq("id", resolved.conexaoId);
+                  let reply: string | null = null;
+                  try {
+                    reply = await processInboundMessage({
+                      companyId: resolved.companyId,
+                      conexaoId: resolved.conexaoId,
+                      phone: from,
+                      text,
+                    });
+                  } catch (engineErr: any) {
+                    console.error("[whatsapp-engine] erro:", engineErr?.message);
+                    reply = "Desculpe, tivemos um problema. Tente novamente em instantes.";
+                  }
+
+                  if (reply) {
+                    const res = await sendWhatsappCloud({
+                      phoneNumberId: resolved.phoneNumberId,
+                      to: from,
+                      body: reply,
+                      token: resolved.token,
+                    });
+                    await saveMensagem({
+                      companyId: resolved.companyId,
+                      conversaId,
+                      direction: "out",
+                      content: reply,
+                      status: res.ok ? "sent" : "failed",
+                      raw: res.raw,
+                    });
+                    if (!res.ok) {
+                      await supabaseAdmin
+                        .from("whatsapp_conexoes")
+                        .update({ last_error: String(res.raw?.error?.message ?? "send failed").slice(0, 300) })
+                        .eq("id", resolved.conexaoId);
+                    }
                   }
                 }
               }
