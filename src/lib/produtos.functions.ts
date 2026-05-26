@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller } from "./auth.server";
+import { getCaller, assertAdminish } from "./auth.server";
 
 export const listProdutos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
