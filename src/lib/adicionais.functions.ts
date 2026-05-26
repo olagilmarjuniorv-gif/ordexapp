@@ -43,6 +43,7 @@ export const upsertAdicionalGrupo = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    const _caller = await getCaller(context.userId); assertAdminish(_caller);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     if (data.id) {
       const { error } = await supabaseAdmin.from("adicionais_grupos")
@@ -63,6 +64,7 @@ export const deleteAdicionalGrupo = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    const _caller = await getCaller(context.userId); assertAdminish(_caller);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     await supabaseAdmin.from("adicionais_opcoes").delete().eq("grupo_id", data.id);
     const { error } = await supabaseAdmin.from("adicionais_grupos").delete().eq("id", data.id).eq("company_id", company);
@@ -83,6 +85,7 @@ export const upsertAdicionalOpcao = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    const _caller = await getCaller(context.userId); assertAdminish(_caller);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     const { data: g } = await supabaseAdmin.from("adicionais_grupos").select("company_id").eq("id", data.grupo_id).maybeSingle();
     if (!g || g.company_id !== company) throw new Response("Grupo inválido", { status: 403 });
@@ -105,6 +108,7 @@ export const deleteAdicionalOpcao = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    const _caller = await getCaller(context.userId); assertAdminish(_caller);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin.from("adicionais_opcoes").delete().eq("id", data.id);
     if (error) throw new Response(error.message, { status: 500 });
@@ -119,6 +123,7 @@ export const setProdutoAdicionais = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    const _caller = await getCaller(context.userId); assertAdminish(_caller);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     const { data: p } = await supabaseAdmin.from("produtos").select("company_id").eq("id", data.produto_id).maybeSingle();
     if (!p || p.company_id !== company) throw new Response("Produto inválido", { status: 403 });
