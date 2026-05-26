@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getCaller, assertAdminish } from "./auth.server";
 
 async function getCompany(userId: string) {
   const { data } = await supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle();
@@ -34,8 +35,10 @@ export const upsertCategoria = createServerFn({ method: "POST" })
     }).parse(d)
   )
   .handler(async ({ context, data }) => {
-    const company = await getCompany(context.userId);
-    if (!company) throw new Response("Sem empresa", { status: 403 });
+    const caller = await getCaller(context.userId);
+    assertAdminish(caller);
+    if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
+    const company = caller.companyId;
     if (data.id) {
       const { error } = await supabaseAdmin.from("categorias")
         .update({ name: data.name, sort_order: data.sort_order, active: data.active })
@@ -56,8 +59,10 @@ export const reorderCategorias = createServerFn({ method: "POST" })
     z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(d)
   )
   .handler(async ({ context, data }) => {
-    const company = await getCompany(context.userId);
-    if (!company) throw new Response("Sem empresa", { status: 403 });
+    const caller = await getCaller(context.userId);
+    assertAdminish(caller);
+    if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
+    const company = caller.companyId;
     await Promise.all(
       data.ids.map((id, idx) =>
         supabaseAdmin.from("categorias")
@@ -72,9 +77,10 @@ export const deleteCategoria = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    const company = await getCompany(context.userId);
-    if (!company) throw new Response("Sem empresa", { status: 403 });
-    const { error } = await supabaseAdmin.from("categorias").delete().eq("id", data.id).eq("company_id", company);
+    const caller = await getCaller(context.userId);
+    assertAdminish(caller);
+    if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
+    const { error } = await supabaseAdmin.from("categorias").delete().eq("id", data.id).eq("company_id", caller.companyId);
     if (error) throw new Response(error.message, { status: 500 });
     return { ok: true };
   });
