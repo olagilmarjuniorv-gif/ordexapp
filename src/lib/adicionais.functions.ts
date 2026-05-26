@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getCaller, assertAdminish } from "./auth.server";
 
 async function getCompany(userId: string) {
   const { data } = await supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle();
