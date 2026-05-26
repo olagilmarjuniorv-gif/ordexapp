@@ -38,6 +38,7 @@ export const createProduto = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => produtoSchema.parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { data: created, error } = await supabaseAdmin
       .from("produtos")
@@ -52,6 +53,7 @@ export const updateProduto = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => produtoSchema.extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { id, ...rest } = data;
     const { error } = await supabaseAdmin
@@ -70,6 +72,7 @@ export const setProdutoActive = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin
       .from("produtos")
@@ -87,6 +90,7 @@ export const setProdutoAvailable = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin
       .from("produtos")
@@ -109,6 +113,7 @@ export const uploadProdutoImage = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const cleaned = data.dataBase64.includes(",") ? data.dataBase64.split(",")[1] : data.dataBase64;
     const buf = Buffer.from(cleaned, "base64");
