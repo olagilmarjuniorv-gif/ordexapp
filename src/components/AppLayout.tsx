@@ -42,6 +42,7 @@ export function AppLayout() {
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/clientes", label: "Clientes", icon: Users },
     ];
   } else if (isSuperAdmin) {
