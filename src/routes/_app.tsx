@@ -13,8 +13,8 @@ export const Route = createFileRoute("/_app")({
 });
 
 // Rotas proibidas por role
-const ATENDENTE_BLOCKED = ["/cozinha", "/empresas", "/usuarios", "/historico", "/produtos", "/categorias", "/adicionais", "/combos", "/cardapio", "/mensagens", "/suporte", "/chamados", "/conectores"];
-const COZINHA_ALLOWED_PREFIX = "/cozinha";
+const ATENDENTE_BLOCKED = ["/cozinha", "/empresas", "/usuarios", "/historico", "/produtos", "/categorias", "/adicionais", "/combos", "/cardapio", "/suporte", "/chamados", "/conectores"];
+const COZINHA_ALLOWED_PREFIXES = ["/cozinha", "/pedidos"];
 
 function Guard() {
   const { session, loading, profile, role, isAtendente, isCozinha } = useAuth();
