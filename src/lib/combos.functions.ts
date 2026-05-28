@@ -44,8 +44,11 @@ export const upsertCombo = createServerFn({ method: "POST" })
     }).parse(d)
   )
   .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     const company = await getCompany(context.userId);
     if (!company) throw new Response("Sem empresa", { status: 403 });
+
     let id = data.id;
     if (id) {
       const { error } = await supabaseAdmin.from("combos")
