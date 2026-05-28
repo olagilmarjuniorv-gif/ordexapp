@@ -40,8 +40,11 @@ export const upsertFluxo = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    assertAdminish(caller);
     const company = await getCompany(context.userId);
     if (!company) throw new Response("Sem empresa", { status: 403 });
+
     const { error } = await supabaseAdmin
       .from("whatsapp_fluxos")
       .upsert({ company_id: company, ...data }, { onConflict: "company_id" });
