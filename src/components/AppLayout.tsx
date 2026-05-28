@@ -11,9 +11,9 @@ export function AppLayout() {
   const navigate = useNavigate();
   const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha } = useAuth();
 
-  // Cozinha: layout minimal, vê só /cozinha
+  // Cozinha: layout minimal, vê só /cozinha e /pedidos
   if (isCozinha) {
-    if (!path.startsWith("/cozinha")) return <Navigate to="/cozinha" />;
+    if (!path.startsWith("/cozinha") && !path.startsWith("/pedidos")) return <Navigate to="/cozinha" />;
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 py-3">
@@ -42,6 +42,7 @@ export function AppLayout() {
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
+      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/clientes", label: "Clientes", icon: Users },
     ];
   } else if (isSuperAdmin) {

@@ -13,8 +13,8 @@ export const Route = createFileRoute("/_app")({
 });
 
 // Rotas proibidas por role
-const ATENDENTE_BLOCKED = ["/cozinha", "/empresas", "/usuarios", "/historico", "/produtos", "/categorias", "/adicionais", "/combos", "/cardapio", "/mensagens", "/suporte", "/chamados", "/conectores"];
-const COZINHA_ALLOWED_PREFIX = "/cozinha";
+const ATENDENTE_BLOCKED = ["/cozinha", "/empresas", "/usuarios", "/historico", "/produtos", "/categorias", "/adicionais", "/combos", "/cardapio", "/suporte", "/chamados", "/conectores"];
+const COZINHA_ALLOWED_PREFIXES = ["/cozinha", "/pedidos"];
 
 function Guard() {
   const { session, loading, profile, role, isAtendente, isCozinha } = useAuth();
@@ -47,7 +47,7 @@ function Guard() {
   if (!session) return <Navigate to="/login" />;
 
   // Guard por role
-  if (isCozinha && !path.startsWith(COZINHA_ALLOWED_PREFIX)) {
+  if (isCozinha && !COZINHA_ALLOWED_PREFIXES.some((p) => path.startsWith(p))) {
     return <Navigate to="/cozinha" />;
   }
   if (isAtendente && ATENDENTE_BLOCKED.some((b) => path.startsWith(b))) {
