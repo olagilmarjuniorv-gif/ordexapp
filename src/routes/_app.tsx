@@ -47,7 +47,7 @@ function Guard() {
   if (!session) return <Navigate to="/login" />;
 
   // Guard por role
-  if (isCozinha && !path.startsWith(COZINHA_ALLOWED_PREFIX)) {
+  if (isCozinha && !COZINHA_ALLOWED_PREFIXES.some((p) => path.startsWith(p))) {
     return <Navigate to="/cozinha" />;
   }
   if (isAtendente && ATENDENTE_BLOCKED.some((b) => path.startsWith(b))) {
