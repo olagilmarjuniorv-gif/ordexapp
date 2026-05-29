@@ -198,7 +198,7 @@ function NovoPedido() {
   const canSubmit = items.length > 0 && (canal !== "salao" || mesaId);
 
   return (
-    <div className="pb-32">
+    <div className="pb-40 lg:pb-32">
       <div className="flex items-center gap-3 mb-4">
         <Link to="/pedidos" className="rounded-lg p-2 -ml-2 hover:bg-muted"><ArrowLeft className="h-5 w-5" /></Link>
         <div>
