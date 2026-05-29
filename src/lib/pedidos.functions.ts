@@ -228,6 +228,9 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.isAdmin && caller.role !== "atendente") {
+      throw new Response("Acesso negado", { status: 403 });
+    }
 
     const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
     if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
