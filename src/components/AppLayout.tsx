@@ -13,10 +13,20 @@ import { getCompanyById } from "@/lib/companies.functions";
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha } = useAuth();
+  const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha, companyId } = useAuth();
 
   // Notificação interna quando pedido fica "pronto" (admin + atendente).
   usePedidoProntoNotify((isAdmin && !isSuperAdmin) || isAtendente);
+
+  // Nome da empresa para identidade visual (sidebar + topo)
+  const getCompanyByIdFn = useServerFn(getCompanyById);
+  const companyQuery = useQuery({
+    queryKey: ["company-name", companyId],
+    queryFn: () => getCompanyByIdFn({ data: {} }),
+    enabled: !!companyId && !isSuperAdmin,
+    staleTime: 60_000,
+  });
+  const companyName = (companyQuery.data as any)?.name as string | undefined;
 
   // Cozinha: layout minimal, vê só /cozinha e /pedidos
   if (isCozinha) {
