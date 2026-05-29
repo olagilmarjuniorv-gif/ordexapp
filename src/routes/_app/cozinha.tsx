@@ -58,7 +58,6 @@ function beep() {
 }
 
 function Cozinha() {
-  const { canSeeFinancials } = useAuth();
   const qc = useQueryClient();
   const fetchFn = useServerFn(listPedidos);
   const updateFn = useServerFn(updatePedidoStatus);
