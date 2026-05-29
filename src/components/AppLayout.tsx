@@ -1,11 +1,14 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, 
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { usePedidoProntoNotify } from "@/hooks/use-pedido-pronto-notify";
+import { getCompanyById } from "@/lib/companies.functions";
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
