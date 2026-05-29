@@ -212,3 +212,30 @@ export const setCompanyActive = createServerFn({ method: "POST" })
     if (error) throw new Response(error.message, { status: 500 });
     return { ok: true };
   });
+
+export const updateCompanyPagamentos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        pagamento_metodos: PAGAMENTO_METODOS_SCHEMA,
+        exigir_pagamento_antes_cozinha: z.boolean(),
+        permitir_pagamento_entrega: z.boolean(),
+        permitir_pagamento_retirada: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const c = await getCaller(context.userId);
+    if (!c.isSuperAdmin && !(c.isCompanyAdmin && c.companyId === data.id)) {
+      throw new Response("Acesso negado", { status: 403 });
+    }
+    const { id, ...rest } = data;
+    const { error } = await supabaseAdmin
+      .from("companies")
+      .update(rest)
+      .eq("id", id);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
