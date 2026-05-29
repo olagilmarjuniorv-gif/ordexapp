@@ -39,7 +39,7 @@ const canalLabel: Record<string, string> = {
 
 const LATE_MIN = 25;
 
-type StatusFilter = "todos" | "abertos" | "preparo" | "pronto" | "pago" | "atrasados";
+type StatusFilter = "todos" | "abertos" | "preparo" | "pronto" | "pago" | "atrasados" | "fin_pago" | "fin_aguardando" | "fin_entrega" | "fin_retirada";
 
 const FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "todos", label: "Todos" },
@@ -48,7 +48,35 @@ const FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "pronto", label: "Prontos" },
   { id: "pago", label: "Pagos" },
   { id: "atrasados", label: "Atrasados" },
+  { id: "fin_pago", label: "$ Pagos" },
+  { id: "fin_aguardando", label: "$ Aguardando" },
+  { id: "fin_entrega", label: "$ Na entrega" },
+  { id: "fin_retirada", label: "$ Na retirada" },
 ];
+
+const FIN_LABEL: Record<string, string> = {
+  aguardando_pagamento: "Aguardando pagamento",
+  pago: "Pago",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+  cancelado: "Cancelado",
+};
+const FIN_COLOR: Record<string, string> = {
+  aguardando_pagamento: "bg-amber-100 text-amber-800",
+  pago: "bg-emerald-100 text-emerald-800",
+  pagamento_entrega: "bg-sky-100 text-sky-800",
+  pagamento_retirada: "bg-sky-100 text-sky-800",
+  cancelado: "bg-muted text-muted-foreground",
+};
+const FORMA_LABEL_SHORT: Record<string, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito",
+  debito_presencial: "Débito",
+  pix_presencial: "Pix",
+  pagamento_entrega: "Na entrega",
+  pagamento_retirada: "Na retirada",
+};
 
 function PedidosList() {
   const { user, isAtendente } = useAuth();
