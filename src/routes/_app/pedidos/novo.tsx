@@ -59,6 +59,7 @@ function NovoPedido() {
   const fetchProdAdic = useServerFn(getProdutoAdicionais);
   const createFn = useServerFn(createPedido);
   const createClienteFn = useServerFn(createCliente);
+  const fetchCompany = useServerFn(getCompanyById);
 
   const [canal, setCanal] = useState<Canal>(search.canal ?? "salao");
   const [mesaId, setMesaId] = useState<string | null>(search.mesa ?? null);
