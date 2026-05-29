@@ -10,7 +10,8 @@ import { listClientes, createCliente } from "@/lib/clientes.functions";
 import { listCategorias } from "@/lib/categorias.functions";
 import { listCombos } from "@/lib/combos.functions";
 import { getProdutoAdicionais } from "@/lib/adicionais.functions";
-import { createPedido, PEDIDO_CANAIS } from "@/lib/pedidos.functions";
+import { createPedido, PEDIDO_CANAIS, FORMAS_PAGAMENTO, type FormaPagamento, type StatusFinanceiro } from "@/lib/pedidos.functions";
+import { getCompanyById } from "@/lib/companies.functions";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
