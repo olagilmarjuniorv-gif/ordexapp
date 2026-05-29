@@ -297,6 +297,7 @@ function AtendenteDashboard() {
         <div>
           <p className="text-sm text-muted-foreground">Operação de hoje 🍔</p>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Meu painel</h1>
+          <CompanyNameTag />
         </div>
         <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all">
           <Plus className="h-4 w-4" /> Novo pedido
