@@ -260,30 +260,75 @@ export type Database = {
       companies: {
         Row: {
           active: boolean
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
           created_at: string
+          delivery_ativo: boolean
+          email: string | null
+          estado: string | null
+          horarios: Json
           id: string
           name: string
+          numero: string | null
+          pedido_minimo: number
           phone: string | null
+          retirada_ativa: boolean
+          rua: string | null
           slug: string | null
+          taxa_entrega: number
+          tempo_preparo_min: number
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           active?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           created_at?: string
+          delivery_ativo?: boolean
+          email?: string | null
+          estado?: string | null
+          horarios?: Json
           id?: string
           name: string
+          numero?: string | null
+          pedido_minimo?: number
           phone?: string | null
+          retirada_ativa?: boolean
+          rua?: string | null
           slug?: string | null
+          taxa_entrega?: number
+          tempo_preparo_min?: number
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           active?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           created_at?: string
+          delivery_ativo?: boolean
+          email?: string | null
+          estado?: string | null
+          horarios?: Json
           id?: string
           name?: string
+          numero?: string | null
+          pedido_minimo?: number
           phone?: string | null
+          retirada_ativa?: boolean
+          rua?: string | null
           slug?: string | null
+          taxa_entrega?: number
+          tempo_preparo_min?: number
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
