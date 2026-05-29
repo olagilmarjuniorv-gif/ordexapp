@@ -341,11 +341,13 @@ async function finalizarPedido(
       company_id: sessao.company_id,
       user_id: anyMember.id,
       client_id: clienteId,
-      canal: "delivery",
+      canal: opts.canal,
       items,
       total_amount: total,
       status: "novo",
       external_provider: "whatsapp",
+      forma_pagamento: opts.formaPagamento,
+      status_financeiro: statusFinanceiroFor(opts.formaPagamento),
     })
     .select("id")
     .single();
