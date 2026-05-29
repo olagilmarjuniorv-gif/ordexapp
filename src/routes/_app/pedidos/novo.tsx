@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { ArrowLeft, Search, Plus, Minus, Trash2, Loader2, ShoppingBag, Package2, UserPlus, X } from "lucide-react";
 import { listProdutos } from "@/lib/produtos.functions";
