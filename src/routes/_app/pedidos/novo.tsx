@@ -445,7 +445,7 @@ function NovoClienteModal({ onClose, onCreated, createFn }: { onClose: () => voi
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-5">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-background rounded-t-2xl sm:rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-lg font-semibold">Novo cliente</h2>
           <button onClick={onClose} className="p-1 -mr-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
