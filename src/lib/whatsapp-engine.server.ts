@@ -9,10 +9,75 @@ export type EstadoConversa =
   | "escolhendo_quantidade"
   | "escrevendo_observacao"
   | "confirmando_pedido"
+  | "escolhendo_entrega"
   | "escolhendo_pagamento"
+  | "resumo_final"
   | "aguardando_atendente"
   | "pedido_finalizado"
   | "conversa_encerrada";
+
+type FormaPagamentoCode =
+  | "pix_online"
+  | "dinheiro"
+  | "credito_presencial"
+  | "debito_presencial"
+  | "pix_presencial"
+  | "pagamento_entrega"
+  | "pagamento_retirada";
+
+type StatusFinanceiroCode =
+  | "aguardando_pagamento"
+  | "pagamento_entrega"
+  | "pagamento_retirada";
+
+const PAGAMENTO_LABELS: Record<FormaPagamentoCode, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito presencial",
+  debito_presencial: "Débito presencial",
+  pix_presencial: "Pix presencial",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+};
+
+function statusFinanceiroFor(forma: FormaPagamentoCode): StatusFinanceiroCode {
+  if (forma === "pagamento_entrega") return "pagamento_entrega";
+  if (forma === "pagamento_retirada") return "pagamento_retirada";
+  return "aguardando_pagamento";
+}
+
+async function getCompanyPagamentos(companyId: string) {
+  const { data } = await supabaseAdmin
+    .from("companies")
+    .select("pagamento_metodos, permitir_pagamento_entrega, permitir_pagamento_retirada, delivery_ativo, retirada_ativa")
+    .eq("id", companyId)
+    .maybeSingle();
+  return data;
+}
+
+async function listFormasPagamentoAtivas(companyId: string, canal: "delivery" | "retirada"): Promise<FormaPagamentoCode[]> {
+  const cfg = await getCompanyPagamentos(companyId);
+  const metodos = (cfg?.pagamento_metodos as Record<string, boolean>) ?? {};
+  const ordered: FormaPagamentoCode[] = [
+    "pix_online",
+    "dinheiro",
+    "credito_presencial",
+    "debito_presencial",
+    "pix_presencial",
+    "pagamento_entrega",
+    "pagamento_retirada",
+  ];
+  return ordered.filter((f) => {
+    if (!metodos[f]) return false;
+    if (f === "pagamento_entrega") {
+      return canal === "delivery" && cfg?.permitir_pagamento_entrega !== false;
+    }
+    if (f === "pagamento_retirada") {
+      return canal === "retirada" && cfg?.permitir_pagamento_retirada !== false;
+    }
+    return true;
+  });
+}
 
 const TIMEOUT_MS = 30 * 60 * 1000;
 
@@ -192,7 +257,10 @@ async function mostrarProdutos(
   };
 }
 
-async function finalizarPedido(sessao: Sessao): Promise<string> {
+async function finalizarPedido(
+  sessao: Sessao,
+  opts: { canal: "delivery" | "retirada"; formaPagamento: FormaPagamentoCode },
+): Promise<string> {
   const cart = sessao.carrinho;
   const total = cartTotal(cart);
 
@@ -273,11 +341,13 @@ async function finalizarPedido(sessao: Sessao): Promise<string> {
       company_id: sessao.company_id,
       user_id: anyMember.id,
       client_id: clienteId,
-      canal: "delivery",
+      canal: opts.canal,
       items,
       total_amount: total,
       status: "novo",
       external_provider: "whatsapp",
+      forma_pagamento: opts.formaPagamento,
+      status_financeiro: statusFinanceiroFor(opts.formaPagamento),
     })
     .select("id")
     .single();
@@ -420,8 +490,21 @@ export async function processInboundMessage(opts: {
         return reply;
       }
       if (tl === "2" || ["finalizar", "fechar", "sim"].includes(tl)) {
-        await updateSession(sessao.id, { estado_atual: "escolhendo_pagamento" });
-        return `*Forma de pagamento:*\n\n*1* — Dinheiro\n*2* — PIX\n*3* — Cartão na entrega`;
+        const cfg = await getCompanyPagamentos(companyId);
+        const opcoes: ("delivery" | "retirada")[] = [];
+        if (cfg?.delivery_ativo !== false) opcoes.push("delivery");
+        if (cfg?.retirada_ativa !== false) opcoes.push("retirada");
+        if (opcoes.length === 0) {
+          return "Desculpe, não estamos aceitando pedidos no momento.";
+        }
+        await updateSession(sessao.id, {
+          estado_atual: "escolhendo_entrega",
+          contexto: { ...sessao.contexto, entrega_opcoes: opcoes },
+        });
+        const lista = opcoes
+          .map((o, i) => `*${i + 1}* — ${o === "delivery" ? "Entrega" : "Retirada no local"}`)
+          .join("\n");
+        return `*Como deseja receber seu pedido?*\n\n${lista}`;
       }
       if (tl === "3" || tl === "cancelar") {
         await updateSession(sessao.id, { estado_atual: "conversa_encerrada", carrinho: [], contexto: {} });
@@ -430,15 +513,70 @@ export async function processInboundMessage(opts: {
       return "Opção inválida. Digite *1*, *2* ou *3*.";
     }
 
+    case "escolhendo_entrega": {
+      const opcoes: ("delivery" | "retirada")[] = sessao.contexto?.entrega_opcoes ?? ["delivery", "retirada"];
+      const n = parseInt(tl, 10);
+      if (!Number.isFinite(n) || n < 1 || n > opcoes.length) {
+        return `Opção inválida. Digite o *número* da forma de entrega.`;
+      }
+      const canal = opcoes[n - 1];
+      const formas = await listFormasPagamentoAtivas(companyId, canal);
+      if (formas.length === 0) {
+        return "Nenhuma forma de pagamento disponível. Digite *atendente* para falar com alguém.";
+      }
+      const lista = formas.map((f, i) => `*${i + 1}* — ${PAGAMENTO_LABELS[f]}`).join("\n");
+      await updateSession(sessao.id, {
+        estado_atual: "escolhendo_pagamento",
+        contexto: { ...sessao.contexto, canal, formas_pagamento: formas },
+      });
+      return `*Forma de pagamento:*\n\n${lista}\n\nDigite o número da opção desejada.`;
+    }
+
     case "escolhendo_pagamento": {
-      const map: Record<string, string> = { "1": "Dinheiro", "2": "PIX", "3": "Cartão na entrega" };
-      const pag = map[tl];
-      if (!pag) return "Opção inválida. Digite *1*, *2* ou *3*.";
+      const formas: FormaPagamentoCode[] = sessao.contexto?.formas_pagamento ?? [];
+      const canal: "delivery" | "retirada" = sessao.contexto?.canal ?? "delivery";
+      const n = parseInt(tl, 10);
+      if (!Number.isFinite(n) || n < 1 || n > formas.length) {
+        return "Opção inválida. Digite o *número* da forma de pagamento.";
+      }
+      const forma = formas[n - 1];
+      const total = cartTotal(sessao.carrinho);
+      const canalLabel = canal === "delivery" ? "Entrega" : "Retirada no local";
+      await updateSession(sessao.id, {
+        estado_atual: "resumo_final",
+        contexto: { ...sessao.contexto, forma_pagamento: forma },
+      });
+      return [
+        "*Resumo do pedido:*",
+        "",
+        cartSummary(sessao.carrinho),
+        "",
+        `Forma de entrega: *${canalLabel}*`,
+        `Forma de pagamento: *${PAGAMENTO_LABELS[forma]}*`,
+        `Total: *${brl(total)}*`,
+        "",
+        "Confirmar pedido?",
+        "*1* — Sim, confirmar",
+        "*2* — Cancelar",
+      ].join("\n");
+    }
+
+    case "resumo_final": {
+      if (tl === "2" || tl === "cancelar" || tl === "nao" || tl === "não") {
+        await updateSession(sessao.id, { estado_atual: "conversa_encerrada", carrinho: [], contexto: {} });
+        return "Pedido cancelado. Digite *menu* quando quiser recomeçar.";
+      }
+      if (!(tl === "1" || ["sim", "confirmar", "ok"].includes(tl))) {
+        return "Digite *1* para confirmar ou *2* para cancelar.";
+      }
+      const canal: "delivery" | "retirada" = sessao.contexto?.canal ?? "delivery";
+      const forma: FormaPagamentoCode | undefined = sessao.contexto?.forma_pagamento;
+      if (!forma) {
+        await updateSession(sessao.id, { estado_atual: "aguardando_inicio" });
+        return "Algo deu errado. Digite *menu* para recomeçar.";
+      }
       try {
-        const pedidoId = await finalizarPedido({
-          ...sessao,
-          contexto: { ...sessao.contexto, pagamento: pag },
-        });
+        const pedidoId = await finalizarPedido(sessao, { canal, formaPagamento: forma });
         const fluxo = await getFluxo(companyId);
         const total = cartTotal(sessao.carrinho);
         await updateSession(sessao.id, {
@@ -446,12 +584,14 @@ export async function processInboundMessage(opts: {
           carrinho: [],
           contexto: { pedido_id: pedidoId },
         });
-        return `✅ *Pedido confirmado!*\n\nNº ${pedidoId.slice(0, 8).toUpperCase()}\nPagamento: ${pag}\nTotal: *${brl(total)}*\n\nTempo estimado: 35 minutos.\n\n${fluxo.mensagem_fechamento}`;
+        const canalLabel = canal === "delivery" ? "Entrega" : "Retirada";
+        return `✅ *Pedido confirmado!*\n\nNº ${pedidoId.slice(0, 8).toUpperCase()}\nEntrega: ${canalLabel}\nPagamento: ${PAGAMENTO_LABELS[forma]}\nTotal: *${brl(total)}*\n\nTempo estimado: 35 minutos.\n\n${fluxo.mensagem_fechamento}`;
       } catch (e: any) {
         console.error("[whatsapp-engine] finalizar erro:", e?.message);
         return "Não conseguimos registrar seu pedido agora. Um atendente vai te chamar.";
       }
     }
+
 
     case "pedido_finalizado": {
       if (isMenuTrigger(t)) {
