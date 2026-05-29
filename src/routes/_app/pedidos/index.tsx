@@ -226,6 +226,12 @@ function PedidosList() {
                         <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${statusColor[p.status] ?? "bg-muted text-muted-foreground"}`}>
                           {statusLabel[p.status] ?? p.status}
                         </span>
+                        {p.status_financeiro && (
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${FIN_COLOR[p.status_financeiro] ?? "bg-muted text-muted-foreground"}`}>
+                            {FIN_LABEL[p.status_financeiro] ?? p.status_financeiro}
+                            {p.forma_pagamento ? ` · ${FORMA_LABEL_SHORT[p.forma_pagamento] ?? p.forma_pagamento}` : ""}
+                          </span>
+                        )}
                         <span>{canalLabel[p.canal] ?? p.canal}</span>
                         {p.cliente?.phone && <span className="tabular-nums">{p.cliente.phone}</span>}
                         {p.external_provider === "ifood" && (
