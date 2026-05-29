@@ -1,9 +1,36 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPedido, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
+import {
+  getPedido,
+  updatePedidoStatus,
+  updatePedidoStatusFinanceiro,
+  FORMAS_PAGAMENTO,
+  STATUS_FINANCEIRO,
+  type PedidoStatus,
+  type FormaPagamento,
+  type StatusFinanceiro,
+} from "@/lib/pedidos.functions";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt } from "lucide-react";
+import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt, Wallet } from "lucide-react";
+
+const FORMA_LABEL: Record<FormaPagamento, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito presencial",
+  debito_presencial: "Débito presencial",
+  pix_presencial: "Pix presencial",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+};
+const FIN_LABEL: Record<StatusFinanceiro, string> = {
+  aguardando_pagamento: "Aguardando pagamento",
+  pago: "Pago",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+  cancelado: "Cancelado",
+};
 
 export const Route = createFileRoute("/_app/pedidos/$id")({
   component: PedidoDetail,
@@ -25,8 +52,11 @@ const canalLabel: Record<string, string> = {
 function PedidoDetail() {
   const qc = useQueryClient();
   const { id } = Route.useParams();
+  const { isAdmin, isAtendente } = useAuth();
+  const canEditFinanceiro = isAdmin || isAtendente;
   const getFn = useServerFn(getPedido);
   const statusFn = useServerFn(updatePedidoStatus);
+  const finFn = useServerFn(updatePedidoStatusFinanceiro);
 
   const { data: pedRaw, isLoading, error } = useQuery({
     queryKey: ["pedido", id],
@@ -39,6 +69,17 @@ function PedidoDetail() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pedido", id] });
       qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
+  const finM = useMutation({
+    mutationFn: (vars: { status_financeiro: StatusFinanceiro; forma_pagamento?: FormaPagamento | null }) =>
+      finFn({ data: { id, ...vars } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedido", id] });
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      toast.success("Pagamento atualizado");
     },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
@@ -128,6 +169,69 @@ function PedidoDetail() {
             Total: {formatBRL(pedido.total_amount)}
           </div>
         </div>
+
+        {/* Pagamento */}
+        <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold">Pagamento</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Forma de pagamento</p>
+              <p className="font-medium">
+                {pedido.forma_pagamento ? (FORMA_LABEL[pedido.forma_pagamento as FormaPagamento] ?? pedido.forma_pagamento) : "Não definida"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Status financeiro</p>
+              <p className="font-medium">
+                {FIN_LABEL[pedido.status_financeiro as StatusFinanceiro] ?? pedido.status_financeiro}
+              </p>
+            </div>
+          </div>
+
+          {canEditFinanceiro && pedido.status_financeiro !== "cancelado" && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+              <select
+                value={pedido.forma_pagamento ?? ""}
+                onChange={(e) =>
+                  finM.mutate({
+                    status_financeiro: pedido.status_financeiro as StatusFinanceiro,
+                    forma_pagamento: (e.target.value || null) as FormaPagamento | null,
+                  })
+                }
+                className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              >
+                <option value="">— Sem forma —</option>
+                {FORMAS_PAGAMENTO.map((f) => (
+                  <option key={f} value={f}>{FORMA_LABEL[f]}</option>
+                ))}
+              </select>
+              <select
+                value={pedido.status_financeiro ?? ""}
+                onChange={(e) =>
+                  finM.mutate({ status_financeiro: e.target.value as StatusFinanceiro })
+                }
+                className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              >
+                {STATUS_FINANCEIRO.map((s) => (
+                  <option key={s} value={s}>{FIN_LABEL[s]}</option>
+                ))}
+              </select>
+              {pedido.status_financeiro !== "pago" && (
+                <button
+                  onClick={() => finM.mutate({ status_financeiro: "pago" })}
+                  disabled={finM.isPending}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" /> Marcar pago
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-6">
           {pedido.status === "novo" && (

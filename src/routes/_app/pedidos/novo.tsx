@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { ArrowLeft, Search, Plus, Minus, Trash2, Loader2, ShoppingBag, Package2, UserPlus, X } from "lucide-react";
 import { listProdutos } from "@/lib/produtos.functions";
@@ -10,7 +10,8 @@ import { listClientes, createCliente } from "@/lib/clientes.functions";
 import { listCategorias } from "@/lib/categorias.functions";
 import { listCombos } from "@/lib/combos.functions";
 import { getProdutoAdicionais } from "@/lib/adicionais.functions";
-import { createPedido, PEDIDO_CANAIS } from "@/lib/pedidos.functions";
+import { createPedido, PEDIDO_CANAIS, FORMAS_PAGAMENTO, type FormaPagamento, type StatusFinanceiro } from "@/lib/pedidos.functions";
+import { getCompanyById } from "@/lib/companies.functions";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
@@ -33,6 +34,16 @@ const CANAL_OPTIONS: { value: Canal; label: string }[] = [
 ];
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+
+const FORMA_LABEL: Record<FormaPagamento, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito presencial",
+  debito_presencial: "Débito presencial",
+  pix_presencial: "Pix presencial",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+};
 
 type CartItem = {
   uid: string;
@@ -58,6 +69,7 @@ function NovoPedido() {
   const fetchProdAdic = useServerFn(getProdutoAdicionais);
   const createFn = useServerFn(createPedido);
   const createClienteFn = useServerFn(createCliente);
+  const fetchCompany = useServerFn(getCompanyById);
 
   const [canal, setCanal] = useState<Canal>(search.canal ?? "salao");
   const [mesaId, setMesaId] = useState<string | null>(search.mesa ?? null);
@@ -68,12 +80,33 @@ function NovoPedido() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [picker, setPicker] = useState<{ produto: any; grupos: any[] } | null>(null);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento | "">("");
 
   const { data: produtos = [], isLoading: loadingProdutos } = useQuery({ queryKey: ["produtos"], queryFn: () => fetchProdutos({}) });
   const { data: combos = [] } = useQuery({ queryKey: ["combos"], queryFn: () => fetchCombos({}) });
   const { data: categorias = [] } = useQuery({ queryKey: ["categorias"], queryFn: () => fetchCats({}) });
   const { data: mesas = [] } = useQuery({ queryKey: ["mesas"], queryFn: () => fetchMesas({}), enabled: canal === "salao" });
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: () => fetchClientes({}) });
+  const { data: company } = useQuery({ queryKey: ["company-pagamentos"], queryFn: () => fetchCompany({}) });
+
+  const formasDisponiveis = useMemo<FormaPagamento[]>(() => {
+    const cfg = (company as any)?.pagamento_metodos ?? {};
+    const permEntrega = (company as any)?.permitir_pagamento_entrega ?? true;
+    const permRetirada = (company as any)?.permitir_pagamento_retirada ?? true;
+    return FORMAS_PAGAMENTO.filter((m) => {
+      if (cfg[m] === false) return false;
+      if (m === "pagamento_entrega") return permEntrega && canal === "delivery";
+      if (m === "pagamento_retirada") return permRetirada && (canal === "retirada" || canal === "balcao");
+      return true;
+    });
+  }, [company, canal]);
+
+  // Reset forma se não for mais válida para o canal
+  useEffect(() => {
+    if (formaPagamento && !formasDisponiveis.includes(formaPagamento as FormaPagamento)) {
+      setFormaPagamento("");
+    }
+  }, [formasDisponiveis, formaPagamento]);
 
   const filteredProdutos = useMemo(() => {
     return (produtos as any[]).filter((p) => {
@@ -132,22 +165,29 @@ function NovoPedido() {
   function remove(uid: string) { setItems((p) => p.filter((i) => i.uid !== uid)); }
 
   const submit = useMutation({
-    mutationFn: () => createFn({
-      data: {
-        canal,
-        mesa_id: canal === "salao" ? mesaId : null,
-        client_id: clienteId,
-        observacao: observacao.trim() || undefined,
-        items: items.map((i) => ({
-          kind: i.kind,
-          product_id: i.product_id,
-          combo_id: i.combo_id,
-          quantity: i.quantity,
-          price: i.basePrice,
-          adicionais: i.adicionais,
-        })),
-      },
-    }),
+    mutationFn: () => {
+      let status_financeiro: StatusFinanceiro = "aguardando_pagamento";
+      if (formaPagamento === "pagamento_entrega") status_financeiro = "pagamento_entrega";
+      else if (formaPagamento === "pagamento_retirada") status_financeiro = "pagamento_retirada";
+      return createFn({
+        data: {
+          canal,
+          mesa_id: canal === "salao" ? mesaId : null,
+          client_id: clienteId,
+          observacao: observacao.trim() || undefined,
+          forma_pagamento: (formaPagamento || null) as FormaPagamento | null,
+          status_financeiro,
+          items: items.map((i) => ({
+            kind: i.kind,
+            product_id: i.product_id,
+            combo_id: i.combo_id,
+            quantity: i.quantity,
+            price: i.basePrice,
+            adicionais: i.adicionais,
+          })),
+        },
+      });
+    },
     onSuccess: ({ id }) => {
       toast.success("Pedido enviado para a cozinha");
       navigate({ to: "/pedidos/$id", params: { id } });
@@ -307,8 +347,37 @@ function NovoPedido() {
 
           <textarea value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Observação geral" rows={2}
             className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none" />
+
+          {/* Pagamento */}
+          <div className="mt-3 rounded-xl border border-border bg-card p-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">Pagamento</p>
+            {formasDisponiveis.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhuma forma de pagamento configurada para este canal.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setFormaPagamento("")}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${formaPagamento === "" ? "bg-foreground text-background" : "bg-muted text-foreground/70"}`}
+                >
+                  Definir depois
+                </button>
+                {formasDisponiveis.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setFormaPagamento(m)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium ${formaPagamento === m ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70"}`}
+                  >
+                    {FORMA_LABEL[m]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
 
       <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-30 border-t border-border bg-background/95 backdrop-blur p-3">
         <div className="max-w-3xl mx-auto flex items-center gap-3">

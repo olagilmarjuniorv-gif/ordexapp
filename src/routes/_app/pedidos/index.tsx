@@ -39,7 +39,7 @@ const canalLabel: Record<string, string> = {
 
 const LATE_MIN = 25;
 
-type StatusFilter = "todos" | "abertos" | "preparo" | "pronto" | "pago" | "atrasados";
+type StatusFilter = "todos" | "abertos" | "preparo" | "pronto" | "pago" | "atrasados" | "fin_pago" | "fin_aguardando" | "fin_entrega" | "fin_retirada";
 
 const FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "todos", label: "Todos" },
@@ -48,7 +48,35 @@ const FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "pronto", label: "Prontos" },
   { id: "pago", label: "Pagos" },
   { id: "atrasados", label: "Atrasados" },
+  { id: "fin_pago", label: "$ Pagos" },
+  { id: "fin_aguardando", label: "$ Aguardando" },
+  { id: "fin_entrega", label: "$ Na entrega" },
+  { id: "fin_retirada", label: "$ Na retirada" },
 ];
+
+const FIN_LABEL: Record<string, string> = {
+  aguardando_pagamento: "Aguardando pagamento",
+  pago: "Pago",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+  cancelado: "Cancelado",
+};
+const FIN_COLOR: Record<string, string> = {
+  aguardando_pagamento: "bg-amber-100 text-amber-800",
+  pago: "bg-emerald-100 text-emerald-800",
+  pagamento_entrega: "bg-sky-100 text-sky-800",
+  pagamento_retirada: "bg-sky-100 text-sky-800",
+  cancelado: "bg-muted text-muted-foreground",
+};
+const FORMA_LABEL_SHORT: Record<string, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito",
+  debito_presencial: "Débito",
+  pix_presencial: "Pix",
+  pagamento_entrega: "Na entrega",
+  pagamento_retirada: "Na retirada",
+};
 
 function PedidosList() {
   const { user, isAtendente } = useAuth();
@@ -82,6 +110,14 @@ function PedidosList() {
         return p.status === "pago";
       case "atrasados":
         return ["novo", "preparo", "pronto"].includes(p.status) && ageMin >= LATE_MIN;
+      case "fin_pago":
+        return p.status_financeiro === "pago";
+      case "fin_aguardando":
+        return p.status_financeiro === "aguardando_pagamento";
+      case "fin_entrega":
+        return p.status_financeiro === "pagamento_entrega";
+      case "fin_retirada":
+        return p.status_financeiro === "pagamento_retirada";
       default:
         return true;
     }
@@ -94,6 +130,10 @@ function PedidosList() {
     pronto: all.filter((p) => p.status === "pronto").length,
     pago: all.filter((p) => p.status === "pago").length,
     atrasados: all.filter((p) => ["novo", "preparo", "pronto"].includes(p.status) && (now - new Date(p.created_at).getTime()) / 60_000 >= LATE_MIN).length,
+    fin_pago: all.filter((p) => p.status_financeiro === "pago").length,
+    fin_aguardando: all.filter((p) => p.status_financeiro === "aguardando_pagamento").length,
+    fin_entrega: all.filter((p) => p.status_financeiro === "pagamento_entrega").length,
+    fin_retirada: all.filter((p) => p.status_financeiro === "pagamento_retirada").length,
   } as Record<StatusFilter, number>;
 
   return (
@@ -186,6 +226,12 @@ function PedidosList() {
                         <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${statusColor[p.status] ?? "bg-muted text-muted-foreground"}`}>
                           {statusLabel[p.status] ?? p.status}
                         </span>
+                        {p.status_financeiro && (
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${FIN_COLOR[p.status_financeiro] ?? "bg-muted text-muted-foreground"}`}>
+                            {FIN_LABEL[p.status_financeiro] ?? p.status_financeiro}
+                            {p.forma_pagamento ? ` · ${FORMA_LABEL_SHORT[p.forma_pagamento] ?? p.forma_pagamento}` : ""}
+                          </span>
+                        )}
                         <span>{canalLabel[p.canal] ?? p.canal}</span>
                         {p.cliente?.phone && <span className="tabular-nums">{p.cliente.phone}</span>}
                         {p.external_provider === "ifood" && (

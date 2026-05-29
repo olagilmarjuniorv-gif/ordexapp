@@ -61,7 +61,7 @@ export const listPedidos = createServerFn({ method: "GET" })
 
     const { data, error } = await supabaseAdmin
       .from("pedidos")
-      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, observacao, external_provider, external_order_id, imported_at, cliente:clientes(id, name, phone), mesa:mesas(numero)")
+      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, observacao, forma_pagamento, status_financeiro, external_provider, external_order_id, imported_at, cliente:clientes(id, name, phone), mesa:mesas(numero)")
       .eq("company_id", caller.companyId)
       .order("created_at", { ascending: false });
 
@@ -228,6 +228,9 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.isAdmin && caller.role !== "atendente") {
+      throw new Response("Acesso negado", { status: 403 });
+    }
 
     const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
     if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
