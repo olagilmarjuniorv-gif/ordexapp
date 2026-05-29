@@ -105,6 +105,9 @@ export function AppLayout() {
         <div className="relative flex items-center px-5 py-5 border-b border-sidebar-border">
           <div className="min-w-0">
             <p className="brand-wordmark text-2xl text-white leading-none truncate">SaiuPedido</p>
+            {companyName ? (
+              <p className="text-xs text-sidebar-foreground/80 mt-1 truncate font-medium">{companyName}</p>
+            ) : null}
             <p className="text-[11px] text-sidebar-foreground/60 mt-2 truncate flex items-center gap-1.5">
               <span className="realtime-dot" />
               {profile?.full_name || role || "Operação"}
