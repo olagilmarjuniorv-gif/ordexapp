@@ -135,6 +135,13 @@ export const createPedido = createServerFn({ method: "POST" })
       };
     });
 
+    // Default financial status inferred from forma_pagamento
+    let status_financeiro: StatusFinanceiro = data.status_financeiro ?? "aguardando_pagamento";
+    if (!data.status_financeiro && data.forma_pagamento) {
+      if (data.forma_pagamento === "pagamento_entrega") status_financeiro = "pagamento_entrega";
+      else if (data.forma_pagamento === "pagamento_retirada") status_financeiro = "pagamento_retirada";
+    }
+
     const { data: created, error: insErr } = await supabaseAdmin
       .from("pedidos")
       .insert({
@@ -147,7 +154,9 @@ export const createPedido = createServerFn({ method: "POST" })
         items,
         total_amount,
         status: "novo",
-      })
+        forma_pagamento: data.forma_pagamento ?? null,
+        status_financeiro,
+      } as any)
       .select("id")
       .single();
 
