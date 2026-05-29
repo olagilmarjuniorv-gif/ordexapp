@@ -20,6 +20,7 @@ import { Route as AppPagamentosRouteImport } from './routes/_app/pagamentos'
 import { Route as AppMeuRestauranteRouteImport } from './routes/_app/meu-restaurante'
 import { Route as AppMensagensRouteImport } from './routes/_app/mensagens'
 import { Route as AppHistoricoRouteImport } from './routes/_app/historico'
+import { Route as AppFinanceiroRouteImport } from './routes/_app/financeiro'
 import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
 import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
@@ -94,6 +95,11 @@ const AppMensagensRoute = AppMensagensRouteImport.update({
 const AppHistoricoRoute = AppHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEntregasRoute = AppEntregasRouteImport.update({
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
   '/entregas': typeof AppEntregasRoute
+  '/financeiro': typeof AppFinanceiroRoute
   '/historico': typeof AppHistoricoRoute
   '/mensagens': typeof AppMensagensRoute
   '/meu-restaurante': typeof AppMeuRestauranteRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
   '/entregas': typeof AppEntregasRoute
+  '/financeiro': typeof AppFinanceiroRoute
   '/historico': typeof AppHistoricoRoute
   '/mensagens': typeof AppMensagensRoute
   '/meu-restaurante': typeof AppMeuRestauranteRoute
@@ -287,6 +295,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
   '/_app/entregas': typeof AppEntregasRoute
+  '/_app/financeiro': typeof AppFinanceiroRoute
   '/_app/historico': typeof AppHistoricoRoute
   '/_app/mensagens': typeof AppMensagensRoute
   '/_app/meu-restaurante': typeof AppMeuRestauranteRoute
@@ -322,6 +331,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/empresas'
     | '/entregas'
+    | '/financeiro'
     | '/historico'
     | '/mensagens'
     | '/meu-restaurante'
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/empresas'
     | '/entregas'
+    | '/financeiro'
     | '/historico'
     | '/mensagens'
     | '/meu-restaurante'
@@ -389,6 +400,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/empresas'
     | '/_app/entregas'
+    | '/_app/financeiro'
     | '/_app/historico'
     | '/_app/mensagens'
     | '/_app/meu-restaurante'
@@ -495,6 +507,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof AppHistoricoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/financeiro': {
+      id: '/_app/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AppFinanceiroRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/entregas': {
@@ -659,6 +678,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
   AppEntregasRoute: typeof AppEntregasRoute
+  AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppMensagensRoute: typeof AppMensagensRoute
   AppMeuRestauranteRoute: typeof AppMeuRestauranteRoute
@@ -686,6 +706,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
   AppEntregasRoute: AppEntregasRoute,
+  AppFinanceiroRoute: AppFinanceiroRoute,
   AppHistoricoRoute: AppHistoricoRoute,
   AppMensagensRoute: AppMensagensRoute,
   AppMeuRestauranteRoute: AppMeuRestauranteRoute,
@@ -716,3 +737,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
