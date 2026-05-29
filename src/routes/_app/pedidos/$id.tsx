@@ -1,9 +1,36 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPedido, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
+import {
+  getPedido,
+  updatePedidoStatus,
+  updatePedidoStatusFinanceiro,
+  FORMAS_PAGAMENTO,
+  STATUS_FINANCEIRO,
+  type PedidoStatus,
+  type FormaPagamento,
+  type StatusFinanceiro,
+} from "@/lib/pedidos.functions";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt } from "lucide-react";
+import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt, Wallet } from "lucide-react";
+
+const FORMA_LABEL: Record<FormaPagamento, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito presencial",
+  debito_presencial: "Débito presencial",
+  pix_presencial: "Pix presencial",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+};
+const FIN_LABEL: Record<StatusFinanceiro, string> = {
+  aguardando_pagamento: "Aguardando pagamento",
+  pago: "Pago",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+  cancelado: "Cancelado",
+};
 
 export const Route = createFileRoute("/_app/pedidos/$id")({
   component: PedidoDetail,
