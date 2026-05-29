@@ -379,7 +379,7 @@ function NovoPedido() {
       )}
 
 
-      <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-30 border-t border-border bg-background/95 backdrop-blur p-3">
+      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-60 z-30 border-t border-border bg-background/95 backdrop-blur p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <div className="flex-1">
             <p className="text-[11px] text-muted-foreground">Total</p>
