@@ -66,6 +66,7 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/empresas", label: "Empresas", icon: Building2 },
+      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/chamados", label: "Chamados", icon: LifeBuoy },
       { to: "/conectores", label: "Conectores", icon: Plug },
@@ -81,6 +82,7 @@ export function AppLayout() {
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
+      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
