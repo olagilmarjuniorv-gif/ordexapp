@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, 
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet, DollarSign,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -61,6 +61,7 @@ export function AppLayout() {
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/financeiro", label: "Financeiro", icon: DollarSign },
     ];
   } else if (isSuperAdmin) {
     nav = [
@@ -68,6 +69,7 @@ export function AppLayout() {
       { to: "/empresas", label: "Empresas", icon: Building2 },
       { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
+      { to: "/financeiro", label: "Financeiro", icon: DollarSign },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/chamados", label: "Chamados", icon: LifeBuoy },
       { to: "/conectores", label: "Conectores", icon: Plug },
@@ -85,6 +87,7 @@ export function AppLayout() {
       { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
+      { to: "/financeiro", label: "Financeiro", icon: DollarSign },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
