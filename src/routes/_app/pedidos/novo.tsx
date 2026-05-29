@@ -102,7 +102,7 @@ function NovoPedido() {
   }, [company, canal]);
 
   // Reset forma se não for mais válida para o canal
-  useMemo(() => {
+  useEffect(() => {
     if (formaPagamento && !formasDisponiveis.includes(formaPagamento as FormaPagamento)) {
       setFormaPagamento("");
     }
