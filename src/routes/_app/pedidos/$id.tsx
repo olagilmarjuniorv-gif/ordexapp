@@ -170,6 +170,69 @@ function PedidoDetail() {
           </div>
         </div>
 
+        {/* Pagamento */}
+        <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold">Pagamento</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Forma de pagamento</p>
+              <p className="font-medium">
+                {pedido.forma_pagamento ? (FORMA_LABEL[pedido.forma_pagamento as FormaPagamento] ?? pedido.forma_pagamento) : "Não definida"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Status financeiro</p>
+              <p className="font-medium">
+                {FIN_LABEL[pedido.status_financeiro as StatusFinanceiro] ?? pedido.status_financeiro}
+              </p>
+            </div>
+          </div>
+
+          {canEditFinanceiro && pedido.status_financeiro !== "cancelado" && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+              <select
+                value={pedido.forma_pagamento ?? ""}
+                onChange={(e) =>
+                  finM.mutate({
+                    status_financeiro: pedido.status_financeiro as StatusFinanceiro,
+                    forma_pagamento: (e.target.value || null) as FormaPagamento | null,
+                  })
+                }
+                className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              >
+                <option value="">— Sem forma —</option>
+                {FORMAS_PAGAMENTO.map((f) => (
+                  <option key={f} value={f}>{FORMA_LABEL[f]}</option>
+                ))}
+              </select>
+              <select
+                value={pedido.status_financeiro ?? ""}
+                onChange={(e) =>
+                  finM.mutate({ status_financeiro: e.target.value as StatusFinanceiro })
+                }
+                className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+              >
+                {STATUS_FINANCEIRO.map((s) => (
+                  <option key={s} value={s}>{FIN_LABEL[s]}</option>
+                ))}
+              </select>
+              {pedido.status_financeiro !== "pago" && (
+                <button
+                  onClick={() => finM.mutate({ status_financeiro: "pago" })}
+                  disabled={finM.isPending}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" /> Marcar pago
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-6">
           {pedido.status === "novo" && (
             <>
