@@ -337,8 +337,37 @@ function NovoPedido() {
 
           <textarea value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Observação geral" rows={2}
             className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none" />
+
+          {/* Pagamento */}
+          <div className="mt-3 rounded-xl border border-border bg-card p-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">Pagamento</p>
+            {formasDisponiveis.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhuma forma de pagamento configurada para este canal.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setFormaPagamento("")}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${formaPagamento === "" ? "bg-foreground text-background" : "bg-muted text-foreground/70"}`}
+                >
+                  Definir depois
+                </button>
+                {formasDisponiveis.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setFormaPagamento(m)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium ${formaPagamento === m ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70"}`}
+                  >
+                    {FORMA_LABEL[m]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
 
       <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-30 border-t border-border bg-background/95 backdrop-blur p-3">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
