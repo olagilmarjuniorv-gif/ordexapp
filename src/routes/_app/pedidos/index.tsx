@@ -110,6 +110,14 @@ function PedidosList() {
         return p.status === "pago";
       case "atrasados":
         return ["novo", "preparo", "pronto"].includes(p.status) && ageMin >= LATE_MIN;
+      case "fin_pago":
+        return p.status_financeiro === "pago";
+      case "fin_aguardando":
+        return p.status_financeiro === "aguardando_pagamento";
+      case "fin_entrega":
+        return p.status_financeiro === "pagamento_entrega";
+      case "fin_retirada":
+        return p.status_financeiro === "pagamento_retirada";
       default:
         return true;
     }
@@ -122,6 +130,10 @@ function PedidosList() {
     pronto: all.filter((p) => p.status === "pronto").length,
     pago: all.filter((p) => p.status === "pago").length,
     atrasados: all.filter((p) => ["novo", "preparo", "pronto"].includes(p.status) && (now - new Date(p.created_at).getTime()) / 60_000 >= LATE_MIN).length,
+    fin_pago: all.filter((p) => p.status_financeiro === "pago").length,
+    fin_aguardando: all.filter((p) => p.status_financeiro === "aguardando_pagamento").length,
+    fin_entrega: all.filter((p) => p.status_financeiro === "pagamento_entrega").length,
+    fin_retirada: all.filter((p) => p.status_financeiro === "pagamento_retirada").length,
   } as Record<StatusFilter, number>;
 
   return (
