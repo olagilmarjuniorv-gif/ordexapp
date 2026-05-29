@@ -198,7 +198,7 @@ function NovoPedido() {
   const canSubmit = items.length > 0 && (canal !== "salao" || mesaId);
 
   return (
-    <div className="pb-32">
+    <div className="pb-40 lg:pb-32">
       <div className="flex items-center gap-3 mb-4">
         <Link to="/pedidos" className="rounded-lg p-2 -ml-2 hover:bg-muted"><ArrowLeft className="h-5 w-5" /></Link>
         <div>
@@ -379,7 +379,7 @@ function NovoPedido() {
       )}
 
 
-      <div className="fixed bottom-0 left-0 right-0 lg:left-60 z-30 border-t border-border bg-background/95 backdrop-blur p-3">
+      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-60 z-30 border-t border-border bg-background/95 backdrop-blur p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <div className="flex-1">
             <p className="text-[11px] text-muted-foreground">Total</p>
@@ -445,7 +445,7 @@ function NovoClienteModal({ onClose, onCreated, createFn }: { onClose: () => voi
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-5">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-background rounded-t-2xl sm:rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-lg font-semibold">Novo cliente</h2>
           <button onClick={onClose} className="p-1 -mr-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>

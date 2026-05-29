@@ -163,20 +163,20 @@ export function AppLayout() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-5 border-t border-border bg-background/95 backdrop-blur lg:hidden">
-        {nav.slice(0, 5).map((n) => {
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex overflow-x-auto border-t border-border bg-background/95 backdrop-blur lg:hidden">
+        {nav.map((n) => {
           const active = path.startsWith(n.to);
           return (
             <Link
               key={n.to}
               to={n.to}
               className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[10.5px] font-medium transition-colors",
+                "flex shrink-0 min-w-[68px] flex-col items-center gap-1 px-2 py-2.5 text-[10.5px] font-medium transition-colors",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
               <n.icon className={cn("h-5 w-5", active && "scale-110")} />
-              {n.label}
+              <span className="truncate max-w-[64px]">{n.label}</span>
             </Link>
           );
         })}

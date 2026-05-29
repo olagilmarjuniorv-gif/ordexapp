@@ -222,7 +222,7 @@ function FinanceiroPage() {
       {/* Tabela */}
       <section className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2">Pedido</th>
