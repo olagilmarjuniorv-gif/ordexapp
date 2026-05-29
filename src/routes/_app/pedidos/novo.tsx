@@ -155,22 +155,29 @@ function NovoPedido() {
   function remove(uid: string) { setItems((p) => p.filter((i) => i.uid !== uid)); }
 
   const submit = useMutation({
-    mutationFn: () => createFn({
-      data: {
-        canal,
-        mesa_id: canal === "salao" ? mesaId : null,
-        client_id: clienteId,
-        observacao: observacao.trim() || undefined,
-        items: items.map((i) => ({
-          kind: i.kind,
-          product_id: i.product_id,
-          combo_id: i.combo_id,
-          quantity: i.quantity,
-          price: i.basePrice,
-          adicionais: i.adicionais,
-        })),
-      },
-    }),
+    mutationFn: () => {
+      let status_financeiro: StatusFinanceiro = "aguardando_pagamento";
+      if (formaPagamento === "pagamento_entrega") status_financeiro = "pagamento_entrega";
+      else if (formaPagamento === "pagamento_retirada") status_financeiro = "pagamento_retirada";
+      return createFn({
+        data: {
+          canal,
+          mesa_id: canal === "salao" ? mesaId : null,
+          client_id: clienteId,
+          observacao: observacao.trim() || undefined,
+          forma_pagamento: (formaPagamento || null) as FormaPagamento | null,
+          status_financeiro,
+          items: items.map((i) => ({
+            kind: i.kind,
+            product_id: i.product_id,
+            combo_id: i.combo_id,
+            quantity: i.quantity,
+            price: i.basePrice,
+            adicionais: i.adicionais,
+          })),
+        },
+      });
+    },
     onSuccess: ({ id }) => {
       toast.success("Pedido enviado para a cozinha");
       navigate({ to: "/pedidos/$id", params: { id } });
