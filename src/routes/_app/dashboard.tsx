@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy, MessageSquare, Activity, TrendingDown, Clock } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { getCompanyDashboardData } from "@/lib/dashboard.functions";
+import { getCompanyById } from "@/lib/companies.functions";
 import { getSaasOverview } from "@/lib/saas.functions";
 import { listPedidos } from "@/lib/pedidos.functions";
 import { useQuery } from "@tanstack/react-query";
@@ -258,6 +259,20 @@ function SuperAdminDashboard() {
   );
 }
 
+function CompanyNameTag() {
+  const { companyId, isSuperAdmin } = useAuth();
+  const fn = useServerFn(getCompanyById);
+  const { data } = useQuery({
+    queryKey: ["company-name", companyId],
+    queryFn: () => fn({ data: {} }),
+    enabled: !!companyId && !isSuperAdmin,
+    staleTime: 60_000,
+  });
+  const name = (data as any)?.name as string | undefined;
+  if (!name) return null;
+  return <p className="text-sm text-primary font-medium mt-0.5">{name}</p>;
+}
+
 function Dashboard() {
   const { isSuperAdmin, isAtendente, companyId, loading } = useAuth();
 
@@ -297,6 +312,7 @@ function AtendenteDashboard() {
         <div>
           <p className="text-sm text-muted-foreground">Operação de hoje 🍔</p>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Meu painel</h1>
+          <CompanyNameTag />
         </div>
         <Link to="/pedidos/novo" className="inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all">
           <Plus className="h-4 w-4" /> Novo pedido

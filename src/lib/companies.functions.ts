@@ -4,6 +4,29 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getCaller } from "./auth.server";
 
+const HORARIO_DIA = z.object({
+  abre: z.string().regex(/^\d{2}:\d{2}$/),
+  fecha: z.string().regex(/^\d{2}:\d{2}$/),
+  ativo: z.boolean(),
+});
+
+const HORARIOS_SCHEMA = z.object({
+  seg: HORARIO_DIA,
+  ter: HORARIO_DIA,
+  qua: HORARIO_DIA,
+  qui: HORARIO_DIA,
+  sex: HORARIO_DIA,
+  sab: HORARIO_DIA,
+  dom: HORARIO_DIA,
+});
+
+export type HorariosFuncionamento = z.infer<typeof HORARIOS_SCHEMA>;
+
+const FULL_FIELDS =
+  "id, name, slug, phone, whatsapp, email, active, created_at, " +
+  "cep, rua, numero, complemento, bairro, cidade, estado, " +
+  "delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega, horarios";
+
 export const listCompanies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -20,6 +43,27 @@ export const listCompanies = createServerFn({ method: "GET" })
     const { data, error } = await q;
     if (error) throw new Response(error.message, { status: 500 });
     return data ?? [];
+  });
+
+export const getCompanyById = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid().optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    const c = await getCaller(context.userId);
+    const targetId = data.id ?? c.companyId;
+    if (!targetId) return null;
+    if (!c.isSuperAdmin && targetId !== c.companyId) {
+      throw new Response("Acesso negado", { status: 403 });
+    }
+    const { data: row, error } = await supabaseAdmin
+      .from("companies")
+      .select(FULL_FIELDS)
+      .eq("id", targetId)
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    return row;
   });
 
 export const createCompany = createServerFn({ method: "POST" })
@@ -72,6 +116,58 @@ export const updateCompany = createServerFn({ method: "POST" })
       .from("companies")
       .update({ name: data.name, slug: data.slug || null, phone: data.phone || null })
       .eq("id", data.id);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
+
+export const updateMeuRestaurante = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        name: z.string().trim().min(1).max(120),
+        phone: z.string().trim().max(40).optional().nullable(),
+        whatsapp: z.string().trim().max(40).optional().nullable(),
+        email: z.string().trim().max(200).optional().nullable(),
+        cep: z.string().trim().max(20).optional().nullable(),
+        rua: z.string().trim().max(200).optional().nullable(),
+        numero: z.string().trim().max(20).optional().nullable(),
+        complemento: z.string().trim().max(120).optional().nullable(),
+        bairro: z.string().trim().max(120).optional().nullable(),
+        cidade: z.string().trim().max(120).optional().nullable(),
+        estado: z.string().trim().max(40).optional().nullable(),
+        delivery_ativo: z.boolean(),
+        retirada_ativa: z.boolean(),
+        tempo_preparo_min: z.number().int().min(0).max(600),
+        pedido_minimo: z.number().min(0).max(100000),
+        taxa_entrega: z.number().min(0).max(100000),
+        horarios: HORARIOS_SCHEMA,
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const c = await getCaller(context.userId);
+    if (!c.isSuperAdmin && !(c.isCompanyAdmin && c.companyId === data.id)) {
+      throw new Response("Acesso negado", { status: 403 });
+    }
+    const { id, ...rest } = data;
+    const { error } = await supabaseAdmin
+      .from("companies")
+      .update({
+        ...rest,
+        email: rest.email || null,
+        whatsapp: rest.whatsapp || null,
+        phone: rest.phone || null,
+        cep: rest.cep || null,
+        rua: rest.rua || null,
+        numero: rest.numero || null,
+        complemento: rest.complemento || null,
+        bairro: rest.bairro || null,
+        cidade: rest.cidade || null,
+        estado: rest.estado || null,
+      })
+      .eq("id", id);
     if (error) throw new Response(error.message, { status: 500 });
     return { ok: true };
   });

@@ -16,6 +16,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUsuariosRouteImport } from './routes/_app/usuarios'
 import { Route as AppProdutosRouteImport } from './routes/_app/produtos'
+import { Route as AppMeuRestauranteRouteImport } from './routes/_app/meu-restaurante'
 import { Route as AppMensagensRouteImport } from './routes/_app/mensagens'
 import { Route as AppHistoricoRouteImport } from './routes/_app/historico'
 import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
@@ -72,6 +73,11 @@ const AppUsuariosRoute = AppUsuariosRouteImport.update({
 const AppProdutosRoute = AppProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMeuRestauranteRoute = AppMeuRestauranteRouteImport.update({
+  id: '/meu-restaurante',
+  path: '/meu-restaurante',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMensagensRoute = AppMensagensRouteImport.update({
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/entregas': typeof AppEntregasRoute
   '/historico': typeof AppHistoricoRoute
   '/mensagens': typeof AppMensagensRoute
+  '/meu-restaurante': typeof AppMeuRestauranteRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/mesas/$id': typeof AppMesasIdRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/entregas': typeof AppEntregasRoute
   '/historico': typeof AppHistoricoRoute
   '/mensagens': typeof AppMensagensRoute
+  '/meu-restaurante': typeof AppMeuRestauranteRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/mesas/$id': typeof AppMesasIdRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/_app/entregas': typeof AppEntregasRoute
   '/_app/historico': typeof AppHistoricoRoute
   '/_app/mensagens': typeof AppMensagensRoute
+  '/_app/meu-restaurante': typeof AppMeuRestauranteRoute
   '/_app/produtos': typeof AppProdutosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/mesas/$id': typeof AppMesasIdRoute
@@ -306,6 +315,7 @@ export interface FileRouteTypes {
     | '/entregas'
     | '/historico'
     | '/mensagens'
+    | '/meu-restaurante'
     | '/produtos'
     | '/usuarios'
     | '/mesas/$id'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/entregas'
     | '/historico'
     | '/mensagens'
+    | '/meu-restaurante'
     | '/produtos'
     | '/usuarios'
     | '/mesas/$id'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/_app/entregas'
     | '/_app/historico'
     | '/_app/mensagens'
+    | '/_app/meu-restaurante'
     | '/_app/produtos'
     | '/_app/usuarios'
     | '/_app/mesas/$id'
@@ -443,6 +455,13 @@ declare module '@tanstack/react-router' {
       path: '/produtos'
       fullPath: '/produtos'
       preLoaderRoute: typeof AppProdutosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/meu-restaurante': {
+      id: '/_app/meu-restaurante'
+      path: '/meu-restaurante'
+      fullPath: '/meu-restaurante'
+      preLoaderRoute: typeof AppMeuRestauranteRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mensagens': {
@@ -623,6 +642,7 @@ interface AppRouteChildren {
   AppEntregasRoute: typeof AppEntregasRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppMensagensRoute: typeof AppMensagensRoute
+  AppMeuRestauranteRoute: typeof AppMeuRestauranteRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
   AppMesasIdRoute: typeof AppMesasIdRoute
@@ -648,6 +668,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEntregasRoute: AppEntregasRoute,
   AppHistoricoRoute: AppHistoricoRoute,
   AppMensagensRoute: AppMensagensRoute,
+  AppMeuRestauranteRoute: AppMeuRestauranteRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppUsuariosRoute: AppUsuariosRoute,
   AppMesasIdRoute: AppMesasIdRoute,

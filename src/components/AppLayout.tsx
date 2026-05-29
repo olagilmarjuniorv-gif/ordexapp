@@ -1,19 +1,32 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, 
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { usePedidoProntoNotify } from "@/hooks/use-pedido-pronto-notify";
+import { getCompanyById } from "@/lib/companies.functions";
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha } = useAuth();
+  const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha, companyId } = useAuth();
 
   // Notificação interna quando pedido fica "pronto" (admin + atendente).
   usePedidoProntoNotify((isAdmin && !isSuperAdmin) || isAtendente);
+
+  // Nome da empresa para identidade visual (sidebar + topo)
+  const getCompanyByIdFn = useServerFn(getCompanyById);
+  const companyQuery = useQuery({
+    queryKey: ["company-name", companyId],
+    queryFn: () => getCompanyByIdFn({ data: {} }),
+    enabled: !!companyId && !isSuperAdmin,
+    staleTime: 60_000,
+  });
+  const companyName = (companyQuery.data as any)?.name as string | undefined;
 
   // Cozinha: layout minimal, vê só /cozinha e /pedidos
   if (isCozinha) {
@@ -53,6 +66,7 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/empresas", label: "Empresas", icon: Building2 },
+      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/chamados", label: "Chamados", icon: LifeBuoy },
       { to: "/conectores", label: "Conectores", icon: Plug },
@@ -68,6 +82,7 @@ export function AppLayout() {
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
+      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
@@ -90,6 +105,9 @@ export function AppLayout() {
         <div className="relative flex items-center px-5 py-5 border-b border-sidebar-border">
           <div className="min-w-0">
             <p className="brand-wordmark text-2xl text-white leading-none truncate">SaiuPedido</p>
+            {companyName ? (
+              <p className="text-xs text-sidebar-foreground/80 mt-1 truncate font-medium">{companyName}</p>
+            ) : null}
             <p className="text-[11px] text-sidebar-foreground/60 mt-2 truncate flex items-center gap-1.5">
               <span className="realtime-dot" />
               {profile?.full_name || role || "Operação"}
