@@ -84,6 +84,7 @@ export function AppLayout() {
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
+      { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
