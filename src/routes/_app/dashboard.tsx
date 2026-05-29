@@ -410,6 +410,8 @@ function CompanyDashboard() {
         </div>
       </div>
 
+      <OnboardingChecklist />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
         <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" to="/pedidos" />
