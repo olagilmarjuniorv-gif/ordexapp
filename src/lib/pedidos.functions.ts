@@ -7,7 +7,25 @@ import { getCaller } from "./auth.server";
 
 export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"] as const;
 export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
+export const FORMAS_PAGAMENTO = [
+  "pix_online",
+  "dinheiro",
+  "credito_presencial",
+  "debito_presencial",
+  "pix_presencial",
+  "pagamento_entrega",
+  "pagamento_retirada",
+] as const;
+export const STATUS_FINANCEIRO = [
+  "aguardando_pagamento",
+  "pago",
+  "pagamento_entrega",
+  "pagamento_retirada",
+  "cancelado",
+] as const;
 export type PedidoStatus = typeof PEDIDO_STATUSES[number];
+export type FormaPagamento = typeof FORMAS_PAGAMENTO[number];
+export type StatusFinanceiro = typeof STATUS_FINANCEIRO[number];
 
 const adicionalSchema = z.object({
   name: z.string(),
