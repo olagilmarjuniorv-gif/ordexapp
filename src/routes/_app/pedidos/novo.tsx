@@ -35,6 +35,16 @@ const CANAL_OPTIONS: { value: Canal; label: string }[] = [
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
+const FORMA_LABEL: Record<FormaPagamento, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito presencial",
+  debito_presencial: "Débito presencial",
+  pix_presencial: "Pix presencial",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+};
+
 type CartItem = {
   uid: string;
   kind: "produto" | "combo";
