@@ -90,25 +90,26 @@ function MeuRestaurantePage() {
 
   useEffect(() => {
     if (!company) return;
+    const c = company as any;
     setForm({
-      id: company.id,
-      name: company.name ?? "",
-      phone: company.phone ?? "",
-      whatsapp: (company as any).whatsapp ?? "",
-      email: (company as any).email ?? "",
-      cep: (company as any).cep ?? "",
-      rua: (company as any).rua ?? "",
-      numero: (company as any).numero ?? "",
-      complemento: (company as any).complemento ?? "",
-      bairro: (company as any).bairro ?? "",
-      cidade: (company as any).cidade ?? "",
-      estado: (company as any).estado ?? "",
-      delivery_ativo: (company as any).delivery_ativo ?? true,
-      retirada_ativa: (company as any).retirada_ativa ?? true,
-      tempo_preparo_min: (company as any).tempo_preparo_min ?? 30,
-      pedido_minimo: Number((company as any).pedido_minimo ?? 0),
-      taxa_entrega: Number((company as any).taxa_entrega ?? 0),
-      horarios: (company as any).horarios as HorariosFuncionamento,
+      id: c.id,
+      name: c.name ?? "",
+      phone: c.phone ?? "",
+      whatsapp: c.whatsapp ?? "",
+      email: c.email ?? "",
+      cep: c.cep ?? "",
+      rua: c.rua ?? "",
+      numero: c.numero ?? "",
+      complemento: c.complemento ?? "",
+      bairro: c.bairro ?? "",
+      cidade: c.cidade ?? "",
+      estado: c.estado ?? "",
+      delivery_ativo: c.delivery_ativo ?? true,
+      retirada_ativa: c.retirada_ativa ?? true,
+      tempo_preparo_min: c.tempo_preparo_min ?? 30,
+      pedido_minimo: Number(c.pedido_minimo ?? 0),
+      taxa_entrega: Number(c.taxa_entrega ?? 0),
+      horarios: c.horarios as HorariosFuncionamento,
     });
   }, [company]);
 
