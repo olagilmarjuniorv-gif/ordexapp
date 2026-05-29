@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// Cozinha não controla pagamentos. Fluxo: NOVO → PREPARO → PRONTO.
 import { useState, useEffect } from "react";
 import { listPedidos, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
-import { useAuth } from "@/lib/auth";
-import { ChefHat, Play, Check, DollarSign, Volume2, VolumeX, Maximize2, Minimize2, Sun, Moon, AlertTriangle } from "lucide-react";
+import { ChefHat, Play, Check, Volume2, VolumeX, Maximize2, Minimize2, Sun, Moon, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/cozinha")({
@@ -18,7 +18,7 @@ const LATE_MIN = 25;
 const NEXT_LABEL: Partial<Record<PedidoStatus, { next: PedidoStatus; label: string; icon: any }>> = {
   novo: { next: "preparo", label: "Iniciar preparo", icon: Play },
   preparo: { next: "pronto", label: "Marcar pronto", icon: Check },
-  pronto: { next: "pago", label: "Marcar pago", icon: DollarSign },
+  // pronto: cozinha não fecha pagamento — fluxo financeiro fica com atendente/admin
 };
 
 // Tons fixos (sem piscar). Apenas borda/fundo por status.
