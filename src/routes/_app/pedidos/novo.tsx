@@ -77,6 +77,26 @@ function NovoPedido() {
   const { data: categorias = [] } = useQuery({ queryKey: ["categorias"], queryFn: () => fetchCats({}) });
   const { data: mesas = [] } = useQuery({ queryKey: ["mesas"], queryFn: () => fetchMesas({}), enabled: canal === "salao" });
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: () => fetchClientes({}) });
+  const { data: company } = useQuery({ queryKey: ["company-pagamentos"], queryFn: () => fetchCompany({}) });
+
+  const formasDisponiveis = useMemo<FormaPagamento[]>(() => {
+    const cfg = (company as any)?.pagamento_metodos ?? {};
+    const permEntrega = (company as any)?.permitir_pagamento_entrega ?? true;
+    const permRetirada = (company as any)?.permitir_pagamento_retirada ?? true;
+    return FORMAS_PAGAMENTO.filter((m) => {
+      if (cfg[m] === false) return false;
+      if (m === "pagamento_entrega") return permEntrega && canal === "delivery";
+      if (m === "pagamento_retirada") return permRetirada && (canal === "retirada" || canal === "balcao");
+      return true;
+    });
+  }, [company, canal]);
+
+  // Reset forma se não for mais válida para o canal
+  useMemo(() => {
+    if (formaPagamento && !formasDisponiveis.includes(formaPagamento as FormaPagamento)) {
+      setFormaPagamento("");
+    }
+  }, [formasDisponiveis, formaPagamento]);
 
   const filteredProdutos = useMemo(() => {
     return (produtos as any[]).filter((p) => {
