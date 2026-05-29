@@ -11,6 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { SalesChart } from "@/components/SalesChart";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/period";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -408,6 +409,8 @@ function CompanyDashboard() {
           </Link>
         </div>
       </div>
+
+      <OnboardingChecklist />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
