@@ -70,6 +70,7 @@ function NovoPedido() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [picker, setPicker] = useState<{ produto: any; grupos: any[] } | null>(null);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento | "">("");
 
   const { data: produtos = [], isLoading: loadingProdutos } = useQuery({ queryKey: ["produtos"], queryFn: () => fetchProdutos({}) });
   const { data: combos = [] } = useQuery({ queryKey: ["combos"], queryFn: () => fetchCombos({}) });
