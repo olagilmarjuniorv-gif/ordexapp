@@ -25,7 +25,30 @@ export type HorariosFuncionamento = z.infer<typeof HORARIOS_SCHEMA>;
 const FULL_FIELDS =
   "id, name, slug, phone, whatsapp, email, active, created_at, " +
   "cep, rua, numero, complemento, bairro, cidade, estado, " +
-  "delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega, horarios";
+  "delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega, horarios, " +
+  "pagamento_metodos, exigir_pagamento_antes_cozinha, permitir_pagamento_entrega, permitir_pagamento_retirada";
+
+export const PAGAMENTO_METODOS = [
+  "pix_online",
+  "dinheiro",
+  "credito_presencial",
+  "debito_presencial",
+  "pix_presencial",
+  "pagamento_entrega",
+  "pagamento_retirada",
+] as const;
+export type PagamentoMetodo = typeof PAGAMENTO_METODOS[number];
+export type PagamentoMetodosConfig = Record<PagamentoMetodo, boolean>;
+
+const PAGAMENTO_METODOS_SCHEMA = z.object({
+  pix_online: z.boolean(),
+  dinheiro: z.boolean(),
+  credito_presencial: z.boolean(),
+  debito_presencial: z.boolean(),
+  pix_presencial: z.boolean(),
+  pagamento_entrega: z.boolean(),
+  pagamento_retirada: z.boolean(),
+});
 
 export const listCompanies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
