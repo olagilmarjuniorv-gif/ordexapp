@@ -9,10 +9,75 @@ export type EstadoConversa =
   | "escolhendo_quantidade"
   | "escrevendo_observacao"
   | "confirmando_pedido"
+  | "escolhendo_entrega"
   | "escolhendo_pagamento"
+  | "resumo_final"
   | "aguardando_atendente"
   | "pedido_finalizado"
   | "conversa_encerrada";
+
+type FormaPagamentoCode =
+  | "pix_online"
+  | "dinheiro"
+  | "credito_presencial"
+  | "debito_presencial"
+  | "pix_presencial"
+  | "pagamento_entrega"
+  | "pagamento_retirada";
+
+type StatusFinanceiroCode =
+  | "aguardando_pagamento"
+  | "pagamento_entrega"
+  | "pagamento_retirada";
+
+const PAGAMENTO_LABELS: Record<FormaPagamentoCode, string> = {
+  pix_online: "Pix online",
+  dinheiro: "Dinheiro",
+  credito_presencial: "Crédito presencial",
+  debito_presencial: "Débito presencial",
+  pix_presencial: "Pix presencial",
+  pagamento_entrega: "Pagamento na entrega",
+  pagamento_retirada: "Pagamento na retirada",
+};
+
+function statusFinanceiroFor(forma: FormaPagamentoCode): StatusFinanceiroCode {
+  if (forma === "pagamento_entrega") return "pagamento_entrega";
+  if (forma === "pagamento_retirada") return "pagamento_retirada";
+  return "aguardando_pagamento";
+}
+
+async function getCompanyPagamentos(companyId: string) {
+  const { data } = await supabaseAdmin
+    .from("companies")
+    .select("pagamento_metodos, permitir_pagamento_entrega, permitir_pagamento_retirada, delivery_ativo, retirada_ativa")
+    .eq("id", companyId)
+    .maybeSingle();
+  return data;
+}
+
+async function listFormasPagamentoAtivas(companyId: string, canal: "delivery" | "retirada"): Promise<FormaPagamentoCode[]> {
+  const cfg = await getCompanyPagamentos(companyId);
+  const metodos = (cfg?.pagamento_metodos as Record<string, boolean>) ?? {};
+  const ordered: FormaPagamentoCode[] = [
+    "pix_online",
+    "dinheiro",
+    "credito_presencial",
+    "debito_presencial",
+    "pix_presencial",
+    "pagamento_entrega",
+    "pagamento_retirada",
+  ];
+  return ordered.filter((f) => {
+    if (!metodos[f]) return false;
+    if (f === "pagamento_entrega") {
+      return canal === "delivery" && cfg?.permitir_pagamento_entrega !== false;
+    }
+    if (f === "pagamento_retirada") {
+      return canal === "retirada" && cfg?.permitir_pagamento_retirada !== false;
+    }
+    return true;
+  });
+}
 
 const TIMEOUT_MS = 30 * 60 * 1000;
 
