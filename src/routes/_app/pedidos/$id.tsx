@@ -52,8 +52,11 @@ const canalLabel: Record<string, string> = {
 function PedidoDetail() {
   const qc = useQueryClient();
   const { id } = Route.useParams();
+  const { isAdmin, isAtendente } = useAuth();
+  const canEditFinanceiro = isAdmin || isAtendente;
   const getFn = useServerFn(getPedido);
   const statusFn = useServerFn(updatePedidoStatus);
+  const finFn = useServerFn(updatePedidoStatusFinanceiro);
 
   const { data: pedRaw, isLoading, error } = useQuery({
     queryKey: ["pedido", id],
@@ -66,6 +69,17 @@ function PedidoDetail() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pedido", id] });
       qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
+  const finM = useMutation({
+    mutationFn: (vars: { status_financeiro: StatusFinanceiro; forma_pagamento?: FormaPagamento | null }) =>
+      finFn({ data: { id, ...vars } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedido", id] });
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      toast.success("Pagamento atualizado");
     },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
