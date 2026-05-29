@@ -76,7 +76,7 @@ function FinanceiroPage() {
 
   const companiesQuery = useQuery({
     queryKey: ["companies-list"],
-    queryFn: () => listCompaniesFn({ data: {} }),
+    queryFn: () => listCompaniesFn({}),
     enabled: !!isSuperAdmin,
     staleTime: 60_000,
   });
