@@ -257,7 +257,10 @@ async function mostrarProdutos(
   };
 }
 
-async function finalizarPedido(sessao: Sessao): Promise<string> {
+async function finalizarPedido(
+  sessao: Sessao,
+  opts: { canal: "delivery" | "retirada"; formaPagamento: FormaPagamentoCode },
+): Promise<string> {
   const cart = sessao.carrinho;
   const total = cartTotal(cart);
 
