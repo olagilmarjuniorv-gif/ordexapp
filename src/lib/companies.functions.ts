@@ -25,7 +25,30 @@ export type HorariosFuncionamento = z.infer<typeof HORARIOS_SCHEMA>;
 const FULL_FIELDS =
   "id, name, slug, phone, whatsapp, email, active, created_at, " +
   "cep, rua, numero, complemento, bairro, cidade, estado, " +
-  "delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega, horarios";
+  "delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega, horarios, " +
+  "pagamento_metodos, exigir_pagamento_antes_cozinha, permitir_pagamento_entrega, permitir_pagamento_retirada";
+
+export const PAGAMENTO_METODOS = [
+  "pix_online",
+  "dinheiro",
+  "credito_presencial",
+  "debito_presencial",
+  "pix_presencial",
+  "pagamento_entrega",
+  "pagamento_retirada",
+] as const;
+export type PagamentoMetodo = typeof PAGAMENTO_METODOS[number];
+export type PagamentoMetodosConfig = Record<PagamentoMetodo, boolean>;
+
+const PAGAMENTO_METODOS_SCHEMA = z.object({
+  pix_online: z.boolean(),
+  dinheiro: z.boolean(),
+  credito_presencial: z.boolean(),
+  debito_presencial: z.boolean(),
+  pix_presencial: z.boolean(),
+  pagamento_entrega: z.boolean(),
+  pagamento_retirada: z.boolean(),
+});
 
 export const listCompanies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -186,6 +209,33 @@ export const setCompanyActive = createServerFn({ method: "POST" })
       .from("companies")
       .update({ active: data.active })
       .eq("id", data.id);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true };
+  });
+
+export const updateCompanyPagamentos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        pagamento_metodos: PAGAMENTO_METODOS_SCHEMA,
+        exigir_pagamento_antes_cozinha: z.boolean(),
+        permitir_pagamento_entrega: z.boolean(),
+        permitir_pagamento_retirada: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const c = await getCaller(context.userId);
+    if (!c.isSuperAdmin && !(c.isCompanyAdmin && c.companyId === data.id)) {
+      throw new Response("Acesso negado", { status: 403 });
+    }
+    const { id, ...rest } = data;
+    const { error } = await supabaseAdmin
+      .from("companies")
+      .update(rest)
+      .eq("id", id);
     if (error) throw new Response(error.message, { status: 500 });
     return { ok: true };
   });

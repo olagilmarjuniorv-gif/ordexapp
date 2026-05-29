@@ -7,7 +7,25 @@ import { getCaller } from "./auth.server";
 
 export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"] as const;
 export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
+export const FORMAS_PAGAMENTO = [
+  "pix_online",
+  "dinheiro",
+  "credito_presencial",
+  "debito_presencial",
+  "pix_presencial",
+  "pagamento_entrega",
+  "pagamento_retirada",
+] as const;
+export const STATUS_FINANCEIRO = [
+  "aguardando_pagamento",
+  "pago",
+  "pagamento_entrega",
+  "pagamento_retirada",
+  "cancelado",
+] as const;
 export type PedidoStatus = typeof PEDIDO_STATUSES[number];
+export type FormaPagamento = typeof FORMAS_PAGAMENTO[number];
+export type StatusFinanceiro = typeof STATUS_FINANCEIRO[number];
 
 const adicionalSchema = z.object({
   name: z.string(),
@@ -30,6 +48,8 @@ const createSchema = z.object({
   mesa_id: z.string().uuid().nullable().optional(),
   canal: z.enum(PEDIDO_CANAIS).default("salao"),
   observacao: z.string().optional(),
+  forma_pagamento: z.enum(FORMAS_PAGAMENTO).nullable().optional(),
+  status_financeiro: z.enum(STATUS_FINANCEIRO).optional(),
   items: z.array(pedidoItemSchema).min(1, "Adicione ao menos um item."),
 });
 
@@ -115,6 +135,13 @@ export const createPedido = createServerFn({ method: "POST" })
       };
     });
 
+    // Default financial status inferred from forma_pagamento
+    let status_financeiro: StatusFinanceiro = data.status_financeiro ?? "aguardando_pagamento";
+    if (!data.status_financeiro && data.forma_pagamento) {
+      if (data.forma_pagamento === "pagamento_entrega") status_financeiro = "pagamento_entrega";
+      else if (data.forma_pagamento === "pagamento_retirada") status_financeiro = "pagamento_retirada";
+    }
+
     const { data: created, error: insErr } = await supabaseAdmin
       .from("pedidos")
       .insert({
@@ -127,7 +154,9 @@ export const createPedido = createServerFn({ method: "POST" })
         items,
         total_amount,
         status: "novo",
-      })
+        forma_pagamento: data.forma_pagamento ?? null,
+        status_financeiro,
+      } as any)
       .select("id")
       .single();
 
@@ -180,6 +209,45 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
       entityType: "pedido",
       entityId: data.id,
       description: `Status alterado para "${data.status}"`,
+    });
+
+    return { ok: true };
+  });
+
+export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        status_financeiro: z.enum(STATUS_FINANCEIRO),
+        forma_pagamento: z.enum(FORMAS_PAGAMENTO).nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+
+    const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
+    if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
+    if (data.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+
+    const { error } = await supabaseAdmin
+      .from("pedidos")
+      .update(patch as any)
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId);
+
+    if (error) throw new Response(error.message, { status: 500 });
+
+    await audit({
+      companyId: caller.companyId,
+      userId: caller.userId,
+      action: `pedido.financeiro.${data.status_financeiro}`,
+      entityType: "pedido",
+      entityId: data.id,
+      description: `Status financeiro alterado para "${data.status_financeiro}"`,
     });
 
     return { ok: true };

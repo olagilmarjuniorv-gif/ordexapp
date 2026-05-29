@@ -268,11 +268,15 @@ export type Database = {
           delivery_ativo: boolean
           email: string | null
           estado: string | null
+          exigir_pagamento_antes_cozinha: boolean
           horarios: Json
           id: string
           name: string
           numero: string | null
+          pagamento_metodos: Json
           pedido_minimo: number
+          permitir_pagamento_entrega: boolean
+          permitir_pagamento_retirada: boolean
           phone: string | null
           retirada_ativa: boolean
           rua: string | null
@@ -292,11 +296,15 @@ export type Database = {
           delivery_ativo?: boolean
           email?: string | null
           estado?: string | null
+          exigir_pagamento_antes_cozinha?: boolean
           horarios?: Json
           id?: string
           name: string
           numero?: string | null
+          pagamento_metodos?: Json
           pedido_minimo?: number
+          permitir_pagamento_entrega?: boolean
+          permitir_pagamento_retirada?: boolean
           phone?: string | null
           retirada_ativa?: boolean
           rua?: string | null
@@ -316,11 +324,15 @@ export type Database = {
           delivery_ativo?: boolean
           email?: string | null
           estado?: string | null
+          exigir_pagamento_antes_cozinha?: boolean
           horarios?: Json
           id?: string
           name?: string
           numero?: string | null
+          pagamento_metodos?: Json
           pedido_minimo?: number
+          permitir_pagamento_entrega?: boolean
+          permitir_pagamento_retirada?: boolean
           phone?: string | null
           retirada_ativa?: boolean
           rua?: string | null
@@ -553,6 +565,7 @@ export type Database = {
           external_order_id: string | null
           external_payload: Json | null
           external_provider: string | null
+          forma_pagamento: string | null
           id: string
           imported_at: string | null
           items: Json
@@ -561,6 +574,7 @@ export type Database = {
           orcamento_id: string | null
           paid_at: string | null
           status: string
+          status_financeiro: string
           total_amount: number
           updated_at: string
           user_id: string
@@ -573,6 +587,7 @@ export type Database = {
           external_order_id?: string | null
           external_payload?: Json | null
           external_provider?: string | null
+          forma_pagamento?: string | null
           id?: string
           imported_at?: string | null
           items?: Json
@@ -581,6 +596,7 @@ export type Database = {
           orcamento_id?: string | null
           paid_at?: string | null
           status?: string
+          status_financeiro?: string
           total_amount?: number
           updated_at?: string
           user_id: string
@@ -593,6 +609,7 @@ export type Database = {
           external_order_id?: string | null
           external_payload?: Json | null
           external_provider?: string | null
+          forma_pagamento?: string | null
           id?: string
           imported_at?: string | null
           items?: Json
@@ -601,6 +618,7 @@ export type Database = {
           orcamento_id?: string | null
           paid_at?: string | null
           status?: string
+          status_financeiro?: string
           total_amount?: number
           updated_at?: string
           user_id?: string

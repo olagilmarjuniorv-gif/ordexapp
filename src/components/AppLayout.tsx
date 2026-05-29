@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, 
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -67,6 +67,7 @@ export function AppLayout() {
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/empresas", label: "Empresas", icon: Building2 },
       { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
+      { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
       { to: "/chamados", label: "Chamados", icon: LifeBuoy },
       { to: "/conectores", label: "Conectores", icon: Plug },
@@ -83,6 +84,7 @@ export function AppLayout() {
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
       { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
+      { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
