@@ -48,6 +48,8 @@ const createSchema = z.object({
   mesa_id: z.string().uuid().nullable().optional(),
   canal: z.enum(PEDIDO_CANAIS).default("salao"),
   observacao: z.string().optional(),
+  forma_pagamento: z.enum(FORMAS_PAGAMENTO).nullable().optional(),
+  status_financeiro: z.enum(STATUS_FINANCEIRO).optional(),
   items: z.array(pedidoItemSchema).min(1, "Adicione ao menos um item."),
 });
 
