@@ -214,6 +214,45 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        status_financeiro: z.enum(STATUS_FINANCEIRO),
+        forma_pagamento: z.enum(FORMAS_PAGAMENTO).nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+
+    const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
+    if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
+    if (data.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+
+    const { error } = await supabaseAdmin
+      .from("pedidos")
+      .update(patch)
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId);
+
+    if (error) throw new Response(error.message, { status: 500 });
+
+    await audit({
+      companyId: caller.companyId,
+      userId: caller.userId,
+      action: `pedido.financeiro.${data.status_financeiro}`,
+      entityType: "pedido",
+      entityId: data.id,
+      description: `Status financeiro alterado para "${data.status_financeiro}"`,
+    });
+
+    return { ok: true };
+  });
+
 function formatBRL(v: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
