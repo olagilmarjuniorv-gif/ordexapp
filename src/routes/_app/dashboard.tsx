@@ -259,6 +259,20 @@ function SuperAdminDashboard() {
   );
 }
 
+function CompanyNameTag() {
+  const { companyId, isSuperAdmin } = useAuth();
+  const fn = useServerFn(getCompanyById);
+  const { data } = useQuery({
+    queryKey: ["company-name", companyId],
+    queryFn: () => fn({ data: {} }),
+    enabled: !!companyId && !isSuperAdmin,
+    staleTime: 60_000,
+  });
+  const name = (data as any)?.name as string | undefined;
+  if (!name) return null;
+  return <p className="text-sm text-primary font-medium mt-0.5">{name}</p>;
+}
+
 function Dashboard() {
   const { isSuperAdmin, isAtendente, companyId, loading } = useAuth();
 
