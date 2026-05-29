@@ -172,8 +172,7 @@ function Cozinha() {
             const late = ageMin >= LATE_MIN;
             const t = tone[p.status] ?? tone.novo;
             const action = NEXT_LABEL[p.status as PedidoStatus];
-            const allowPagoBtn = canSeeFinancials || p.status === "pronto";
-            const showAction = action && (action.next !== "pago" || allowPagoBtn);
+            const showAction = !!action;
             const cardText = dark ? "text-white" : "";
 
             return (
