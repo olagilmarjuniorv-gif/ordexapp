@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, Search, Plus, Minus, Trash2, Loader2, ShoppingBag, Package2 } from "lucide-react";
+import { ArrowLeft, Search, Plus, Minus, Trash2, Loader2, ShoppingBag, Package2, UserPlus, X } from "lucide-react";
 import { listProdutos } from "@/lib/produtos.functions";
 import { listMesas } from "@/lib/mesas.functions";
-import { listClientes } from "@/lib/clientes.functions";
+import { listClientes, createCliente } from "@/lib/clientes.functions";
 import { listCategorias } from "@/lib/categorias.functions";
 import { listCombos } from "@/lib/combos.functions";
 import { getProdutoAdicionais } from "@/lib/adicionais.functions";
@@ -48,6 +48,7 @@ type CartItem = {
 
 function NovoPedido() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const search = Route.useSearch();
   const fetchProdutos = useServerFn(listProdutos);
   const fetchMesas = useServerFn(listMesas);
@@ -56,6 +57,7 @@ function NovoPedido() {
   const fetchCombos = useServerFn(listCombos);
   const fetchProdAdic = useServerFn(getProdutoAdicionais);
   const createFn = useServerFn(createPedido);
+  const createClienteFn = useServerFn(createCliente);
 
   const [canal, setCanal] = useState<Canal>(search.canal ?? "salao");
   const [mesaId, setMesaId] = useState<string | null>(search.mesa ?? null);
@@ -65,12 +67,13 @@ function NovoPedido() {
   const [catFilter, setCatFilter] = useState<string>("all");
   const [items, setItems] = useState<CartItem[]>([]);
   const [picker, setPicker] = useState<{ produto: any; grupos: any[] } | null>(null);
+  const [showNovoCliente, setShowNovoCliente] = useState(false);
 
   const { data: produtos = [], isLoading: loadingProdutos } = useQuery({ queryKey: ["produtos"], queryFn: () => fetchProdutos({}) });
   const { data: combos = [] } = useQuery({ queryKey: ["combos"], queryFn: () => fetchCombos({}) });
   const { data: categorias = [] } = useQuery({ queryKey: ["categorias"], queryFn: () => fetchCats({}) });
   const { data: mesas = [] } = useQuery({ queryKey: ["mesas"], queryFn: () => fetchMesas({}), enabled: canal === "salao" });
-  const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: () => fetchClientes({}), enabled: canal === "delivery" });
+  const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: () => fetchClientes({}) });
 
   const filteredProdutos = useMemo(() => {
     return (produtos as any[]).filter((p) => {
@@ -86,11 +89,20 @@ function NovoPedido() {
     return (combos as any[]).filter((c) => c.active && (!query || c.name.toLowerCase().includes(query.toLowerCase())));
   }, [combos, query, catFilter]);
 
+  // Mapa de quantidades por produto/combo no carrinho (para badge visual)
+  const cartQtyMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const it of items) {
+      const key = it.kind === "combo" ? `c:${it.combo_id}` : `p:${it.product_id}`;
+      m.set(key, (m.get(key) ?? 0) + it.quantity);
+    }
+    return m;
+  }, [items]);
+
   const total = items.reduce((acc, i) => acc + (i.basePrice + i.adicionais.reduce((a, x) => a + x.price, 0)) * i.quantity, 0);
   const totalQty = items.reduce((acc, i) => acc + i.quantity, 0);
 
   async function tapProduto(p: any) {
-    // verifica se tem grupos
     try {
       const grupos = await fetchProdAdic({ data: { produto_id: p.id } });
       if ((grupos as any[]).length > 0) {
@@ -136,7 +148,10 @@ function NovoPedido() {
         })),
       },
     }),
-    onSuccess: ({ id }) => { toast.success("Pedido criado"); navigate({ to: "/pedidos/$id", params: { id } }); },
+    onSuccess: ({ id }) => {
+      toast.success("Pedido enviado para a cozinha");
+      navigate({ to: "/pedidos/$id", params: { id } });
+    },
     onError: (e: any) => toast.error(e?.message ?? "Erro ao criar pedido"),
   });
 
@@ -179,14 +194,28 @@ function NovoPedido() {
         </div>
       )}
 
-      {canal === "delivery" && (
-        <div className="mb-3">
-          <select value={clienteId ?? ""} onChange={(e) => setClienteId(e.target.value || null)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
-            <option value="">— Sem cliente —</option>
-            {(clientes as any[]).map((c) => <option key={c.id} value={c.id}>{c.name} {c.phone ? `· ${c.phone}` : ""}</option>)}
-          </select>
-        </div>
-      )}
+      {/* Cliente — disponível em todos os canais */}
+      <div className="mb-3 flex gap-2">
+        <select
+          value={clienteId ?? ""}
+          onChange={(e) => setClienteId(e.target.value || null)}
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">— Sem cliente —</option>
+          {(clientes as any[]).map((c) => (
+            <option key={c.id} value={c.id}>{c.name} {c.phone ? `· ${c.phone}` : ""}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => setShowNovoCliente(true)}
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:border-primary/40"
+          title="Cadastrar novo cliente"
+        >
+          <UserPlus className="h-4 w-4" />
+          <span className="hidden sm:inline">Novo</span>
+        </button>
+      </div>
 
       {/* Categorias */}
       {(categorias as any[]).length > 0 && (
@@ -205,25 +234,43 @@ function NovoPedido() {
 
       {loadingProdutos ? <Loader2 className="mx-auto my-10 h-5 w-5 animate-spin text-muted-foreground" /> : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {filteredCombos.map((c: any) => (
-            <button key={`combo-${c.id}`} onClick={() => addCombo(c)}
-              className="relative text-left rounded-xl border-2 border-amber-300 bg-amber-50 p-3 hover:border-amber-400">
-              <div className="flex items-center gap-1 mb-1">
-                <Package2 className="h-3 w-3 text-amber-700" />
-                <span className="text-[10px] font-bold uppercase text-amber-700">Combo</span>
-              </div>
-              <p className="text-sm font-medium leading-tight line-clamp-2">{c.name}</p>
-              <p className="mt-1 text-sm font-display font-semibold text-primary">{brl(Number(c.price))}</p>
-            </button>
-          ))}
-          {filteredProdutos.map((p: any) => (
-            <button key={p.id} onClick={() => tapProduto(p)}
-              className="relative text-left rounded-xl border-2 border-border bg-card p-3 hover:border-primary/40 overflow-hidden">
-              {p.image_url && <img src={p.image_url} alt={p.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
-              <p className="text-sm font-medium leading-tight line-clamp-2">{p.name}</p>
-              <p className="mt-1 text-sm font-display font-semibold text-primary">{brl(Number(p.price))}</p>
-            </button>
-          ))}
+          {filteredCombos.map((c: any) => {
+            const qty = cartQtyMap.get(`c:${c.id}`) ?? 0;
+            const selected = qty > 0;
+            return (
+              <button key={`combo-${c.id}`} onClick={() => addCombo(c)}
+                className={`relative text-left rounded-xl border-2 p-3 transition ${selected ? "border-primary bg-primary-soft ring-2 ring-primary/30" : "border-amber-300 bg-amber-50 hover:border-amber-400"}`}>
+                <div className="flex items-center gap-1 mb-1">
+                  <Package2 className="h-3 w-3 text-amber-700" />
+                  <span className="text-[10px] font-bold uppercase text-amber-700">Combo</span>
+                </div>
+                <p className="text-sm font-medium leading-tight line-clamp-2">{c.name}</p>
+                <p className="mt-1 text-sm font-display font-semibold text-primary">{brl(Number(c.price))}</p>
+                {selected && (
+                  <span className="absolute bottom-1.5 right-1.5 min-w-[22px] h-[22px] px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold tabular-nums shadow">
+                    {qty}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          {filteredProdutos.map((p: any) => {
+            const qty = cartQtyMap.get(`p:${p.id}`) ?? 0;
+            const selected = qty > 0;
+            return (
+              <button key={p.id} onClick={() => tapProduto(p)}
+                className={`relative text-left rounded-xl border-2 p-3 overflow-hidden transition ${selected ? "border-primary bg-primary-soft ring-2 ring-primary/30" : "border-border bg-card hover:border-primary/40"}`}>
+                {p.image_url && <img src={p.image_url} alt={p.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
+                <p className="text-sm font-medium leading-tight line-clamp-2">{p.name}</p>
+                <p className="mt-1 text-sm font-display font-semibold text-primary">{brl(Number(p.price))}</p>
+                {selected && (
+                  <span className="absolute bottom-1.5 right-1.5 min-w-[22px] h-[22px] px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold tabular-nums shadow">
+                    {qty}
+                  </span>
+                )}
+              </button>
+            );
+          })}
           {filteredCombos.length + filteredProdutos.length === 0 && (
             <div className="col-span-full rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">Nada encontrado.</div>
           )}
@@ -271,7 +318,7 @@ function NovoPedido() {
           </div>
           <button disabled={!canSubmit || submit.isPending} onClick={() => submit.mutate()}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40">
-            {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Enviar
+            {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Enviar para cozinha
           </button>
         </div>
       </div>
@@ -281,6 +328,89 @@ function NovoPedido() {
           onClose={() => setPicker(null)}
           onConfirm={(adic: any) => { addProduto(picker.produto, adic); setPicker(null); }} />
       )}
+
+      {showNovoCliente && (
+        <NovoClienteModal
+          onClose={() => setShowNovoCliente(false)}
+          onCreated={(id) => {
+            qc.invalidateQueries({ queryKey: ["clientes"] });
+            setClienteId(id);
+            setShowNovoCliente(false);
+            toast.success("Cliente cadastrado e selecionado");
+          }}
+          createFn={createClienteFn}
+        />
+      )}
+    </div>
+  );
+}
+
+function NovoClienteModal({ onClose, onCreated, createFn }: { onClose: () => void; onCreated: (id: string) => void; createFn: any }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [obs, setObs] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!name.trim()) { toast.error("Informe o nome"); return; }
+    setSaving(true);
+    try {
+      const fullAddress = obs.trim()
+        ? `${address.trim()}${address.trim() ? " — " : ""}Obs: ${obs.trim()}`
+        : address.trim();
+      const r = await createFn({
+        data: {
+          name: name.trim(),
+          phone: phone.trim() || null,
+          address: fullAddress || null,
+        },
+      });
+      onCreated(r.id);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao cadastrar cliente");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-lg font-semibold">Novo cliente</h2>
+          <button onClick={onClose} className="p-1 -mr-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Nome *</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} autoFocus
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Telefone</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel"
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Endereço (opcional)</label>
+            <input value={address} onChange={(e) => setAddress(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Observação (opcional)</label>
+            <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={2}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-5">
+          <button onClick={onClose} className="flex-1 rounded-lg border border-border px-3 py-2 text-sm">Cancelar</button>
+          <button onClick={save} disabled={saving}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -5,11 +5,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { usePedidoProntoNotify } from "@/hooks/use-pedido-pronto-notify";
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { signOut, profile, role, isAdmin, isSuperAdmin, isAtendente, isCozinha } = useAuth();
+
+  // Notificação interna quando pedido fica "pronto" (admin + atendente).
+  usePedidoProntoNotify((isAdmin && !isSuperAdmin) || isAtendente);
 
   // Cozinha: layout minimal, vê só /cozinha e /pedidos
   if (isCozinha) {
