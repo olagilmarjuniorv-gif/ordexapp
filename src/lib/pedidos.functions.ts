@@ -5,8 +5,15 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { audit } from "./audit.server";
 import { getCaller } from "./auth.server";
 
-export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "pago", "cancelado"] as const;
+export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "finalizado", "pago", "cancelado"] as const;
 export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
+export const FASES_CANAL = [
+  "aguardando_servir", "em_consumo",
+  "aguardando_retirada", "retirado",
+  "saiu_entrega", "entregue",
+  "aguardando_cliente",
+] as const;
+export type FaseCanal = typeof FASES_CANAL[number];
 export const FORMAS_PAGAMENTO = [
   "pix_online",
   "dinheiro",
