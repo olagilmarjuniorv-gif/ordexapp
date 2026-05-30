@@ -22,6 +22,8 @@ const STATUS_LABEL: Record<string, string> = {
   preparo: "Em preparo",
   pronto: "Pronto",
   pago: "Pago",
+  finalizado: "Finalizado",
+  cancelado: "Cancelado",
 };
 
 function elapsed(opened_at: string | null) {
