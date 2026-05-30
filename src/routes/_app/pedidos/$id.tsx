@@ -58,6 +58,7 @@ function PedidoDetail() {
   const getFn = useServerFn(getPedido);
   const statusFn = useServerFn(updatePedidoStatus);
   const finFn = useServerFn(updatePedidoStatusFinanceiro);
+  const voltarFn = useServerFn(voltarParaCozinha);
 
   const { data: pedRaw, isLoading, error } = useQuery({
     queryKey: ["pedido", id],
