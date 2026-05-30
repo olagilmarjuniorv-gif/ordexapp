@@ -13,6 +13,7 @@ import {
   type StatusFinanceiro,
 } from "@/lib/pedidos.functions";
 import { useAuth } from "@/lib/auth";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt, Wallet, Undo2, CheckCircle2 } from "lucide-react";
 
@@ -65,6 +66,9 @@ function PedidoDetail() {
     queryFn: () => getFn({ data: { id } }),
   });
   const pedido = pedRaw as any;
+
+  useRealtimeInvalidate("pedidos", [["pedido", id], ["pedidos"]]);
+
 
   const statusM = useMutation({
     mutationFn: (status: PedidoStatus) => statusFn({ data: { id, status } }),
@@ -279,7 +283,18 @@ function PedidoDetail() {
             </>
           )}
           {(pedido.status === "finalizado" || pedido.status === "pago") && (
-            <p className="text-sm text-emerald-600 font-medium">Pedido finalizado.</p>
+            <>
+              <p className="text-sm text-emerald-600 font-medium">Pedido finalizado.</p>
+              {isAdmin && (
+                <button
+                  onClick={() => voltarM.mutate()}
+                  disabled={voltarM.isPending}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold disabled:opacity-50"
+                >
+                  <Undo2 className="h-4 w-4" /> Voltar para cozinha
+                </button>
+              )}
+            </>
           )}
           {pedido.status === "cancelado" && <p className="text-sm text-muted-foreground font-medium">Pedido cancelado.</p>}
         </div>

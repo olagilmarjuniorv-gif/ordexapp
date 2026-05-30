@@ -229,17 +229,24 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
     if (loadErr || !current) throw new Response("Pedido não encontrado", { status: 404 });
 
     let finalStatus: PedidoStatus = data.status;
+    // Normaliza legado: status=pago → finalizado + financeiro=pago
+    if (data.status === "pago") {
+      finalStatus = "finalizado";
+    }
     // Regra: marcar "pronto" + já pago → finalizado automático
     if (data.status === "pronto" && current.status_financeiro === "pago") {
       finalStatus = "finalizado";
     }
 
     const patch: Record<string, unknown> = { status: finalStatus };
-    if (finalStatus === "pago" || finalStatus === "finalizado") {
-      // marca paid_at apenas quando ainda não estava registrado e financeiro=pago
-      if (current.status_financeiro === "pago" || finalStatus === "pago") {
-        patch.paid_at = new Date().toISOString();
-      }
+    // Normaliza financeiro conforme transição
+    if (data.status === "pago") {
+      patch.status_financeiro = "pago";
+      patch.paid_at = new Date().toISOString();
+    } else if (data.status === "cancelado") {
+      patch.status_financeiro = "cancelado";
+    } else if (finalStatus === "finalizado" && current.status_financeiro === "pago") {
+      patch.paid_at = new Date().toISOString();
     }
 
     const { error } = await supabaseAdmin
@@ -319,8 +326,20 @@ export const setFaseCanal = createServerFn({ method: "POST" })
 
     const patch: Record<string, unknown> = { fase_canal: data.fase };
     if (data.finalizar) {
-      patch.status = "finalizado";
-      if (current.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+      const fin = current.status_financeiro as StatusFinanceiro;
+      if (fin === "pago") {
+        patch.status = "finalizado";
+        patch.paid_at = new Date().toISOString();
+      } else if (fin === "pagamento_entrega" || fin === "pagamento_retirada") {
+        patch.status = "finalizado";
+        patch.status_financeiro = "pago";
+        patch.paid_at = new Date().toISOString();
+      } else {
+        throw new Response(
+          "Não é possível finalizar: marque o pagamento antes.",
+          { status: 400 },
+        );
+      }
     }
     const { error } = await supabaseAdmin
       .from("pedidos")
