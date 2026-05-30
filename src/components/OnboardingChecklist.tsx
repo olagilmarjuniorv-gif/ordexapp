@@ -15,10 +15,8 @@ import {
   X,
   Rocket,
 } from "lucide-react";
-import {
-  getOnboardingStatus,
-  type OnboardingItemKey,
-} from "@/lib/onboarding.functions";
+import { getOnboardingStatus } from "@/lib/onboarding.functions";
+import type { OnboardingItemKey } from "@/lib/onboarding.types";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 
 const ITEMS: {
@@ -73,7 +71,7 @@ export function OnboardingChecklist() {
   const getFn = useServerFn(getOnboardingStatus);
   const { data, isLoading } = useQuery({
     queryKey: ["onboarding-status"],
-    queryFn: () => getFn({}),
+    queryFn: () => getFn(),
     staleTime: 10_000,
   });
 

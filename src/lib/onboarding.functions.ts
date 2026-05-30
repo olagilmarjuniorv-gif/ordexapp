@@ -3,45 +3,29 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getCaller } from "./auth.server";
 
-export type OnboardingItemKey =
-  | "meu_restaurante"
-  | "cardapio"
-  | "pagamentos"
-  | "whatsapp"
-  | "pedido_teste";
-
-export type OnboardingStatus = {
-  companyId: string | null;
-  items: Record<OnboardingItemKey, boolean>;
-  completed: number;
-  total: number;
-  percent: number;
-  done: boolean;
-};
-
-const EMPTY: OnboardingStatus = {
-  companyId: null,
-  items: {
-    meu_restaurante: false,
-    cardapio: false,
-    pagamentos: false,
-    whatsapp: false,
-    pedido_teste: false,
-  },
-  completed: 0,
-  total: 5,
-  percent: 0,
-  done: false,
-};
-
 export const getOnboardingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<OnboardingStatus> => {
+  .handler(async ({ context }) => {
     const caller = await getCaller(context.userId);
     const companyId = caller.companyId;
-    if (!companyId) return EMPTY;
 
-    // 1. Meu Restaurante: nome + telefone preenchidos
+    const empty = {
+      companyId: null as string | null,
+      items: {
+        meu_restaurante: false,
+        cardapio: false,
+        pagamentos: false,
+        whatsapp: false,
+        pedido_teste: false,
+      },
+      completed: 0,
+      total: 5,
+      percent: 0,
+      done: false,
+    };
+
+    if (!companyId) return empty;
+
     const { data: company } = await supabaseAdmin
       .from("companies")
       .select("name, phone, pagamento_metodos")
@@ -51,11 +35,9 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
     const meu_restaurante =
       !!company?.name?.trim() && !!company?.phone?.toString().trim();
 
-    // 3. Pagamentos: ≥1 método ativo
     const metodos = (company?.pagamento_metodos ?? {}) as Record<string, boolean>;
     const pagamentos = Object.values(metodos).some((v) => v === true);
 
-    // 2. Cardápio: ≥1 categoria ativa + ≥1 produto ativo
     const [{ count: catCount }, { count: prodCount }] = await Promise.all([
       supabaseAdmin
         .from("categorias")
@@ -70,7 +52,6 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
     ]);
     const cardapio = (catCount ?? 0) > 0 && (prodCount ?? 0) > 0;
 
-    // 4. WhatsApp: ≥1 conexão ativa/conectada
     const { count: waCount } = await supabaseAdmin
       .from("whatsapp_conexoes")
       .select("id", { count: "exact", head: true })
@@ -79,7 +60,6 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
       .eq("status", "conectado");
     const whatsapp = (waCount ?? 0) > 0;
 
-    // 5. Pedido teste: ≥1 pedido criado
     const { count: pedCount } = await supabaseAdmin
       .from("pedidos")
       .select("id", { count: "exact", head: true })
@@ -92,7 +72,7 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
     const percent = Math.round((completed / total) * 100);
 
     return {
-      companyId,
+      companyId: companyId as string | null,
       items,
       completed,
       total,
