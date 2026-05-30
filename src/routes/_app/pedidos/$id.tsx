@@ -261,12 +261,26 @@ function PedidoDetail() {
               <Bell className="h-4 w-4" /> Marcar como pronto
             </button>
           )}
-          {pedido.status === "pronto" && (
-            <button onClick={() => statusM.mutate("pago")} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
-              <BadgeCheck className="h-4 w-4" /> Marcar como pago
-            </button>
+          {pedido.status === "pronto" && canEditFinanceiro && (
+            <>
+              <button
+                onClick={() => voltarM.mutate()}
+                disabled={voltarM.isPending}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold disabled:opacity-50"
+              >
+                <Undo2 className="h-4 w-4" /> Voltar para cozinha
+              </button>
+              <button
+                onClick={() => statusM.mutate("finalizado")}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Finalizar pedido
+              </button>
+            </>
           )}
-          {pedido.status === "pago" && <p className="text-sm text-emerald-600 font-medium">Pedido finalizado.</p>}
+          {(pedido.status === "finalizado" || pedido.status === "pago") && (
+            <p className="text-sm text-emerald-600 font-medium">Pedido finalizado.</p>
+          )}
           {pedido.status === "cancelado" && <p className="text-sm text-muted-foreground font-medium">Pedido cancelado.</p>}
         </div>
       </div>
