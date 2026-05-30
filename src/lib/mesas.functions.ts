@@ -135,12 +135,17 @@ export const getComandaMesa = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (pErr) throw new Response(pErr.message, { status: 500 });
 
-    const ativos = (pedidos ?? []).filter((p) => p.status !== "cancelado");
-    const naoPagos = ativos.filter((p) => p.status !== "pago");
+    const all = pedidos ?? [];
+    const TERMINAIS = new Set(["finalizado", "pago", "cancelado"]);
+    const ativos = all.filter((p) => !TERMINAIS.has(p.status));
+    const historico = all.filter((p) => TERMINAIS.has(p.status) && p.status !== "cancelado");
+    const naoPagos = ativos.filter((p) => (p as any).status_financeiro !== "pago");
     const totalAberto = naoPagos.reduce((s, p) => s + Number(p.total_amount), 0);
-    const totalGeral = ativos.reduce((s, p) => s + Number(p.total_amount), 0);
+    const totalGeral = all
+      .filter((p) => p.status !== "cancelado")
+      .reduce((s, p) => s + Number(p.total_amount), 0);
 
-    return { mesa, pedidos: ativos, totalAberto, totalGeral };
+    return { mesa, pedidos: ativos, historico, totalAberto, totalGeral };
   });
 
 // Avança a mesa para "conta" (fechamento iniciado, mas ainda não pago)
