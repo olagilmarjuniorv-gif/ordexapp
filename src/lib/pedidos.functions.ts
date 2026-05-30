@@ -326,8 +326,20 @@ export const setFaseCanal = createServerFn({ method: "POST" })
 
     const patch: Record<string, unknown> = { fase_canal: data.fase };
     if (data.finalizar) {
-      patch.status = "finalizado";
-      if (current.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+      const fin = current.status_financeiro as StatusFinanceiro;
+      if (fin === "pago") {
+        patch.status = "finalizado";
+        patch.paid_at = new Date().toISOString();
+      } else if (fin === "pagamento_entrega" || fin === "pagamento_retirada") {
+        patch.status = "finalizado";
+        patch.status_financeiro = "pago";
+        patch.paid_at = new Date().toISOString();
+      } else {
+        throw new Response(
+          "Não é possível finalizar: marque o pagamento antes.",
+          { status: 400 },
+        );
+      }
     }
     const { error } = await supabaseAdmin
       .from("pedidos")
