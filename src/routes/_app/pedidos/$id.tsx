@@ -67,6 +67,9 @@ function PedidoDetail() {
   });
   const pedido = pedRaw as any;
 
+  useRealtimeInvalidate("pedidos", [["pedido", id], ["pedidos"]]);
+
+
   const statusM = useMutation({
     mutationFn: (status: PedidoStatus) => statusFn({ data: { id, status } }),
     onSuccess: () => {
