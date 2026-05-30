@@ -129,7 +129,7 @@ export const getComandaMesa = createServerFn({ method: "GET" })
 
     const { data: pedidos, error: pErr } = await supabaseAdmin
       .from("pedidos")
-      .select("id, created_at, status, total_amount, items, observacao, paid_at")
+      .select("id, created_at, status, status_financeiro, total_amount, items, observacao, paid_at")
       .eq("company_id", companyId)
       .eq("mesa_id", data.mesaId)
       .order("created_at", { ascending: true });
