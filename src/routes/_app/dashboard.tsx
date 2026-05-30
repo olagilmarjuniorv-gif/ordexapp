@@ -11,7 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { SalesChart } from "@/components/SalesChart";
-import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+// OnboardingChecklist removido temporariamente — server function instável em produção
 import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/period";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -410,7 +410,7 @@ function CompanyDashboard() {
         </div>
       </div>
 
-      <OnboardingChecklist />
+      {/* <OnboardingChecklist /> removido temporariamente */}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
