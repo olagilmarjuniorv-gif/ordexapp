@@ -5,6 +5,7 @@ import {
   getPedido,
   updatePedidoStatus,
   updatePedidoStatusFinanceiro,
+  voltarParaCozinha,
   FORMAS_PAGAMENTO,
   STATUS_FINANCEIRO,
   type PedidoStatus,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/pedidos.functions";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt, Wallet } from "lucide-react";
+import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt, Wallet, Undo2, CheckCircle2 } from "lucide-react";
 
 const FORMA_LABEL: Record<FormaPagamento, string> = {
   pix_online: "Pix online",
