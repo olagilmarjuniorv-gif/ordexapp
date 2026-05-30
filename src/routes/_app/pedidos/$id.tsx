@@ -86,6 +86,16 @@ function PedidoDetail() {
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
+  const voltarM = useMutation({
+    mutationFn: () => voltarFn({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Pedido devolvido à cozinha");
+      qc.invalidateQueries({ queryKey: ["pedido", id] });
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
   if (isLoading || !pedido)
     return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin" /></div>;
   if (error) return <div className="text-center text-destructive py-12">{(error as Error).message}</div>;
