@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, 
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet, DollarSign,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet, DollarSign, ClipboardList,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -58,6 +58,7 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+      { to: "/expedicao", label: "Expedição", icon: ClipboardList },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/clientes", label: "Clientes", icon: Users },
@@ -79,6 +80,7 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
+      { to: "/expedicao", label: "Expedição", icon: ClipboardList },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/cozinha", label: "Cozinha", icon: ChefHat },
       { to: "/cardapio", label: "Cardápio", icon: BookOpen },

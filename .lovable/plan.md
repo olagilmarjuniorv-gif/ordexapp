@@ -1,102 +1,103 @@
-## Motor Conversacional WhatsApp — SaiuPedido
+# Pacote de Melhorias Operacionais
 
-Construir o motor de pedidos via WhatsApp com máquina de estados multiempresa, integrado às tabelas já existentes (`produtos`, `categorias`, `pedidos`, `whatsapp_conexoes`, `whatsapp_conversas`, `whatsapp_mensagens`).
+Refatoração focada em fluxo operacional. **Não toca em** RLS, multiempresa, auth, integrações, WhatsApp ou lógica financeira existente.
 
----
+## 1. Novos estados operacionais
 
-### 1. Migração de banco
+Adicionar status `finalizado` ao enum de status de pedidos:
 
-Criar 4 tabelas novas + RLS multiempresa:
-
-- **`whatsapp_sessoes`** — uma por (empresa + telefone). Campos: `company_id`, `customer_phone`, `estado_atual` (text), `carrinho` (jsonb), `contexto` (jsonb — última categoria/produto sendo selecionado), `atendente_assumiu` (bool), `last_event_at`, `expires_at`.
-- **`whatsapp_carrinhos`** — histórico de carrinhos finalizados (auditoria). Campos: `sessao_id`, `company_id`, `status`, `valor_total`, `observacoes`, `pedido_id`.
-- **`whatsapp_carrinho_itens`** — itens de cada carrinho. Campos: `carrinho_id`, `produto_id`, `quantidade`, `valor_unitario`, `observacoes`.
-- **`whatsapp_fluxos`** — configuração por empresa. Campos: `company_id` (unique), `mensagem_boas_vindas`, `mensagem_fechamento`, `mensagem_sem_atendimento`, `ativo`.
-
-RLS: todas com `company_id = get_user_company(auth.uid())` + super_admin.
-
-Adicionar `realtime` para `pedidos` (se já não tem) e nas novas tabelas relevantes.
-
----
-
-### 2. Máquina de estados (`src/lib/whatsapp-engine.server.ts`)
-
-Estados:
 ```
-aguardando_inicio → escolhendo_categoria → escolhendo_produto
-  → escolhendo_adicionais → escolhendo_quantidade → escrevendo_observacao
-  → confirmando_pedido → escolhendo_pagamento → pedido_finalizado
-  → conversa_encerrada
-aguardando_atendente (sai do fluxo automático)
+novo → preparo → pronto → finalizado → (pago opcional, ou cancelado)
 ```
 
-Funções principais:
-- `getOrCreateSession(companyId, phone)` — busca/cria sessão.
-- `processInboundMessage({ companyId, conexaoId, phone, text })` — roteia para handler do estado atual, retorna `{ reply, nextState }`.
-- `handlers[estado]` — um por estado, lê texto + carrinho e produz transição.
-- `triggerHumanHandoff(sessao)` — palavras-chave: `atendente`, `ajuda`, `falar com alguém`, `humano`.
-- `resetIfTimeout(sessao)` — se `last_event_at` > 30 min, encerra.
-- `finalizePedido(sessao)` — cria registro em `pedidos` com `items` montados a partir do carrinho, canal `delivery`, retorna número curto.
+`pago` deixa de ser status operacional e passa a ser exclusivamente representado por `status_financeiro`. Compatibilidade: pedidos antigos com `status='pago'` continuam funcionando (tratados como finalizados na UI).
 
-Navegação:
-- Categoria: lista `categorias` ativas da empresa, mostra numerado.
-- Produto: lista produtos da categoria escolhida.
-- Adicionais: por enquanto pular (estrutura preparada — texto "sem adicionais" se grupo vazio).
-- Quantidade: parse de número (default 1).
-- Observação: aceita texto livre ou "pular".
-- Confirmação: mostra resumo + total, aguarda "sim/não/adicionar mais".
+**Migration:** apenas adicionar `'finalizado'` à lista de status válidos no constraint/validação. Não migrar dados antigos.
 
----
+## 2. Server functions — novas regras automáticas
 
-### 3. Webhook integration
+Em `src/lib/pedidos.functions.ts`:
 
-Atualizar `src/routes/api/public/webhooks/whatsapp.ts`:
-- Após persistir mensagem inbound, chamar `processInboundMessage`.
-- Enviar `reply` via `sendWhatsappCloud` (substitui o `WELCOME_MESSAGE` fixo atual).
-- Persistir mensagem outbound.
+- **`updatePedidoStatus`**: ao mudar para `pronto`, se `status_financeiro='pago'` → grava `finalizado` direto.
+- **`updatePedidoStatusFinanceiro`**: ao marcar `pago`, se `status='pronto'` → grava `finalizado` direto.
+- **Auto-liberar mesa**: após qualquer update que resulte em `finalizado` ou `cancelado`, se a mesa não tem mais pedidos ativos (status ∉ {finalizado, cancelado}), grava `mesas.status='livre'`.
+- **Nova action `voltarParaCozinha`**: muda status de `pronto` → `preparo`. Permitido para admin/atendente.
 
----
+Em `src/lib/mesas.functions.ts`:
+- `pagarMesa` continua existindo mas o RPC `pagar_mesa` agora deve marcar pedidos como `finalizado` + `status_financeiro=pago` (atualizar a SQL function).
 
-### 4. Server functions (frontend)
+## 3. Cozinha (`/cozinha`)
 
-`src/lib/whatsapp-sessoes.functions.ts`:
-- `listSessoes` — sessões ativas da empresa.
-- `assumirAtendimento(sessaoId)` — marca `atendente_assumiu=true`.
-- `liberarAtendimento(sessaoId)` — volta para fluxo automático.
-- `enviarMensagemManual(sessaoId, body)` — atendente envia texto pelo painel.
+- Filtra somente `status IN ('novo','preparo')`. Pedidos `pronto` somem da tela imediatamente.
+- Ações: Iniciar preparo / Marcar pronto. Sem botão de pagamento, entrega, finalizar.
 
-`src/lib/whatsapp-fluxos.functions.ts`:
-- `getFluxo` / `upsertFluxo` — config de mensagens.
+## 4. Notificação de pedido pronto
 
----
+Já existe `usePedidoProntoNotify` em `src/hooks/use-pedido-pronto-notify.ts`. Garantir que está ativo no `AppLayout` para roles admin/atendente.
 
-### 5. Painel operacional
+## 5. Nova fila "Expedição" (`/expedicao`)
 
-Página existente `_app/pedidos/index.tsx` já mostra pedidos. Garantir realtime via `useRealtimeInvalidate("pedidos", [...])`. Adicionar colunas Kanban: novos / preparo / pronto / pago / cancelado (já existem como status).
+Nova rota `src/routes/_app/expedicao.tsx`. Lista pedidos com `status='pronto'`, agrupados/filtráveis por canal (mesa/balcao/retirada/delivery). Cada card mostra: #curto, cliente, mesa, canal, horário, ações conforme canal:
 
-Página existente `_app/mensagens.tsx` — adicionar listagem de sessões WhatsApp ativas + botão "assumir atendimento" + envio manual.
+- **mesa**: "Servido" → marca finalizado (ou aguarda pagamento)
+- **balcão**: "Entregue ao cliente" → finalizado
+- **retirada**: "Retirado" → finalizado
+- **delivery**: "Saiu para entrega" → mantém em estado intermediário; "Entregue" → finalizado
 
----
+Sub-estados (`aguardando_servir`, `em_consumo`, `saiu_entrega`, `entregue`, etc.) ficam em coluna nova `pedidos.fase_canal` (text, nullable) — registra a etapa dentro do canal sem inflar o enum principal.
 
-### 6. Segurança
+## 6. Tela de Pedidos (`/pedidos`)
 
-- Tokens lidos apenas server-side via `whatsapp_conexoes.access_token` ou env.
-- RLS validada com `get_user_company`.
-- Webhook valida assinatura HMAC SHA-256 (já implementado).
+Substituir chips poluídos por 3 selects simples:
 
----
+- **Status**: Todos | Novo | Em preparo | Pronto | Finalizado | Cancelado | Atrasado
+- **Pagamento**: Todos | Pago | Aguardando | Na entrega | Na retirada
+- **Período**: Hoje (default) | Semana | Mês | Ano
 
-### Arquivos a criar/editar
+## 7. Cards de pedido — limpeza visual
 
-**Criar:**
-- `supabase/migrations/XXX_whatsapp_engine.sql`
-- `src/lib/whatsapp-engine.server.ts`
-- `src/lib/whatsapp-sessoes.functions.ts`
-- `src/lib/whatsapp-fluxos.functions.ts`
+Layout final:
+```
+Mesa 1 • Paulo Rodrigues          R$ 91,30
+🟢 Pago   💳 Pagamento na entrega
+```
 
-**Editar:**
-- `src/routes/api/public/webhooks/whatsapp.ts` — chamar engine
-- `src/routes/_app/mensagens.tsx` — painel sessões WhatsApp
-- `src/routes/_app/pedidos/index.tsx` — garantir realtime (se faltando)
+Sem duplicação de "Pago • Na entrega". Badge financeiro único.
 
-Sem foco em design — UI funcional usando componentes existentes (card-premium, badges).
+## 8. Botão "Marcar como pago"
+
+Em todos os pontos (lista de pedidos, detalhe, mesa): só renderiza se `status_financeiro !== 'pago'`.
+
+## 9. Botão "Voltar para cozinha"
+
+Aparece em pedidos com `status='pronto'` para admin/atendente. Chama `voltarParaCozinha`.
+
+## 10. Remover dependência manual de "Liberar mesa"
+
+Botão continua existindo como fallback admin, mas o fluxo normal libera automático (item 2).
+
+## Arquivos afetados
+
+- **Migration**: ajustar validação de status + `pagar_mesa` RPC
+- `src/lib/pedidos.functions.ts` — auto-finalização, auto-liberação, `voltarParaCozinha`, `setFaseCanal`
+- `src/lib/mesas.functions.ts` — helper de auto-liberação
+- `src/routes/_app/cozinha.tsx` — filtrar prontos
+- `src/routes/_app/expedicao.tsx` — nova rota
+- `src/routes/_app/pedidos/index.tsx` — 3 filtros, cards limpos
+- `src/routes/_app/pedidos/$id.tsx` — botão pago condicional + voltar p/ cozinha
+- `src/routes/_app/mesas/$id.tsx` — botão pago condicional
+- `src/components/AppLayout.tsx` — link "Expedição" no nav + garantir hook de notificação ativo
+
+## Validação
+
+Smoke test manual nos 4 papéis (admin, super_admin, atendente, cozinha) após build verde:
+- Cozinha → Pronto: pedido some da cozinha, aparece em Expedição, toca som no admin.
+- Pedido pago + pronto → finalizado automaticamente.
+- Último pedido da mesa finalizado → mesa volta para `livre` sem clique.
+- Pedido pago não mostra mais "Marcar como pago".
+- "Voltar para cozinha" devolve pedido para fila da cozinha.
+
+## Riscos
+
+- Pedidos legados com `status='pago'` precisam ser tratados como "finalizados" na UI dos filtros (mapeamento na exibição, sem migrar dados).
+- A SQL function `pagar_mesa` precisa ser regravada para usar `finalizado` em vez de `pago` no campo `status`. Pedidos antigos não são alterados.

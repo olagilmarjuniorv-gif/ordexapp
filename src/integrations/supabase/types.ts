@@ -565,6 +565,7 @@ export type Database = {
           external_order_id: string | null
           external_payload: Json | null
           external_provider: string | null
+          fase_canal: string | null
           forma_pagamento: string | null
           id: string
           imported_at: string | null
@@ -587,6 +588,7 @@ export type Database = {
           external_order_id?: string | null
           external_payload?: Json | null
           external_provider?: string | null
+          fase_canal?: string | null
           forma_pagamento?: string | null
           id?: string
           imported_at?: string | null
@@ -609,6 +611,7 @@ export type Database = {
           external_order_id?: string | null
           external_payload?: Json | null
           external_provider?: string | null
+          fase_canal?: string | null
           forma_pagamento?: string | null
           id?: string
           imported_at?: string | null

@@ -84,7 +84,7 @@ function Cozinha() {
   }, [theme]);
 
   const ativos = ((data ?? []) as any[])
-    .filter((p) => ["novo", "preparo", "pronto"].includes(p.status))
+    .filter((p) => ["novo", "preparo"].includes(p.status))
     .sort((a, b) => priority(a) - priority(b));
 
   useEffect(() => {
