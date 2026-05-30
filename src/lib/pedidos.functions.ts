@@ -331,9 +331,8 @@ export const setFaseCanal = createServerFn({ method: "POST" })
         patch.status_financeiro = "pago";
         patch.paid_at = new Date().toISOString();
       } else {
-        throw new Response(
+        throw new Error(
           "Não é possível finalizar: marque o pagamento antes.",
-          { status: 400 },
         );
       }
     }
