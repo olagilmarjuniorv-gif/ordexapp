@@ -13,6 +13,7 @@ import {
   type StatusFinanceiro,
 } from "@/lib/pedidos.functions";
 import { useAuth } from "@/lib/auth";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, ChefHat, Bell, BadgeCheck, X, Printer, Receipt, Wallet, Undo2, CheckCircle2 } from "lucide-react";
 
