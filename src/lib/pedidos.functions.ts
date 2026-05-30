@@ -244,7 +244,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("pedidos")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id)
       .eq("company_id", caller.companyId);
 
