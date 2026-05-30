@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, 
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet, DollarSign,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet, DollarSign, ClipboardList,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
