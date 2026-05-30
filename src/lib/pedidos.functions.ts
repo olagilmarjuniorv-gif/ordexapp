@@ -191,6 +191,27 @@ export const createPedido = createServerFn({ method: "POST" })
     return { id: created.id };
   });
 
+// Helper: if a mesa has no more active orders (active = não finalizado/pago/cancelado),
+// libera a mesa automaticamente.
+async function maybeLiberarMesa(companyId: string, mesaId: string | null | undefined) {
+  if (!mesaId) return;
+  const { data, error } = await supabaseAdmin
+    .from("pedidos")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("mesa_id", mesaId)
+    .not("status", "in", "(finalizado,pago,cancelado)")
+    .limit(1);
+  if (error) return;
+  if ((data ?? []).length === 0) {
+    await supabaseAdmin
+      .from("mesas")
+      .update({ status: "livre", opened_at: null })
+      .eq("id", mesaId)
+      .eq("company_id", companyId);
+  }
+}
+
 export const updatePedidoStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(PEDIDO_STATUSES) }).parse(d))
@@ -198,8 +219,28 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
 
-    const patch: { status: PedidoStatus; paid_at?: string } = { status: data.status };
-    if (data.status === "pago") patch.paid_at = new Date().toISOString();
+    // Carrega estado atual para regras automáticas
+    const { data: current, error: loadErr } = await supabaseAdmin
+      .from("pedidos")
+      .select("status, status_financeiro, mesa_id")
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .single();
+    if (loadErr || !current) throw new Response("Pedido não encontrado", { status: 404 });
+
+    let finalStatus: PedidoStatus = data.status;
+    // Regra: marcar "pronto" + já pago → finalizado automático
+    if (data.status === "pronto" && current.status_financeiro === "pago") {
+      finalStatus = "finalizado";
+    }
+
+    const patch: Record<string, unknown> = { status: finalStatus };
+    if (finalStatus === "pago" || finalStatus === "finalizado") {
+      // marca paid_at apenas quando ainda não estava registrado e financeiro=pago
+      if (current.status_financeiro === "pago" || finalStatus === "pago") {
+        patch.paid_at = new Date().toISOString();
+      }
+    }
 
     const { error } = await supabaseAdmin
       .from("pedidos")
@@ -209,14 +250,88 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
 
     if (error) throw new Response(error.message, { status: 500 });
 
+    // Auto-libera mesa se pedido virou terminal
+    if (["finalizado", "pago", "cancelado"].includes(finalStatus)) {
+      await maybeLiberarMesa(caller.companyId, current.mesa_id);
+    }
+
     await audit({
       companyId: caller.companyId,
       userId: caller.userId,
-      action: `pedido.${data.status}`,
+      action: `pedido.${finalStatus}`,
       entityType: "pedido",
       entityId: data.id,
-      description: `Status alterado para "${data.status}"`,
+      description: `Status alterado para "${finalStatus}"`,
     });
+
+    return { ok: true, status: finalStatus };
+  });
+
+// Voltar pedido para a cozinha (de "pronto" → "preparo"). Para erros operacionais.
+export const voltarParaCozinha = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.isAdmin && caller.role !== "atendente") {
+      throw new Response("Acesso negado", { status: 403 });
+    }
+    const { error } = await supabaseAdmin
+      .from("pedidos")
+      .update({ status: "preparo", fase_canal: null } as any)
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .in("status", ["pronto", "finalizado"]);
+    if (error) throw new Response(error.message, { status: 500 });
+    await audit({
+      companyId: caller.companyId,
+      userId: caller.userId,
+      action: "pedido.voltar_cozinha",
+      entityType: "pedido",
+      entityId: data.id,
+      description: "Pedido devolvido à cozinha",
+    });
+    return { ok: true };
+  });
+
+// Atualiza sub-fase do canal (expedição). Opcionalmente marca pedido como finalizado.
+export const setFaseCanal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      fase: z.enum(FASES_CANAL).nullable(),
+      finalizar: z.boolean().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const caller = await getCaller(context.userId);
+    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+
+    const { data: current } = await supabaseAdmin
+      .from("pedidos")
+      .select("mesa_id, status_financeiro")
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .single();
+    if (!current) throw new Response("Pedido não encontrado", { status: 404 });
+
+    const patch: Record<string, unknown> = { fase_canal: data.fase };
+    if (data.finalizar) {
+      patch.status = "finalizado";
+      if (current.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+    }
+    const { error } = await supabaseAdmin
+      .from("pedidos")
+      .update(patch as any)
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId);
+    if (error) throw new Response(error.message, { status: 500 });
+
+    if (data.finalizar) {
+      await maybeLiberarMesa(caller.companyId, current.mesa_id);
+    }
 
     return { ok: true };
   });
@@ -239,9 +354,23 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
       throw new Response("Acesso negado", { status: 403 });
     }
 
+    const { data: current } = await supabaseAdmin
+      .from("pedidos")
+      .select("status, mesa_id")
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .single();
+
     const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
     if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
     if (data.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+
+    // Regra: se pedido está "pronto" e foi marcado como pago → finalizado automático
+    let autoFinalized = false;
+    if (data.status_financeiro === "pago" && current?.status === "pronto") {
+      patch.status = "finalizado";
+      autoFinalized = true;
+    }
 
     const { error } = await supabaseAdmin
       .from("pedidos")
@@ -250,6 +379,10 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
       .eq("company_id", caller.companyId);
 
     if (error) throw new Response(error.message, { status: 500 });
+
+    if (autoFinalized) {
+      await maybeLiberarMesa(caller.companyId, current?.mesa_id);
+    }
 
     await audit({
       companyId: caller.companyId,
