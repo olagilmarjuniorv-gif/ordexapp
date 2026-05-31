@@ -72,7 +72,7 @@ export const listPedidos = createServerFn({ method: "GET" })
       .eq("company_id", caller.companyId)
       .order("created_at", { ascending: false });
 
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     return data ?? [];
   });
 
@@ -81,7 +81,7 @@ export const getPedido = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
-    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.companyId) throw new Error("Not allowed");
 
     const { data: pedido, error } = await supabaseAdmin
       .from("pedidos")
@@ -90,7 +90,7 @@ export const getPedido = createServerFn({ method: "GET" })
       .eq("company_id", caller.companyId)
       .single();
 
-    if (error) throw new Response("Pedido não encontrado", { status: 404 });
+    if (error) throw new Error("Pedido não encontrado");
     return pedido;
   });
 
@@ -99,7 +99,7 @@ export const createPedido = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createSchema.parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
-    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.companyId) throw new Error("Not allowed");
 
     const productIds = data.items.filter((i) => i.kind === "produto" && i.product_id).map((i) => i.product_id!) as string[];
     const comboIds = data.items.filter((i) => i.kind === "combo" && i.combo_id).map((i) => i.combo_id!) as string[];
@@ -113,9 +113,9 @@ export const createPedido = createServerFn({ method: "POST" })
         : Promise.resolve({ data: [] as any[], error: null as any }),
     ]);
 
-    if (prodErr) throw new Response("Falha ao validar produtos", { status: 500 });
+    if (prodErr) throw new Error("Falha ao validar produtos");
     if (productIds.length && (!produtos || produtos.length !== new Set(productIds).size)) {
-      throw new Response("Produto inválido", { status: 400 });
+      throw new Error("Produto inválido");
     }
 
     const refMap = new Map<string, { price: number; name: string }>();
@@ -126,7 +126,7 @@ export const createPedido = createServerFn({ method: "POST" })
     const items = data.items.map((i) => {
       const refKey = (i.kind === "combo" ? i.combo_id : i.product_id)!;
       const ref = refMap.get(refKey);
-      if (!ref) throw new Response("Item inválido", { status: 400 });
+      if (!ref) throw new Error("Item inválido");
       const adicTotal = (i.adicionais ?? []).reduce((a, x) => a + Number(x.price ?? 0), 0);
       const price = (i.price ?? ref.price) + adicTotal;
       total_amount += i.quantity * price;
@@ -167,7 +167,7 @@ export const createPedido = createServerFn({ method: "POST" })
       .select("id")
       .single();
 
-    if (insErr || !created) throw new Response(insErr?.message ?? "Erro ao criar pedido", { status: 500 });
+    if (insErr || !created) throw new Error(insErr?.message ?? "Erro ao criar pedido");
 
     if (data.mesa_id) {
       await supabaseAdmin
@@ -217,7 +217,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(PEDIDO_STATUSES) }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
-    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.companyId) throw new Error("Not allowed");
 
     // Carrega estado atual para regras automáticas
     const { data: current, error: loadErr } = await supabaseAdmin
@@ -226,7 +226,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .single();
-    if (loadErr || !current) throw new Response("Pedido não encontrado", { status: 404 });
+    if (loadErr || !current) throw new Error("Pedido não encontrado");
 
     let finalStatus: PedidoStatus = data.status;
     // Normaliza legado: status=pago → finalizado + financeiro=pago
@@ -251,7 +251,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("company_id", caller.companyId);
 
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
 
     // Auto-libera mesa se pedido virou terminal
     if (["finalizado", "pago", "cancelado"].includes(finalStatus)) {
@@ -276,9 +276,9 @@ export const voltarParaCozinha = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
-    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.companyId) throw new Error("Not allowed");
     if (!caller.isAdmin && caller.role !== "atendente") {
-      throw new Response("Acesso negado", { status: 403 });
+      throw new Error("Acesso negado");
     }
     const { error } = await supabaseAdmin
       .from("pedidos")
@@ -286,7 +286,7 @@ export const voltarParaCozinha = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .in("status", ["pronto", "finalizado"]);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     await audit({
       companyId: caller.companyId,
       userId: caller.userId,
@@ -310,7 +310,7 @@ export const setFaseCanal = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
-    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.companyId) throw new Error("Not allowed");
 
     const { data: current } = await supabaseAdmin
       .from("pedidos")
@@ -318,7 +318,7 @@ export const setFaseCanal = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .single();
-    if (!current) throw new Response("Pedido não encontrado", { status: 404 });
+    if (!current) throw new Error("Pedido não encontrado");
 
     const patch: Record<string, unknown> = { fase_canal: data.fase };
     if (data.finalizar) {
@@ -341,7 +341,7 @@ export const setFaseCanal = createServerFn({ method: "POST" })
       .update(patch as any)
       .eq("id", data.id)
       .eq("company_id", caller.companyId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
 
     if (data.finalizar) {
       await maybeLiberarMesa(caller.companyId, current.mesa_id);
@@ -363,9 +363,9 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
-    if (!caller.companyId) throw new Response("Not allowed", { status: 403 });
+    if (!caller.companyId) throw new Error("Not allowed");
     if (!caller.isAdmin && caller.role !== "atendente") {
-      throw new Response("Acesso negado", { status: 403 });
+      throw new Error("Acesso negado");
     }
 
     const { data: current } = await supabaseAdmin
@@ -392,7 +392,7 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("company_id", caller.companyId);
 
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
 
     if (autoFinalized) {
       await maybeLiberarMesa(caller.companyId, current?.mesa_id);
