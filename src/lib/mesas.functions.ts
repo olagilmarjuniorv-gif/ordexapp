@@ -26,7 +26,7 @@ export const listMesas = createServerFn({ method: "GET" })
       .select("id, numero, status, capacidade, opened_at")
       .eq("company_id", companyId)
       .order("numero", { ascending: true });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     return data ?? [];
   });
 
@@ -40,13 +40,13 @@ export const createMesa = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
     const { data: created, error } = await supabaseAdmin
       .from("mesas")
       .insert({ company_id: companyId, numero: data.numero, capacidade: data.capacidade })
       .select("id")
       .single();
-    if (error) throw new Response(error.message, { status: 400 });
+    if (error) throw new Error(error.message);
     await audit({ companyId, userId: context.userId, action: "mesa.create", entityType: "mesa", entityId: created.id, description: `Mesa ${data.numero} criada` });
     return { id: created.id };
   });
@@ -58,7 +58,7 @@ export const updateMesaStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
     const patch: { status: MesaStatus; opened_at?: string | null } = { status: data.status };
     if (data.status === "ocupada") patch.opened_at = new Date().toISOString();
     if (data.status === "livre") patch.opened_at = null;
@@ -67,7 +67,7 @@ export const updateMesaStatus = createServerFn({ method: "POST" })
       .update(patch)
       .eq("id", data.id)
       .eq("company_id", companyId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
@@ -82,7 +82,7 @@ export const updateMesa = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
     const patch: { numero: string; capacidade?: number } = { numero: data.numero };
     if (data.capacidade) patch.capacidade = data.capacidade;
     const { error } = await supabaseAdmin
@@ -90,7 +90,7 @@ export const updateMesa = createServerFn({ method: "POST" })
       .update(patch)
       .eq("id", data.id)
       .eq("company_id", companyId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     await audit({ companyId, userId: context.userId, action: "mesa.update", entityType: "mesa", entityId: data.id, description: `Mesa renomeada para "${data.numero}"` });
     return { ok: true };
   });
@@ -100,13 +100,13 @@ export const deleteMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
     const { error } = await supabaseAdmin
       .from("mesas")
       .delete()
       .eq("id", data.id)
       .eq("company_id", companyId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
@@ -117,7 +117,7 @@ export const getComandaMesa = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
 
     const { data: mesa, error: mErr } = await supabaseAdmin
       .from("mesas")
@@ -125,7 +125,7 @@ export const getComandaMesa = createServerFn({ method: "GET" })
       .eq("id", data.mesaId)
       .eq("company_id", companyId)
       .single();
-    if (mErr || !mesa) throw new Response("Mesa não encontrada", { status: 404 });
+    if (mErr || !mesa) throw new Error("Mesa não encontrada");
 
     const { data: pedidos, error: pErr } = await supabaseAdmin
       .from("pedidos")
@@ -133,7 +133,7 @@ export const getComandaMesa = createServerFn({ method: "GET" })
       .eq("company_id", companyId)
       .eq("mesa_id", data.mesaId)
       .order("created_at", { ascending: true });
-    if (pErr) throw new Response(pErr.message, { status: 500 });
+    if (pErr) throw new Error(pErr.message);
 
     const all = pedidos ?? [];
     const TERMINAIS = new Set(["finalizado", "pago", "cancelado"]);
@@ -154,13 +154,13 @@ export const fecharContaMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
     const { error } = await supabaseAdmin
       .from("mesas")
       .update({ status: "conta" })
       .eq("id", data.mesaId)
       .eq("company_id", companyId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     await audit({ companyId, userId: context.userId, action: "mesa.fechar_conta", entityType: "mesa", entityId: data.mesaId, description: "Conta fechada (aguardando pagamento)" });
     return { ok: true };
   });
@@ -172,7 +172,7 @@ export const pagarMesa = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase } = context;
     const { error } = await (supabase as any).rpc("pagar_mesa", { _mesa_id: data.mesaId });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     const companyId = await getCompanyId(context.userId);
     await audit({ companyId, userId: context.userId, action: "mesa.pagar", entityType: "mesa", entityId: data.mesaId, description: "Mesa paga e liberada" });
     return { ok: true };
@@ -183,13 +183,13 @@ export const liberarMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
-    if (!companyId) throw new Response("Sem empresa", { status: 403 });
+    if (!companyId) throw new Error("Sem empresa");
     const { error } = await supabaseAdmin
       .from("mesas")
       .update({ status: "livre", opened_at: null })
       .eq("id", data.mesaId)
       .eq("company_id", companyId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) throw new Error(error.message);
     await audit({ companyId, userId: context.userId, action: "mesa.liberar", entityType: "mesa", entityId: data.mesaId, description: "Mesa liberada manualmente" });
     return { ok: true };
   });
