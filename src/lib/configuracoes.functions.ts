@@ -106,10 +106,9 @@ export const updateEmpresa = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdminOfCompany(context.userId, data.id);
     const { id, ...rest } = data;
-    const payload: Record<string, any> = {};
-    for (const [k, v] of Object.entries(rest)) {
-      payload[k] = v === "" ? null : v;
-    }
+    const payload = Object.fromEntries(
+      Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v]),
+    ) as any;
     const { error } = await supabaseAdmin.from("companies").update(payload).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
