@@ -69,6 +69,7 @@ export function AppLayout() {
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/empresas", label: "Empresas", icon: Building2 },
       { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
+      { to: "/configuracoes", label: "Configurações", icon: Settings },
       { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
