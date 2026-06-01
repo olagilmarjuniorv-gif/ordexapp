@@ -154,7 +154,7 @@ export const updateWhatsappConfig = createServerFn({ method: "POST" })
     const { data: row } = await supabaseAdmin
       .from("whatsapp_conexoes").select("id, settings").eq("company_id", data.companyId).maybeSingle();
     const next = {
-      ...(row?.settings ?? {}),
+      ...((row?.settings as Record<string, unknown> | null) ?? {}),
       bot_habilitado: data.bot_habilitado,
       humano_habilitado: data.humano_habilitado,
       auto_status: data.auto_status,
