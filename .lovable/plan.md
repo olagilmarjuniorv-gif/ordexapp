@@ -1,103 +1,129 @@
-# Pacote de Melhorias Operacionais
 
-Refatoração focada em fluxo operacional. **Não toca em** RLS, multiempresa, auth, integrações, WhatsApp ou lógica financeira existente.
+# Módulo CONFIGURAÇÕES — Análise de Schema e Plano
 
-## 1. Novos estados operacionais
+## 1. Análise do schema atual
 
-Adicionar status `finalizado` ao enum de status de pedidos:
+### Tabela `companies` (já existe, parcial)
+**Campos já existentes:**
+- Identidade: `id, name, slug, active, created_at, updated_at`
+- Contato: `phone, whatsapp, email`
+- Endereço: `cep, rua, numero, complemento, bairro, cidade, estado`
+- Operação: `delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega`
+- Horários: `horarios` (jsonb por dia da semana — já cobre Aba 2)
+- Pagamentos: `pagamento_metodos` (jsonb), `exigir_pagamento_antes_cozinha`, `permitir_pagamento_entrega`, `permitir_pagamento_retirada`
 
+**Campos FALTANTES em `companies`:**
+- Fiscal/empresa: `razao_social`, `cnpj`, `inscricao_estadual`
+- E-mails segmentados: `email_financeiro`, `email_operacional`
+- Responsável: `responsavel_nome`, `responsavel_cpf`, `responsavel_telefone`
+- Público (vitrine): `nome_publico`, `telefone_publico`, `endereco_publico`
+- Operação extra: `tempo_entrega_min`, `raio_entrega_km`
+- Canais habilitados (Aba 2): `canais_ativos` jsonb `{whatsapp,balcao,mesa,delivery,ifood:boolean}`
+- Mensagens operacionais (Aba 2): `mensagens_operacionais` jsonb `{loja_fechada, recebido, preparo, pronto, finalizado}`
+- Chatbot (Aba 6): `chatbot_saudacao`, `chatbot_encerramento`, `chatbot_transferencia_humano`
+  - (já existe `whatsapp_fluxos` com 3 mensagens semelhantes — vamos REUTILIZAR, não duplicar)
+
+### Tabela `whatsapp_conexoes` (já cobre Aba 3 — leitura)
+Tem: `phone_number, phone_number_id, whatsapp_business_id, status, connected_at, last_sync_at, last_error, settings (jsonb)`
+- Recursos (bot/humano/auto-status) → guardar em `settings` jsonb (sem migration de coluna)
+- Indicadores de conversas/mês/qualidade → **somente UI placeholder** (Meta API não plugada ainda)
+
+### Tabela `whatsapp_fluxos` (já cobre Aba 6)
+Já tem: `mensagem_boas_vindas, mensagem_fechamento, mensagem_sem_atendimento, ativo`
+→ Mapeia 1:1 com Aba 6. **Sem migration**.
+
+### Tabela `integracoes` (já cobre estrutura de gateways de pagamento — Aba 4)
+Tem: `provider, status, settings, active...` → suporta `asaas`, `mercado_pago` como novos `provider`. **Sem migration nova**, só UI.
+
+### Assinatura (Aba 5)
+**Não existe** tabela de plano/assinatura. Para entregar somente leitura sem inventar billing:
+- Criar `company_subscriptions` (1 por empresa): `plano (base|pro|max)`, `ciclo (mensal|anual)`, `status`, `proxima_cobranca`, `valor`, `limite_pedidos_mes`, `limite_conversas_mes`, `limite_usuarios`
+- Contadores derivados em runtime (count em `pedidos`, `whatsapp_conversas`, `profiles` do mês corrente) — **sem nova tabela de uso**.
+
+### Privacidade (Aba 7)
+- Links: estáticos no frontend (Termos, Privacidade, Cookies)
+- Solicitações: criar tabela `privacy_requests` (`tipo: exportacao|encerramento`, `status`, `solicitado_por`, `company_id`)
+
+---
+
+## 2. Migrations propostas (3 migrations)
+
+### Migration 1 — Expandir `companies`
+```sql
+ALTER TABLE public.companies
+  ADD COLUMN razao_social text,
+  ADD COLUMN cnpj text,
+  ADD COLUMN inscricao_estadual text,
+  ADD COLUMN email_financeiro text,
+  ADD COLUMN email_operacional text,
+  ADD COLUMN responsavel_nome text,
+  ADD COLUMN responsavel_cpf text,
+  ADD COLUMN responsavel_telefone text,
+  ADD COLUMN nome_publico text,
+  ADD COLUMN telefone_publico text,
+  ADD COLUMN endereco_publico text,
+  ADD COLUMN tempo_entrega_min integer NOT NULL DEFAULT 45,
+  ADD COLUMN raio_entrega_km numeric NOT NULL DEFAULT 0,
+  ADD COLUMN canais_ativos jsonb NOT NULL DEFAULT
+    '{"whatsapp":true,"balcao":true,"mesa":true,"delivery":true,"ifood":false}'::jsonb,
+  ADD COLUMN mensagens_operacionais jsonb NOT NULL DEFAULT
+    '{"loja_fechada":"","recebido":"","preparo":"","pronto":"","finalizado":""}'::jsonb;
 ```
-novo → preparo → pronto → finalizado → (pago opcional, ou cancelado)
-```
+RLS já existe em `companies` — sem alteração.
 
-`pago` deixa de ser status operacional e passa a ser exclusivamente representado por `status_financeiro`. Compatibilidade: pedidos antigos com `status='pago'` continuam funcionando (tratados como finalizados na UI).
+### Migration 2 — `company_subscriptions`
+Tabela 1:1 com `companies`, RLS por `company_id`, GRANTs autenticated+service_role, política "Members view own subscription", "Super admins manage".
 
-**Migration:** apenas adicionar `'finalizado'` à lista de status válidos no constraint/validação. Não migrar dados antigos.
+### Migration 3 — `privacy_requests`
+`id, company_id, tipo, status, solicitado_por, created_at, resolved_at, notes`. RLS: admin da empresa cria/lê; super_admin gerencia.
 
-## 2. Server functions — novas regras automáticas
+---
 
-Em `src/lib/pedidos.functions.ts`:
+## 3. Backend (server functions)
 
-- **`updatePedidoStatus`**: ao mudar para `pronto`, se `status_financeiro='pago'` → grava `finalizado` direto.
-- **`updatePedidoStatusFinanceiro`**: ao marcar `pago`, se `status='pronto'` → grava `finalizado` direto.
-- **Auto-liberar mesa**: após qualquer update que resulte em `finalizado` ou `cancelado`, se a mesa não tem mais pedidos ativos (status ∉ {finalizado, cancelado}), grava `mesas.status='livre'`.
-- **Nova action `voltarParaCozinha`**: muda status de `pronto` → `preparo`. Permitido para admin/atendente.
+Arquivo novo: `src/lib/configuracoes.functions.ts`
+- `getConfiguracoes` — retorna company + subscription + conexao whatsapp + fluxo chatbot
+- `updateEmpresa` (Aba 1) — dados/endereço/responsável/público
+- `updateOperacao` (Aba 2) — canais, funcionamento, horários, entrega, mensagens operacionais
+- `updateWhatsappConfig` (Aba 3) — settings jsonb (bot, humano, auto-status)
+- `updatePagamentos` (Aba 4) — reusar `updateCompanyPagamentos` existente
+- `updateChatbot` (Aba 6) — usa `whatsapp_fluxos`
+- `requestPrivacyAction` (Aba 7) — cria `privacy_requests`
 
-Em `src/lib/mesas.functions.ts`:
-- `pagarMesa` continua existindo mas o RPC `pagar_mesa` agora deve marcar pedidos como `finalizado` + `status_financeiro=pago` (atualizar a SQL function).
+Todas com `requireSupabaseAuth` + checagem `isAdmin || isSuperAdmin` para escrita; atendente só lê.
+Validação com Zod: CNPJ (14), CPF (11), email, telefone, CEP (8), horários `HH:MM`.
 
-## 3. Cozinha (`/cozinha`)
+---
 
-- Filtra somente `status IN ('novo','preparo')`. Pedidos `pronto` somem da tela imediatamente.
-- Ações: Iniciar preparo / Marcar pronto. Sem botão de pagamento, entrega, finalizar.
+## 4. Frontend
 
-## 4. Notificação de pedido pronto
+Nova rota: `src/routes/_app/configuracoes.tsx`
+- Componente único com `<Tabs>` (shadcn) — 7 abas
+- Subcomponentes por aba em `src/components/configuracoes/*` (Empresa, Operacao, Whatsapp, Pagamentos, Assinatura, Chatbot, Privacidade)
+- Cada aba salva isoladamente, `toast.success/error`, invalidate query
+- Atendente: campos `disabled`; Cozinha: redireciona p/ `/dashboard`
+- Reaproveitar tokens do design system (sem cores cruas)
+- Item na sidebar (`AppLayout`): "Configurações" (ícone `Settings`) — visível p/ admin/superadmin
 
-Já existe `usePedidoProntoNotify` em `src/hooks/use-pedido-pronto-notify.ts`. Garantir que está ativo no `AppLayout` para roles admin/atendente.
+---
 
-## 5. Nova fila "Expedição" (`/expedicao`)
+## 5. Itens explicitamente NÃO incluídos
+- Billing real / cobrança (Aba 5 é leitura, dados populados manualmente / via super admin)
+- Integração Meta para health score / qualidade do número (placeholders)
+- IA do chatbot / fluxos avançados (só estrutura base via `whatsapp_fluxos`)
+- Integração financeira Asaas/MP (só registro em `integracoes`)
+- Export real de dados (Aba 7 gera apenas a solicitação)
 
-Nova rota `src/routes/_app/expedicao.tsx`. Lista pedidos com `status='pronto'`, agrupados/filtráveis por canal (mesa/balcao/retirada/delivery). Cada card mostra: #curto, cliente, mesa, canal, horário, ações conforme canal:
+---
 
-- **mesa**: "Servido" → marca finalizado (ou aguarda pagamento)
-- **balcão**: "Entregue ao cliente" → finalizado
-- **retirada**: "Retirado" → finalizado
-- **delivery**: "Saiu para entrega" → mantém em estado intermediário; "Entregue" → finalizado
+## 6. Compatibilidade
+- `meu-restaurante.tsx` continua funcionando (subconjunto destes campos); pode ser removido em passo futuro ou marcado como legacy. **Não removerei nesta entrega** para evitar regressão.
 
-Sub-estados (`aguardando_servir`, `em_consumo`, `saiu_entrega`, `entregue`, etc.) ficam em coluna nova `pedidos.fase_canal` (text, nullable) — registra a etapa dentro do canal sem inflar o enum principal.
+---
 
-## 6. Tela de Pedidos (`/pedidos`)
-
-Substituir chips poluídos por 3 selects simples:
-
-- **Status**: Todos | Novo | Em preparo | Pronto | Finalizado | Cancelado | Atrasado
-- **Pagamento**: Todos | Pago | Aguardando | Na entrega | Na retirada
-- **Período**: Hoje (default) | Semana | Mês | Ano
-
-## 7. Cards de pedido — limpeza visual
-
-Layout final:
-```
-Mesa 1 • Paulo Rodrigues          R$ 91,30
-🟢 Pago   💳 Pagamento na entrega
-```
-
-Sem duplicação de "Pago • Na entrega". Badge financeiro único.
-
-## 8. Botão "Marcar como pago"
-
-Em todos os pontos (lista de pedidos, detalhe, mesa): só renderiza se `status_financeiro !== 'pago'`.
-
-## 9. Botão "Voltar para cozinha"
-
-Aparece em pedidos com `status='pronto'` para admin/atendente. Chama `voltarParaCozinha`.
-
-## 10. Remover dependência manual de "Liberar mesa"
-
-Botão continua existindo como fallback admin, mas o fluxo normal libera automático (item 2).
-
-## Arquivos afetados
-
-- **Migration**: ajustar validação de status + `pagar_mesa` RPC
-- `src/lib/pedidos.functions.ts` — auto-finalização, auto-liberação, `voltarParaCozinha`, `setFaseCanal`
-- `src/lib/mesas.functions.ts` — helper de auto-liberação
-- `src/routes/_app/cozinha.tsx` — filtrar prontos
-- `src/routes/_app/expedicao.tsx` — nova rota
-- `src/routes/_app/pedidos/index.tsx` — 3 filtros, cards limpos
-- `src/routes/_app/pedidos/$id.tsx` — botão pago condicional + voltar p/ cozinha
-- `src/routes/_app/mesas/$id.tsx` — botão pago condicional
-- `src/components/AppLayout.tsx` — link "Expedição" no nav + garantir hook de notificação ativo
-
-## Validação
-
-Smoke test manual nos 4 papéis (admin, super_admin, atendente, cozinha) após build verde:
-- Cozinha → Pronto: pedido some da cozinha, aparece em Expedição, toca som no admin.
-- Pedido pago + pronto → finalizado automaticamente.
-- Último pedido da mesa finalizado → mesa volta para `livre` sem clique.
-- Pedido pago não mostra mais "Marcar como pago".
-- "Voltar para cozinha" devolve pedido para fila da cozinha.
-
-## Riscos
-
-- Pedidos legados com `status='pago'` precisam ser tratados como "finalizados" na UI dos filtros (mapeamento na exibição, sem migrar dados).
-- A SQL function `pagar_mesa` precisa ser regravada para usar `finalizado` em vez de `pago` no campo `status`. Pedidos antigos não são alterados.
+## Aprovação
+Aguardo seu OK para:
+1. Rodar as 3 migrations
+2. Criar `configuracoes.functions.ts`
+3. Criar rota + componentes de abas
+4. Adicionar item na sidebar

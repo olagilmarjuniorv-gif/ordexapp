@@ -261,27 +261,42 @@ export type Database = {
         Row: {
           active: boolean
           bairro: string | null
+          canais_ativos: Json
           cep: string | null
           cidade: string | null
+          cnpj: string | null
           complemento: string | null
           created_at: string
           delivery_ativo: boolean
           email: string | null
+          email_financeiro: string | null
+          email_operacional: string | null
+          endereco_publico: string | null
           estado: string | null
           exigir_pagamento_antes_cozinha: boolean
           horarios: Json
           id: string
+          inscricao_estadual: string | null
+          mensagens_operacionais: Json
           name: string
+          nome_publico: string | null
           numero: string | null
           pagamento_metodos: Json
           pedido_minimo: number
           permitir_pagamento_entrega: boolean
           permitir_pagamento_retirada: boolean
           phone: string | null
+          raio_entrega_km: number
+          razao_social: string | null
+          responsavel_cpf: string | null
+          responsavel_nome: string | null
+          responsavel_telefone: string | null
           retirada_ativa: boolean
           rua: string | null
           slug: string | null
           taxa_entrega: number
+          telefone_publico: string | null
+          tempo_entrega_min: number
           tempo_preparo_min: number
           updated_at: string
           whatsapp: string | null
@@ -289,27 +304,42 @@ export type Database = {
         Insert: {
           active?: boolean
           bairro?: string | null
+          canais_ativos?: Json
           cep?: string | null
           cidade?: string | null
+          cnpj?: string | null
           complemento?: string | null
           created_at?: string
           delivery_ativo?: boolean
           email?: string | null
+          email_financeiro?: string | null
+          email_operacional?: string | null
+          endereco_publico?: string | null
           estado?: string | null
           exigir_pagamento_antes_cozinha?: boolean
           horarios?: Json
           id?: string
+          inscricao_estadual?: string | null
+          mensagens_operacionais?: Json
           name: string
+          nome_publico?: string | null
           numero?: string | null
           pagamento_metodos?: Json
           pedido_minimo?: number
           permitir_pagamento_entrega?: boolean
           permitir_pagamento_retirada?: boolean
           phone?: string | null
+          raio_entrega_km?: number
+          razao_social?: string | null
+          responsavel_cpf?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
           retirada_ativa?: boolean
           rua?: string | null
           slug?: string | null
           taxa_entrega?: number
+          telefone_publico?: string | null
+          tempo_entrega_min?: number
           tempo_preparo_min?: number
           updated_at?: string
           whatsapp?: string | null
@@ -317,30 +347,90 @@ export type Database = {
         Update: {
           active?: boolean
           bairro?: string | null
+          canais_ativos?: Json
           cep?: string | null
           cidade?: string | null
+          cnpj?: string | null
           complemento?: string | null
           created_at?: string
           delivery_ativo?: boolean
           email?: string | null
+          email_financeiro?: string | null
+          email_operacional?: string | null
+          endereco_publico?: string | null
           estado?: string | null
           exigir_pagamento_antes_cozinha?: boolean
           horarios?: Json
           id?: string
+          inscricao_estadual?: string | null
+          mensagens_operacionais?: Json
           name?: string
+          nome_publico?: string | null
           numero?: string | null
           pagamento_metodos?: Json
           pedido_minimo?: number
           permitir_pagamento_entrega?: boolean
           permitir_pagamento_retirada?: boolean
           phone?: string | null
+          raio_entrega_km?: number
+          razao_social?: string | null
+          responsavel_cpf?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
           retirada_ativa?: boolean
           rua?: string | null
           slug?: string | null
           taxa_entrega?: number
+          telefone_publico?: string | null
+          tempo_entrega_min?: number
           tempo_preparo_min?: number
           updated_at?: string
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      company_subscriptions: {
+        Row: {
+          ciclo: string
+          company_id: string
+          created_at: string
+          id: string
+          limite_conversas_mes: number
+          limite_pedidos_mes: number
+          limite_usuarios: number
+          plano: string
+          proxima_cobranca: string | null
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          ciclo?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          limite_conversas_mes?: number
+          limite_pedidos_mes?: number
+          limite_usuarios?: number
+          plano?: string
+          proxima_cobranca?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          ciclo?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          limite_conversas_mes?: number
+          limite_pedidos_mes?: number
+          limite_usuarios?: number
+          plano?: string
+          proxima_cobranca?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
         }
         Relationships: []
       }
@@ -656,6 +746,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      privacy_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          resolved_at: string | null
+          solicitado_por: string
+          status: string
+          tipo: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          resolved_at?: string | null
+          solicitado_por: string
+          status?: string
+          tipo: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          resolved_at?: string | null
+          solicitado_por?: string
+          status?: string
+          tipo?: string
+        }
+        Relationships: []
       }
       produto_grupos_adicionais: {
         Row: {
