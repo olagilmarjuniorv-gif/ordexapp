@@ -26,6 +26,7 @@ import { Route as AppEntregasRouteImport } from './routes/_app/entregas'
 import { Route as AppEmpresasRouteImport } from './routes/_app/empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCozinhaRouteImport } from './routes/_app/cozinha'
+import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoes'
 import { Route as AppConectoresRouteImport } from './routes/_app/conectores'
 import { Route as AppCombosRouteImport } from './routes/_app/combos'
 import { Route as AppClientesRouteImport } from './routes/_app/clientes'
@@ -128,6 +129,11 @@ const AppCozinhaRoute = AppCozinhaRouteImport.update({
   path: '/cozinha',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConectoresRoute = AppConectoresRouteImport.update({
   id: '/conectores',
   path: '/conectores',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AppClientesRoute
   '/combos': typeof AppCombosRoute
   '/conectores': typeof AppConectoresRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
   '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AppClientesRoute
   '/combos': typeof AppCombosRoute
   '/conectores': typeof AppConectoresRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
   '/cozinha': typeof AppCozinhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
@@ -299,6 +307,7 @@ export interface FileRoutesById {
   '/_app/clientes': typeof AppClientesRoute
   '/_app/combos': typeof AppCombosRoute
   '/_app/conectores': typeof AppConectoresRoute
+  '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/cozinha': typeof AppCozinhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/combos'
     | '/conectores'
+    | '/configuracoes'
     | '/cozinha'
     | '/dashboard'
     | '/empresas'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/combos'
     | '/conectores'
+    | '/configuracoes'
     | '/cozinha'
     | '/dashboard'
     | '/empresas'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/_app/clientes'
     | '/_app/combos'
     | '/_app/conectores'
+    | '/_app/configuracoes'
     | '/_app/cozinha'
     | '/_app/dashboard'
     | '/_app/empresas'
@@ -563,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCozinhaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/configuracoes': {
+      id: '/_app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/conectores': {
       id: '/_app/conectores'
       path: '/conectores'
@@ -693,6 +712,7 @@ interface AppRouteChildren {
   AppClientesRoute: typeof AppClientesRoute
   AppCombosRoute: typeof AppCombosRoute
   AppConectoresRoute: typeof AppConectoresRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppCozinhaRoute: typeof AppCozinhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
@@ -722,6 +742,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClientesRoute: AppClientesRoute,
   AppCombosRoute: AppCombosRoute,
   AppConectoresRoute: AppConectoresRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppCozinhaRoute: AppCozinhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
@@ -758,13 +779,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
