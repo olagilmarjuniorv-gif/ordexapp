@@ -332,6 +332,10 @@ export const setFaseCanal = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Error("Not allowed");
+    // A2: expedição é operada por admin/atendente. Cozinha não pode movimentar fases.
+    if (!caller.isAdmin && caller.role !== "atendente") {
+      throw new Error("Acesso negado");
+    }
 
     const { data: current } = await supabaseAdmin
       .from("pedidos")
