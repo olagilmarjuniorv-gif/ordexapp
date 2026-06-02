@@ -68,7 +68,7 @@ export const listPedidos = createServerFn({ method: "GET" })
 
     const { data, error } = await supabaseAdmin
       .from("pedidos")
-      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, observacao, forma_pagamento, status_financeiro, external_provider, external_order_id, imported_at, cliente:clientes(id, name, phone), mesa:mesas(numero)")
+      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, observacao, forma_pagamento, status_financeiro, fase_canal, items, paid_at, external_provider, external_order_id, imported_at, cliente:clientes(id, name, phone), mesa:mesas(numero)")
       .eq("company_id", caller.companyId)
       .order("created_at", { ascending: false });
 
