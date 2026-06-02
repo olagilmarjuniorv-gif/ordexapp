@@ -222,7 +222,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
     // Carrega estado atual para regras automáticas
     const { data: current, error: loadErr } = await supabaseAdmin
       .from("pedidos")
-      .select("status, status_financeiro, mesa_id")
+      .select("status, status_financeiro, mesa_id, paid_at")
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .single();
