@@ -101,6 +101,20 @@ export const createPedido = createServerFn({ method: "POST" })
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Error("Not allowed");
 
+    // M1: bloquear novos pedidos em mesas com conta em fechamento.
+    if (data.mesa_id) {
+      const { data: mesa } = await supabaseAdmin
+        .from("mesas")
+        .select("status")
+        .eq("id", data.mesa_id)
+        .eq("company_id", caller.companyId)
+        .maybeSingle();
+      if (mesa && (mesa as any).status === "conta") {
+        throw new Error("Mesa em fechamento de conta. Libere a mesa antes de adicionar novos pedidos.");
+      }
+    }
+
+
     const productIds = data.items.filter((i) => i.kind === "produto" && i.product_id).map((i) => i.product_id!) as string[];
     const comboIds = data.items.filter((i) => i.kind === "combo" && i.combo_id).map((i) => i.combo_id!) as string[];
 
