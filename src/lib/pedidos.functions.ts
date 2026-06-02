@@ -68,7 +68,7 @@ export const listPedidos = createServerFn({ method: "GET" })
 
     const { data, error } = await supabaseAdmin
       .from("pedidos")
-      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, observacao, forma_pagamento, status_financeiro, external_provider, external_order_id, imported_at, cliente:clientes(id, name, phone), mesa:mesas(numero)")
+      .select("id, created_at, status, total_amount, canal, mesa_id, user_id, observacao, forma_pagamento, status_financeiro, fase_canal, items, paid_at, external_provider, external_order_id, imported_at, cliente:clientes(id, name, phone), mesa:mesas(numero)")
       .eq("company_id", caller.companyId)
       .order("created_at", { ascending: false });
 
@@ -100,6 +100,20 @@ export const createPedido = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Error("Not allowed");
+
+    // M1: bloquear novos pedidos em mesas com conta em fechamento.
+    if (data.mesa_id) {
+      const { data: mesa } = await supabaseAdmin
+        .from("mesas")
+        .select("status")
+        .eq("id", data.mesa_id)
+        .eq("company_id", caller.companyId)
+        .maybeSingle();
+      if (mesa && (mesa as any).status === "conta") {
+        throw new Error("Mesa em fechamento de conta. Libere a mesa antes de adicionar novos pedidos.");
+      }
+    }
+
 
     const productIds = data.items.filter((i) => i.kind === "produto" && i.product_id).map((i) => i.product_id!) as string[];
     const comboIds = data.items.filter((i) => i.kind === "combo" && i.combo_id).map((i) => i.combo_id!) as string[];
@@ -222,7 +236,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
     // Carrega estado atual para regras automáticas
     const { data: current, error: loadErr } = await supabaseAdmin
       .from("pedidos")
-      .select("status, status_financeiro, mesa_id")
+      .select("status, status_financeiro, mesa_id, paid_at")
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .single();
@@ -241,8 +255,17 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
       patch.paid_at = new Date().toISOString();
     } else if (data.status === "cancelado") {
       patch.status_financeiro = "cancelado";
-    } else if (finalStatus === "finalizado" && current.status_financeiro === "pago") {
-      patch.paid_at = new Date().toISOString();
+    } else if (finalStatus === "finalizado") {
+      // C2: regra de consistência financeira ao finalizar
+      const fin = current.status_financeiro as StatusFinanceiro;
+      if (fin === "pago") {
+        if (!(current as any).paid_at) patch.paid_at = new Date().toISOString();
+      } else if (fin === "pagamento_entrega" || fin === "pagamento_retirada") {
+        patch.status_financeiro = "pago";
+        patch.paid_at = new Date().toISOString();
+      } else {
+        throw new Error("Não é possível finalizar: marque o pagamento antes.");
+      }
     }
 
     const { error } = await supabaseAdmin
@@ -280,6 +303,18 @@ export const voltarParaCozinha = createServerFn({ method: "POST" })
     if (!caller.isAdmin && caller.role !== "atendente") {
       throw new Error("Acesso negado");
     }
+    // A1: bloquear retorno à cozinha se pedido já foi pago — evita estado
+    // inconsistente (status=preparo + status_financeiro=pago).
+    const { data: current } = await supabaseAdmin
+      .from("pedidos")
+      .select("status, status_financeiro")
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .single();
+    if (!current) throw new Error("Pedido não encontrado");
+    if ((current as any).status_financeiro === "pago") {
+      throw new Error("Pedido já pago não pode voltar para a cozinha.");
+    }
     const { error } = await supabaseAdmin
       .from("pedidos")
       .update({ status: "preparo", fase_canal: null } as any)
@@ -311,6 +346,10 @@ export const setFaseCanal = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
     if (!caller.companyId) throw new Error("Not allowed");
+    // A2: expedição é operada por admin/atendente. Cozinha não pode movimentar fases.
+    if (!caller.isAdmin && caller.role !== "atendente") {
+      throw new Error("Acesso negado");
+    }
 
     const { data: current } = await supabaseAdmin
       .from("pedidos")
@@ -370,14 +409,22 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
 
     const { data: current } = await supabaseAdmin
       .from("pedidos")
-      .select("status, mesa_id")
+      .select("status, mesa_id, status_financeiro, paid_at")
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .single();
 
     const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
     if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
-    if (data.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+    // M3: só carimba paid_at em transição real para pago (não re-carimbar quando
+    // apenas a forma de pagamento muda em pedido já pago).
+    if (
+      data.status_financeiro === "pago" &&
+      (current as any)?.status_financeiro !== "pago" &&
+      !(current as any)?.paid_at
+    ) {
+      patch.paid_at = new Date().toISOString();
+    }
 
     // Regra: se pedido está "pronto" e foi marcado como pago → finalizado automático
     let autoFinalized = false;
