@@ -289,6 +289,18 @@ export const voltarParaCozinha = createServerFn({ method: "POST" })
     if (!caller.isAdmin && caller.role !== "atendente") {
       throw new Error("Acesso negado");
     }
+    // A1: bloquear retorno à cozinha se pedido já foi pago — evita estado
+    // inconsistente (status=preparo + status_financeiro=pago).
+    const { data: current } = await supabaseAdmin
+      .from("pedidos")
+      .select("status, status_financeiro")
+      .eq("id", data.id)
+      .eq("company_id", caller.companyId)
+      .single();
+    if (!current) throw new Error("Pedido não encontrado");
+    if ((current as any).status_financeiro === "pago") {
+      throw new Error("Pedido já pago não pode voltar para a cozinha.");
+    }
     const { error } = await supabaseAdmin
       .from("pedidos")
       .update({ status: "preparo", fase_canal: null } as any)
