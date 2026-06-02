@@ -241,8 +241,17 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
       patch.paid_at = new Date().toISOString();
     } else if (data.status === "cancelado") {
       patch.status_financeiro = "cancelado";
-    } else if (finalStatus === "finalizado" && current.status_financeiro === "pago") {
-      patch.paid_at = new Date().toISOString();
+    } else if (finalStatus === "finalizado") {
+      // C2: regra de consistência financeira ao finalizar
+      const fin = current.status_financeiro as StatusFinanceiro;
+      if (fin === "pago") {
+        if (!(current as any).paid_at) patch.paid_at = new Date().toISOString();
+      } else if (fin === "pagamento_entrega" || fin === "pagamento_retirada") {
+        patch.status_financeiro = "pago";
+        patch.paid_at = new Date().toISOString();
+      } else {
+        throw new Error("Não é possível finalizar: marque o pagamento antes.");
+      }
     }
 
     const { error } = await supabaseAdmin
