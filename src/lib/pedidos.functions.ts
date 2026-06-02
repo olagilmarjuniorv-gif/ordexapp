@@ -395,14 +395,22 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
 
     const { data: current } = await supabaseAdmin
       .from("pedidos")
-      .select("status, mesa_id")
+      .select("status, mesa_id, status_financeiro, paid_at")
       .eq("id", data.id)
       .eq("company_id", caller.companyId)
       .single();
 
     const patch: Record<string, unknown> = { status_financeiro: data.status_financeiro };
     if (data.forma_pagamento !== undefined) patch.forma_pagamento = data.forma_pagamento;
-    if (data.status_financeiro === "pago") patch.paid_at = new Date().toISOString();
+    // M3: só carimba paid_at em transição real para pago (não re-carimbar quando
+    // apenas a forma de pagamento muda em pedido já pago).
+    if (
+      data.status_financeiro === "pago" &&
+      (current as any)?.status_financeiro !== "pago" &&
+      !(current as any)?.paid_at
+    ) {
+      patch.paid_at = new Date().toISOString();
+    }
 
     // Regra: se pedido está "pronto" e foi marcado como pago → finalizado automático
     let autoFinalized = false;
