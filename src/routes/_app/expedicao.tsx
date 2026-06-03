@@ -1,16 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   listPedidos,
   updatePedidoStatus,
+  updatePedidoStatusFinanceiro,
   voltarParaCozinha,
   setFaseCanal,
   type FaseCanal,
 } from "@/lib/pedidos.functions";
+import { useAuth } from "@/lib/auth";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
-import { PackageCheck, Bike, ShoppingBag, Utensils, ClipboardList, Undo2, CheckCircle2 } from "lucide-react";
+import { PackageCheck, Bike, ShoppingBag, Utensils, ClipboardList, Undo2, CheckCircle2, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/expedicao")({
