@@ -426,12 +426,8 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
       patch.paid_at = new Date().toISOString();
     }
 
-    // Regra: se pedido está "pronto" e foi marcado como pago → finalizado automático
-    let autoFinalized = false;
-    if (data.status_financeiro === "pago" && current?.status === "pronto") {
-      patch.status = "finalizado";
-      autoFinalized = true;
-    }
+    // Pagamento e finalização são eventos independentes.
+    // O pedido só é finalizado via fluxo de expedição (servido/retirado/entregue).
 
     const { error } = await supabaseAdmin
       .from("pedidos")
@@ -440,10 +436,6 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
       .eq("company_id", caller.companyId);
 
     if (error) throw new Error(error.message);
-
-    if (autoFinalized) {
-      await maybeLiberarMesa(caller.companyId, current?.mesa_id);
-    }
 
     await audit({
       companyId: caller.companyId,

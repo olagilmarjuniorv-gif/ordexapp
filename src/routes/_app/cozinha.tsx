@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { listPedidos, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
-import { ChefHat, Play, Check, Volume2, VolumeX, Maximize2, Minimize2, Sun, Moon, AlertTriangle, Clock, Utensils } from "lucide-react";
+import { ChefHat, Play, Check, Volume2, VolumeX, Maximize2, Minimize2, Sun, Moon, AlertTriangle, Clock, Utensils, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/cozinha")({
@@ -324,9 +324,13 @@ function Cozinha() {
                             </button>
                           )}
                           {col.key === "pronto" && (
-                            <p className={`mt-3 text-center text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
-                              Aguardando expedição
-                            </p>
+                            <Link
+                              to="/pedidos/$id"
+                              params={{ id: p.id }}
+                              className={`mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold ${dark ? "border-white/20 text-white hover:bg-white/5" : "border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`}
+                            >
+                              <ExternalLink className="h-4 w-4" /> Ver detalhes
+                            </Link>
                           )}
                         </div>
                       );

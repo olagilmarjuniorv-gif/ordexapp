@@ -255,15 +255,13 @@ function PedidoDetail() {
               <button onClick={() => statusM.mutate("cancelado")} className="inline-flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm font-semibold">
                 <X className="h-4 w-4" /> Cancelar
               </button>
-              <button onClick={() => statusM.mutate("preparo")} className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white">
-                <ChefHat className="h-4 w-4" /> Iniciar preparo
-              </button>
+              <p className="text-sm text-muted-foreground">Aguardando a cozinha iniciar o preparo.</p>
             </>
           )}
           {pedido.status === "preparo" && (
-            <button onClick={() => statusM.mutate("pronto")} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">
-              <Bell className="h-4 w-4" /> Marcar como pronto
-            </button>
+            <p className="text-sm text-muted-foreground inline-flex items-center gap-2">
+              <ChefHat className="h-4 w-4" /> Em preparo na cozinha.
+            </p>
           )}
           {pedido.status === "pronto" && canEditFinanceiro && (
             <>
