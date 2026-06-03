@@ -92,6 +92,14 @@ function Expedicao() {
     },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
+  const marcarPago = useMutation({
+    mutationFn: (id: string) => finFn({ data: { id, status_financeiro: "pago" } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      toast.success("Pagamento confirmado");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
 
   const FILTROS: { id: CanalFiltro; label: string }[] = [
     { id: "todos", label: "Todos" },
