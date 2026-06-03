@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { listPedidos, updatePedidoStatus, type PedidoStatus } from "@/lib/pedidos.functions";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
-import { ChefHat, Play, Check, Volume2, VolumeX, Maximize2, Minimize2, Sun, Moon, AlertTriangle, Clock, Utensils } from "lucide-react";
+import { ChefHat, Play, Check, Volume2, VolumeX, Maximize2, Minimize2, Sun, Moon, AlertTriangle, Clock, Utensils, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/cozinha")({
