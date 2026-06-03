@@ -46,11 +46,14 @@ type CanalFiltro = "todos" | "salao" | "balcao" | "retirada" | "delivery";
 
 function Expedicao() {
   const qc = useQueryClient();
+  const { isAdmin, isAtendente } = useAuth();
+  const canMarkPago = isAdmin || isAtendente;
   const [canal, setCanal] = useState<CanalFiltro>("todos");
   const fetchFn = useServerFn(listPedidos);
   const statusFn = useServerFn(updatePedidoStatus);
   const voltarFn = useServerFn(voltarParaCozinha);
   const faseFn = useServerFn(setFaseCanal);
+  const finFn = useServerFn(updatePedidoStatusFinanceiro);
 
   const { data, isLoading } = useQuery({
     queryKey: ["pedidos"],
