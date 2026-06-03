@@ -324,9 +324,13 @@ function Cozinha() {
                             </button>
                           )}
                           {col.key === "pronto" && (
-                            <p className={`mt-3 text-center text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
-                              Aguardando expedição
-                            </p>
+                            <Link
+                              to="/pedidos/$id"
+                              params={{ id: p.id }}
+                              className={`mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold ${dark ? "border-white/20 text-white hover:bg-white/5" : "border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`}
+                            >
+                              <ExternalLink className="h-4 w-4" /> Ver detalhes
+                            </Link>
                           )}
                         </div>
                       );
