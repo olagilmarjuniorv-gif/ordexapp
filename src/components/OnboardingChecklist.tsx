@@ -30,7 +30,7 @@ const ITEMS: {
     key: "meu_restaurante",
     title: "Meu Restaurante",
     desc: "Informe nome e telefone do estabelecimento.",
-    to: "/meu-restaurante",
+    to: "/configuracoes",
     icon: Store,
   },
   {
