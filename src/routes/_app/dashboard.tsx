@@ -86,8 +86,8 @@ function ChartSection({ chart, granularity, onChange, loading }: {
     <section className="rounded-xl border border-border bg-card p-4 shadow-card">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h2 className="font-display font-semibold">Faturamento</h2>
-          <p className="text-xs text-muted-foreground">Vendas pagas por período</p>
+          <h2 className="font-display font-semibold">Vendas pagas</h2>
+          <p className="text-xs text-muted-foreground">Receita confirmada por período</p>
         </div>
         <PeriodTabs value={granularity} onChange={onChange} />
       </header>
