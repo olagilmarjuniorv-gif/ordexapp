@@ -143,57 +143,6 @@ export const updateCompany = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const updateMeuRestaurante = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z
-      .object({
-        id: z.string().uuid(),
-        name: z.string().trim().min(1).max(120),
-        phone: z.string().trim().max(40).optional().nullable(),
-        whatsapp: z.string().trim().max(40).optional().nullable(),
-        email: z.string().trim().max(200).optional().nullable(),
-        cep: z.string().trim().max(20).optional().nullable(),
-        rua: z.string().trim().max(200).optional().nullable(),
-        numero: z.string().trim().max(20).optional().nullable(),
-        complemento: z.string().trim().max(120).optional().nullable(),
-        bairro: z.string().trim().max(120).optional().nullable(),
-        cidade: z.string().trim().max(120).optional().nullable(),
-        estado: z.string().trim().max(40).optional().nullable(),
-        delivery_ativo: z.boolean(),
-        retirada_ativa: z.boolean(),
-        tempo_preparo_min: z.number().int().min(0).max(600),
-        pedido_minimo: z.number().min(0).max(100000),
-        taxa_entrega: z.number().min(0).max(100000),
-        horarios: HORARIOS_SCHEMA,
-      })
-      .parse(d),
-  )
-  .handler(async ({ context, data }) => {
-    const c = await getCaller(context.userId);
-    if (!c.isSuperAdmin && !(c.isCompanyAdmin && c.companyId === data.id)) {
-      throw new Response("Acesso negado", { status: 403 });
-    }
-    const { id, ...rest } = data;
-    const { error } = await supabaseAdmin
-      .from("companies")
-      .update({
-        ...rest,
-        email: rest.email || null,
-        whatsapp: rest.whatsapp || null,
-        phone: rest.phone || null,
-        cep: rest.cep || null,
-        rua: rest.rua || null,
-        numero: rest.numero || null,
-        complemento: rest.complemento || null,
-        bairro: rest.bairro || null,
-        cidade: rest.cidade || null,
-        estado: rest.estado || null,
-      })
-      .eq("id", id);
-    if (error) throw new Response(error.message, { status: 500 });
-    return { ok: true };
-  });
 
 export const setCompanyActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

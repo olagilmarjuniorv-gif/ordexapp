@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, ShoppingBag, LogOut, Settings,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Store, Wallet, DollarSign, ClipboardList,
+  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Wallet, DollarSign, ClipboardList,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -68,7 +68,6 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/empresas", label: "Empresas", icon: Building2 },
-      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
       { to: "/configuracoes", label: "Configurações", icon: Settings },
       { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
@@ -88,7 +87,7 @@ export function AppLayout() {
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
-      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
+      
       { to: "/configuracoes", label: "Configurações", icon: Settings },
       { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
