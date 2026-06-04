@@ -87,7 +87,7 @@ export function AppLayout() {
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
       { to: "/conectores", label: "Conectores", icon: Plug },
-      { to: "/meu-restaurante", label: "Meu Restaurante", icon: Store },
+      
       { to: "/configuracoes", label: "Configurações", icon: Settings },
       { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
