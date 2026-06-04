@@ -86,8 +86,8 @@ function ChartSection({ chart, granularity, onChange, loading }: {
     <section className="rounded-xl border border-border bg-card p-4 shadow-card">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h2 className="font-display font-semibold">Faturamento</h2>
-          <p className="text-xs text-muted-foreground">Vendas pagas por período</p>
+          <h2 className="font-display font-semibold">Vendas pagas</h2>
+          <p className="text-xs text-muted-foreground">Receita confirmada por período</p>
         </div>
         <PeriodTabs value={granularity} onChange={onChange} />
       </header>
@@ -413,7 +413,7 @@ function CompanyDashboard() {
       {/* <OnboardingChecklist /> removido temporariamente */}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Faturamento" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
+        <StatCard label="Vendas pagas" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
         <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" to="/pedidos" />
         <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" to="/cozinha" />
         <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" to="/cozinha" />
