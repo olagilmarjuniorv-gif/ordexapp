@@ -67,14 +67,42 @@ export const getConfiguracoes = createServerFn({ method: "GET" })
       })(),
     ]);
 
+    const sub = subscription.data;
+    // 0 = ilimitado (somente para pedidos no plano MAX). Para os demais, 0 também trata como ilimitado defensivamente.
+    const restante = (used: number, lim: number | null | undefined) =>
+      !lim || lim <= 0 ? null : Math.max(0, lim - used);
+    const excedente = (used: number, lim: number | null | undefined) =>
+      !lim || lim <= 0 ? 0 : Math.max(0, used - lim);
+
+    const limites = {
+      pedidos: sub?.limite_pedidos_mes ?? 0,
+      conversas: sub?.limite_conversas_mes ?? 0,
+      usuarios: sub?.limite_usuarios ?? 0,
+    };
+    const usoFull = {
+      ...counts,
+      restantes: {
+        pedidos: restante(counts.pedidos, limites.pedidos),
+        conversas: restante(counts.conversas, limites.conversas),
+        usuarios: restante(counts.usuarios, limites.usuarios),
+      },
+      excedentes: {
+        pedidos: excedente(counts.pedidos, limites.pedidos),
+        conversas: excedente(counts.conversas, limites.conversas),
+        usuarios: excedente(counts.usuarios, limites.usuarios),
+      },
+    };
+
     return {
       company: company.data,
-      subscription: subscription.data,
+      subscription: sub,
       conexao: conexao.data,
       fluxo: fluxo.data,
-      uso: counts,
+      uso: usoFull,
     };
   });
+
+
 
 // =========== ABA 1 — EMPRESA ===========
 export const updateEmpresa = createServerFn({ method: "POST" })

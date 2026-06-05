@@ -511,16 +511,20 @@ function AbaPagamentos({ company, readOnly, onSaved }: { company: any; readOnly:
 }
 
 // ============== ABA 5 — ASSINATURA ==============
-function AbaAssinatura({ subscription, uso }: { subscription: any; uso: { pedidos: number; conversas: number; usuarios: number } }) {
+function AbaAssinatura({ subscription, uso }: { subscription: any; uso: any }) {
   const s = subscription ?? { plano: "base", ciclo: "mensal", status: "trial", valor: 0,
-    limite_pedidos_mes: 500, limite_conversas_mes: 1000, limite_usuarios: 3, proxima_cobranca: null };
+    limite_pedidos_mes: 300, limite_conversas_mes: 300, limite_usuarios: 1,
+    proxima_cobranca: null, inicio: null, vencimento: null };
 
+  const fmtRest = (v: number | null | undefined) => v === null || v === undefined ? "Ilimitado" : String(v);
   const pct = (used: number, lim: number) => lim > 0 ? Math.min(100, Math.round((used / lim) * 100)) : 0;
   const items = useMemo(() => ([
-    { label: "Pedidos", used: uso.pedidos, lim: s.limite_pedidos_mes },
-    { label: "Conversas WhatsApp", used: uso.conversas, lim: s.limite_conversas_mes },
-    { label: "Usuários", used: uso.usuarios, lim: s.limite_usuarios },
+    { key: "pedidos", label: "Pedidos", used: uso?.pedidos ?? 0, lim: s.limite_pedidos_mes },
+    { key: "conversas", label: "Conversas WhatsApp", used: uso?.conversas ?? 0, lim: s.limite_conversas_mes },
+    { key: "usuarios", label: "Usuários", used: uso?.usuarios ?? 0, lim: s.limite_usuarios },
   ]), [uso, s]);
+
+  const fmtDate = (v: string | null | undefined) => v ? new Date(v).toLocaleDateString("pt-BR") : "—";
 
   return (
     <div className="space-y-5">
@@ -534,18 +538,30 @@ function AbaAssinatura({ subscription, uso }: { subscription: any; uso: { pedido
       <Section title="Indicadores de uso">
         <div className="space-y-4">
           {items.map((it) => {
-            const p = pct(it.used, it.lim);
+            const ilimitado = !it.lim || it.lim <= 0;
+            const p = ilimitado ? 0 : pct(it.used, it.lim);
             const color = p >= 100 ? "bg-destructive" : p >= 90 ? "bg-orange-500" : p >= 80 ? "bg-yellow-500" : "bg-primary";
+            const restante = uso?.restantes?.[it.key];
+            const excedente = uso?.excedentes?.[it.key] ?? 0;
             return (
               <div key={it.label}>
                 <div className="flex items-center justify-between text-sm">
                   <span>{it.label}</span>
-                  <span className="text-muted-foreground">{it.used} / {it.lim} ({p}%)</span>
+                  <span className="text-muted-foreground">
+                    {it.used} / {ilimitado ? "∞" : it.lim} {ilimitado ? "" : `(${p}%)`} · Restante: {fmtRest(restante)}
+                  </span>
                 </div>
-                <div className="mt-1 h-2 w-full rounded bg-muted overflow-hidden">
-                  <div className={`h-full ${color}`} style={{ width: `${p}%` }} />
-                </div>
-                {p >= 80 && (
+                {!ilimitado && (
+                  <div className="mt-1 h-2 w-full rounded bg-muted overflow-hidden">
+                    <div className={`h-full ${color}`} style={{ width: `${p}%` }} />
+                  </div>
+                )}
+                {it.key === "usuarios" && excedente > 0 && (
+                  <div className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                    <AlertTriangle className="h-3 w-3" /> Excedente de usuários: {excedente}
+                  </div>
+                )}
+                {!ilimitado && p >= 80 && it.key !== "usuarios" && (
                   <div className="mt-1 flex items-center gap-1 text-xs text-orange-600">
                     <AlertTriangle className="h-3 w-3" /> Atenção: {p}% do limite atingido.
                   </div>
@@ -558,7 +574,9 @@ function AbaAssinatura({ subscription, uso }: { subscription: any; uso: { pedido
 
       <Section title="Financeiro">
         <div className="grid gap-3 sm:grid-cols-2 text-sm">
-          <div><span className="text-muted-foreground">Próxima cobrança:</span> {s.proxima_cobranca ? new Date(s.proxima_cobranca).toLocaleDateString("pt-BR") : "—"}</div>
+          <div><span className="text-muted-foreground">Início:</span> {fmtDate(s.inicio)}</div>
+          <div><span className="text-muted-foreground">Vencimento:</span> {fmtDate(s.vencimento)}</div>
+          <div><span className="text-muted-foreground">Próxima cobrança:</span> {fmtDate(s.proxima_cobranca)}</div>
           <div><span className="text-muted-foreground">Valor do plano:</span> R$ {Number(s.valor ?? 0).toFixed(2)}</div>
           <div><span className="text-muted-foreground">Ciclo:</span> {s.ciclo}</div>
           <div><span className="text-muted-foreground">Status:</span> {s.status}</div>
@@ -567,6 +585,7 @@ function AbaAssinatura({ subscription, uso }: { subscription: any; uso: { pedido
     </div>
   );
 }
+
 
 // ============== ABA 6 — CHATBOT ==============
 function AbaChatbot({ company, fluxo, readOnly, onSaved }: { company: any; fluxo: any; readOnly: boolean; onSaved: () => void }) {

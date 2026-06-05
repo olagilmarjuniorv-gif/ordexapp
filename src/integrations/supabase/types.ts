@@ -395,6 +395,7 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          inicio: string | null
           limite_conversas_mes: number
           limite_pedidos_mes: number
           limite_usuarios: number
@@ -403,12 +404,14 @@ export type Database = {
           status: string
           updated_at: string
           valor: number
+          vencimento: string | null
         }
         Insert: {
           ciclo?: string
           company_id: string
           created_at?: string
           id?: string
+          inicio?: string | null
           limite_conversas_mes?: number
           limite_pedidos_mes?: number
           limite_usuarios?: number
@@ -417,12 +420,14 @@ export type Database = {
           status?: string
           updated_at?: string
           valor?: number
+          vencimento?: string | null
         }
         Update: {
           ciclo?: string
           company_id?: string
           created_at?: string
           id?: string
+          inicio?: string | null
           limite_conversas_mes?: number
           limite_pedidos_mes?: number
           limite_usuarios?: number
@@ -431,6 +436,7 @@ export type Database = {
           status?: string
           updated_at?: string
           valor?: number
+          vencimento?: string | null
         }
         Relationships: []
       }
