@@ -102,16 +102,7 @@ export const getConfiguracoes = createServerFn({ method: "GET" })
     };
   });
 
-    ]);
 
-    return {
-      company: company.data,
-      subscription: subscription.data,
-      conexao: conexao.data,
-      fluxo: fluxo.data,
-      uso: counts,
-    };
-  });
 
 // =========== ABA 1 — EMPRESA ===========
 export const updateEmpresa = createServerFn({ method: "POST" })
