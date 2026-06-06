@@ -13,6 +13,8 @@ import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { SalesChart } from "@/components/SalesChart";
 // OnboardingChecklist removido temporariamente — server function instável em produção
 import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/period";
+import { getConfiguracoes } from "@/lib/configuracoes.functions";
+import { TrialBanner } from "@/components/TrialBanner";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
@@ -389,6 +391,13 @@ function CompanyDashboard() {
   useRealtimeInvalidate("pedidos", [["dashboard", granularity]]);
   useRealtimeInvalidate("mesas", [["dashboard", granularity]]);
 
+  const getCfg = useServerFn(getConfiguracoes);
+  const { data: cfg } = useQuery({
+    queryKey: ["dashboard-trial"],
+    queryFn: () => getCfg({}),
+    staleTime: 60_000,
+  });
+
   if (isLoading && !data) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (error || !data) return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
 
@@ -409,6 +418,8 @@ function CompanyDashboard() {
           </Link>
         </div>
       </div>
+
+      <TrialBanner trial={(cfg as any)?.trial ?? null} />
 
       {/* <OnboardingChecklist /> removido temporariamente */}
 

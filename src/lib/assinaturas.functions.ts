@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getCaller } from "./auth.server";
+import { computeTrial } from "./trial";
 
 export const PLAN_DEFAULTS: Record<"base" | "pro" | "max", { limite_pedidos_mes: number; limite_conversas_mes: number; limite_usuarios: number }> = {
   base: { limite_pedidos_mes: 300, limite_conversas_mes: 300, limite_usuarios: 1 },
@@ -66,6 +67,7 @@ export const listAssinaturas = createServerFn({ method: "GET" })
           conversas: convMap.get(c.id) ?? 0,
           usuarios: usuariosMap.get(c.id) ?? 0,
         },
+        trial: computeTrial(s?.status, s?.vencimento as string | null | undefined),
       };
     });
   });
