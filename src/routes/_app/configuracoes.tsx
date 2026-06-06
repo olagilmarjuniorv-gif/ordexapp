@@ -11,6 +11,7 @@ import {
   updateWhatsappConfig, updateChatbot, createPrivacyRequest,
 } from "@/lib/configuracoes.functions";
 import { updateCompanyPagamentos, type HorariosFuncionamento } from "@/lib/companies.functions";
+import { TrialBanner } from "@/components/TrialBanner";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   component: ConfiguracoesPage,
@@ -124,7 +125,7 @@ function ConfiguracoesPage() {
             <AbaPagamentos company={company} readOnly={readOnly} onSaved={refetch} />
           </TabsContent>
           <TabsContent value="assinatura">
-            <AbaAssinatura subscription={data.subscription} uso={data.uso} />
+            <AbaAssinatura subscription={data.subscription} uso={data.uso} trial={(data as any).trial} />
           </TabsContent>
           <TabsContent value="chatbot">
             <AbaChatbot company={company} fluxo={data.fluxo} readOnly={readOnly} onSaved={refetch} />
@@ -511,7 +512,7 @@ function AbaPagamentos({ company, readOnly, onSaved }: { company: any; readOnly:
 }
 
 // ============== ABA 5 — ASSINATURA ==============
-function AbaAssinatura({ subscription, uso }: { subscription: any; uso: any }) {
+function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: any; trial?: any }) {
   const s = subscription ?? { plano: "base", ciclo: "mensal", status: "trial", valor: 0,
     limite_pedidos_mes: 300, limite_conversas_mes: 300, limite_usuarios: 1,
     proxima_cobranca: null, inicio: null, vencimento: null };
@@ -526,12 +527,27 @@ function AbaAssinatura({ subscription, uso }: { subscription: any; uso: any }) {
 
   const fmtDate = (v: string | null | undefined) => v ? new Date(v).toLocaleDateString("pt-BR") : "—";
 
+  const statusBadgeClass = (st: string) => {
+    switch (st) {
+      case "ativo": return "bg-success/15 text-success";
+      case "trial": return "bg-primary/10 text-primary";
+      case "pendente": return "bg-warning/20 text-warning-foreground";
+      case "inadimplente":
+      case "expirado":
+      case "cancelado": return "bg-destructive/15 text-destructive";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
   return (
     <div className="space-y-5">
+      <TrialBanner trial={trial} />
+
       <Section title="Plano atual">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary uppercase">{s.plano}</span>
-          <span className="text-sm text-muted-foreground">Ciclo: {s.ciclo} · Status: {s.status}</span>
+          <span className={`rounded-md px-2.5 py-1 text-xs font-semibold uppercase ${statusBadgeClass(s.status)}`}>{s.status}</span>
+          <span className="text-sm text-muted-foreground">Ciclo: {s.ciclo}</span>
         </div>
       </Section>
 
