@@ -419,6 +419,8 @@ function CompanyDashboard() {
         </div>
       </div>
 
+      <TrialBanner trial={(cfg as any)?.trial ?? null} />
+
       {/* <OnboardingChecklist /> removido temporariamente */}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
