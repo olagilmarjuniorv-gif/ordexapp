@@ -4,11 +4,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getCaller } from "./auth.server";
 
-export const PLAN_DEFAULTS = {
+export const PLAN_DEFAULTS: Record<"base" | "pro" | "max", { limite_pedidos_mes: number; limite_conversas_mes: number; limite_usuarios: number }> = {
   base: { limite_pedidos_mes: 300, limite_conversas_mes: 300, limite_usuarios: 1 },
   pro: { limite_pedidos_mes: 1500, limite_conversas_mes: 1500, limite_usuarios: 3 },
   max: { limite_pedidos_mes: 0, limite_conversas_mes: 3000, limite_usuarios: 8 },
-} as const;
+};
 
 async function assertSuper(userId: string) {
   const c = await getCaller(userId);

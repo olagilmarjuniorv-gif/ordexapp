@@ -32,6 +32,7 @@ import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppChamadosRouteImport } from './routes/_app/chamados'
 import { Route as AppCategoriasRouteImport } from './routes/_app/categorias'
 import { Route as AppCardapioRouteImport } from './routes/_app/cardapio'
+import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'
 import { Route as AppAdicionaisRouteImport } from './routes/_app/adicionais'
 import { Route as AppSuporteIndexRouteImport } from './routes/_app/suporte/index'
 import { Route as AppPedidosIndexRouteImport } from './routes/_app/pedidos/index'
@@ -158,6 +159,11 @@ const AppCardapioRoute = AppCardapioRouteImport.update({
   path: '/cardapio',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAssinaturasRoute = AppAssinaturasRouteImport.update({
+  id: '/assinaturas',
+  path: '/assinaturas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdicionaisRoute = AppAdicionaisRouteImport.update({
   id: '/adicionais',
   path: '/adicionais',
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
+  '/assinaturas': typeof AppAssinaturasRoute
   '/cardapio': typeof AppCardapioRoute
   '/categorias': typeof AppCategoriasRoute
   '/chamados': typeof AppChamadosRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
+  '/assinaturas': typeof AppAssinaturasRoute
   '/cardapio': typeof AppCardapioRoute
   '/categorias': typeof AppCategoriasRoute
   '/chamados': typeof AppChamadosRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/adicionais': typeof AppAdicionaisRoute
+  '/_app/assinaturas': typeof AppAssinaturasRoute
   '/_app/cardapio': typeof AppCardapioRoute
   '/_app/categorias': typeof AppCategoriasRoute
   '/_app/chamados': typeof AppChamadosRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/adicionais'
+    | '/assinaturas'
     | '/cardapio'
     | '/categorias'
     | '/chamados'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/adicionais'
+    | '/assinaturas'
     | '/cardapio'
     | '/categorias'
     | '/chamados'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_app/adicionais'
+    | '/_app/assinaturas'
     | '/_app/cardapio'
     | '/_app/categorias'
     | '/_app/chamados'
@@ -605,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCardapioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/assinaturas': {
+      id: '/_app/assinaturas'
+      path: '/assinaturas'
+      fullPath: '/assinaturas'
+      preLoaderRoute: typeof AppAssinaturasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/adicionais': {
       id: '/_app/adicionais'
       path: '/adicionais'
@@ -687,6 +706,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdicionaisRoute: typeof AppAdicionaisRoute
+  AppAssinaturasRoute: typeof AppAssinaturasRoute
   AppCardapioRoute: typeof AppCardapioRoute
   AppCategoriasRoute: typeof AppCategoriasRoute
   AppChamadosRoute: typeof AppChamadosRoute
@@ -716,6 +736,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdicionaisRoute: AppAdicionaisRoute,
+  AppAssinaturasRoute: AppAssinaturasRoute,
   AppCardapioRoute: AppCardapioRoute,
   AppCategoriasRoute: AppCategoriasRoute,
   AppChamadosRoute: AppChamadosRoute,
@@ -758,13 +779,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

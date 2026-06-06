@@ -66,8 +66,17 @@ function AssinaturasPage() {
     enabled: isSuperAdmin,
   });
 
+  type UpdateInput = {
+    companyId: string;
+    plano: "base" | "pro" | "max";
+    status: "trial" | "ativo" | "pendente" | "inadimplente" | "cancelado" | "expirado";
+    ciclo: "mensal" | "anual";
+    inicio?: string | null;
+    vencimento?: string | null;
+  };
+
   const mutation = useMutation({
-    mutationFn: (input: Parameters<typeof updateFn>[0]["data"]) => updateFn({ data: input }),
+    mutationFn: (input: UpdateInput) => updateFn({ data: input }),
     onSuccess: () => {
       toast.success("Assinatura atualizada");
       qc.invalidateQueries({ queryKey: ["assinaturas"] });
