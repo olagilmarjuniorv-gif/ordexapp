@@ -147,6 +147,13 @@ function AssinaturasPage() {
                       <TableCell>{s?.ciclo ?? "—"}</TableCell>
                       <TableCell>{fmtDate(s?.inicio)}</TableCell>
                       <TableCell>{fmtDate(s?.vencimento)}</TableCell>
+                      <TableCell>
+                        {r.trial?.isTrial
+                          ? r.trial.expirado
+                            ? <span className="text-destructive font-medium">expirado</span>
+                            : <span>{r.trial.diasRestantes}d</span>
+                          : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
                       <TableCell>{fmtLim(r.uso.pedidos, s?.limite_pedidos_mes ?? 0)}</TableCell>
                       <TableCell>{fmtLim(r.uso.conversas, s?.limite_conversas_mes ?? 0)}</TableCell>
                       <TableCell>{fmtLim(r.uso.usuarios, s?.limite_usuarios ?? 0)}</TableCell>
@@ -160,7 +167,7 @@ function AssinaturasPage() {
                 })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       Nenhuma empresa encontrada.
                     </TableCell>
                   </TableRow>
