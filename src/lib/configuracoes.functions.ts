@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getCaller } from "./auth.server";
+import { computeTrial } from "./trial";
 
 const HORARIO_DIA = z.object({
   abre: z.string().regex(/^\d{2}:\d{2}$/),
@@ -99,6 +100,7 @@ export const getConfiguracoes = createServerFn({ method: "GET" })
       conexao: conexao.data,
       fluxo: fluxo.data,
       uso: usoFull,
+      trial: computeTrial(sub?.status, sub?.vencimento as string | null | undefined),
     };
   });
 
