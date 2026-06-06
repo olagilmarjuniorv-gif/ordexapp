@@ -127,6 +127,7 @@ function AssinaturasPage() {
                   <TableHead>Ciclo</TableHead>
                   <TableHead>Início</TableHead>
                   <TableHead>Vencimento</TableHead>
+                  <TableHead>Trial</TableHead>
                   <TableHead>Pedidos</TableHead>
                   <TableHead>Conversas</TableHead>
                   <TableHead>Usuários</TableHead>
