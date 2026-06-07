@@ -30,6 +30,17 @@ export function AppLayout() {
   });
   const companyName = (companyQuery.data as any)?.name as string | undefined;
 
+  // Trial: verifica expiração para exibir overlay
+  const getTrialStatusFn = useServerFn(getTrialStatus);
+  const trialQuery = useQuery({
+    queryKey: ["trial-status", companyId],
+    queryFn: () => getTrialStatusFn(),
+    enabled: !!companyId && !isSuperAdmin,
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const trialExpirado = !isSuperAdmin && (trialQuery.data as any)?.expirado === true;
+
   // Cozinha: layout minimal, vê só /cozinha e /pedidos
   if (isCozinha) {
     if (!path.startsWith("/cozinha") && !path.startsWith("/pedidos")) return <Navigate to="/cozinha" />;
