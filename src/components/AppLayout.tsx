@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { usePedidoProntoNotify } from "@/hooks/use-pedido-pronto-notify";
 import { getCompanyById } from "@/lib/companies.functions";
+import { getTrialStatus } from "@/lib/trial.functions";
+import { TrialExpiredOverlay } from "@/components/TrialExpiredOverlay";
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
