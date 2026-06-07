@@ -198,6 +198,8 @@ export function AppLayout() {
           );
         })}
       </nav>
+
+      {trialExpirado ? <TrialExpiredOverlay canChoosePlan={isAdmin && !isSuperAdmin} /> : null}
     </div>
   );
 }
