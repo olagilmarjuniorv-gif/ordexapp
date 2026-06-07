@@ -135,6 +135,7 @@ export const updateEmpresa = createServerFn({ method: "POST" })
     }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdminOfCompany(context.userId, data.id);
+    await assertTrialAtivo(await getCaller(context.userId));
     const { id, ...rest } = data;
     const payload = Object.fromEntries(
       Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v]),
@@ -163,6 +164,7 @@ export const updateOperacao = createServerFn({ method: "POST" })
     }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdminOfCompany(context.userId, data.id);
+    await assertTrialAtivo(await getCaller(context.userId));
     const { id, ...rest } = data;
     const { error } = await supabaseAdmin.from("companies").update(rest).eq("id", id);
     if (error) throw new Error(error.message);
@@ -181,6 +183,7 @@ export const updateWhatsappConfig = createServerFn({ method: "POST" })
     }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdminOfCompany(context.userId, data.companyId);
+    await assertTrialAtivo(await getCaller(context.userId));
     const { data: row } = await supabaseAdmin
       .from("whatsapp_conexoes").select("id, settings").eq("company_id", data.companyId).maybeSingle();
     const next = {
@@ -213,6 +216,7 @@ export const updateChatbot = createServerFn({ method: "POST" })
     }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdminOfCompany(context.userId, data.companyId);
+    await assertTrialAtivo(await getCaller(context.userId));
     const { companyId, ...rest } = data;
     const { data: existing } = await supabaseAdmin
       .from("whatsapp_fluxos").select("id").eq("company_id", companyId).maybeSingle();
@@ -237,6 +241,7 @@ export const createPrivacyRequest = createServerFn({ method: "POST" })
     }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdminOfCompany(context.userId, data.companyId);
+    await assertTrialAtivo(await getCaller(context.userId));
     const { error } = await supabaseAdmin.from("privacy_requests").insert({
       company_id: data.companyId,
       tipo: data.tipo,
