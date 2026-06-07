@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller } from "./auth.server";
+import { getCaller, assertTrialAtivo } from "./auth.server";
 
 export const TICKET_PRIORITIES = ["baixa", "normal", "alta", "urgente"] as const;
 export const TICKET_STATUSES = ["aberto", "em_andamento", "aguardando", "resolvido", "fechado"] as const;
@@ -106,6 +106,7 @@ export const createTicket = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isCompanyAdmin) throw new Response("Apenas admin da empresa pode abrir chamado", { status: 403 });
     if (!c.companyId) throw new Response("Sem empresa", { status: 400 });
 
@@ -141,6 +142,7 @@ export const replyTicket = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin) throw new Response("Acesso negado", { status: 403 });
 
     const { data: t } = await supabaseAdmin
@@ -183,6 +185,7 @@ export const setTicketStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin) throw new Response("Acesso negado", { status: 403 });
 
     const { data: t } = await supabaseAdmin

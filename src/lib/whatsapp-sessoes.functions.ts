@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { assertTrialAtivo, getCaller } from "./auth.server";
+
+async function guardWrite(userId: string) { await assertTrialAtivo(await getCaller(userId)); }
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendManualMessage } from "./whatsapp-engine.server";
@@ -28,6 +31,7 @@ export const assumirAtendimento = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    await guardWrite(context.userId);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin
       .from("whatsapp_sessoes")
@@ -43,6 +47,7 @@ export const liberarAtendimento = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    await guardWrite(context.userId);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin
       .from("whatsapp_sessoes")
@@ -60,6 +65,7 @@ export const enviarMensagemManual = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const company = await getCompany(context.userId);
+    await guardWrite(context.userId);
     if (!company) throw new Response("Sem empresa", { status: 403 });
     const res = await sendManualMessage({ companyId: company, sessaoId: data.id, body: data.body });
     return { ok: res.ok, status: res.status };

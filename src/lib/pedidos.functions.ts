@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { audit } from "./audit.server";
-import { getCaller } from "./auth.server";
+import { getCaller, assertTrialAtivo } from "./auth.server";
 
 export const PEDIDO_STATUSES = ["novo", "preparo", "pronto", "finalizado", "pago", "cancelado"] as const;
 export const PEDIDO_CANAIS = ["salao", "balcao", "retirada", "delivery"] as const;
@@ -99,6 +99,7 @@ export const createPedido = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createSchema.parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) throw new Error("Not allowed");
 
     // M1: bloquear novos pedidos em mesas com conta em fechamento.
@@ -231,6 +232,7 @@ export const updatePedidoStatus = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(PEDIDO_STATUSES) }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) throw new Error("Not allowed");
 
     // Carrega estado atual para regras automáticas
@@ -299,6 +301,7 @@ export const voltarParaCozinha = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) throw new Error("Not allowed");
     if (!caller.isAdmin && caller.role !== "atendente") {
       throw new Error("Acesso negado");
@@ -345,6 +348,7 @@ export const setFaseCanal = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) throw new Error("Not allowed");
     // A2: expedição é operada por admin/atendente. Cozinha não pode movimentar fases.
     if (!caller.isAdmin && caller.role !== "atendente") {
@@ -402,6 +406,7 @@ export const updatePedidoStatusFinanceiro = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) throw new Error("Not allowed");
     if (!caller.isAdmin && caller.role !== "atendente") {
       throw new Error("Acesso negado");

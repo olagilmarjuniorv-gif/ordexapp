@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller, assertAdminish } from "./auth.server";
+import { getCaller, assertAdminish, assertTrialAtivo } from "./auth.server";
 
 async function getCompany(userId: string) {
   const { data } = await supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle();
@@ -41,6 +41,7 @@ export const upsertFluxo = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     const company = await getCompany(context.userId);
     if (!company) throw new Response("Sem empresa", { status: 403 });

@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller } from "./auth.server";
+import { getCaller, assertTrialAtivo } from "./auth.server";
 
 export const listClientes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -37,6 +37,7 @@ export const createCliente = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) {
         throw new Response("Usuário não está vinculado a uma empresa.", { status: 403 });
     }
@@ -67,6 +68,7 @@ export const updateCliente = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) {
         throw new Response("Usuário não está vinculado a uma empresa.", { status: 403 });
     }
@@ -91,6 +93,7 @@ export const deleteCliente = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     if (!caller.companyId) {
       throw new Response("Usuário não está vinculado a uma empresa.", { status: 403 });
     }

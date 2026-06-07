@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller, assertCompanyScope } from "./auth.server";
+import { getCaller, assertCompanyScope, assertTrialAtivo } from "./auth.server";
 import { pingMetaPhoneNumber } from "./whatsapp.server";
 
 export const getWhatsappConexao = createServerFn({ method: "GET" })
@@ -80,6 +80,7 @@ export const connectWhatsapp = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin) throw new Response("Acesso negado", { status: 403 });
     const companyId = assertCompanyScope(c);
 
@@ -125,6 +126,7 @@ export const disconnectWhatsapp = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin) throw new Response("Acesso negado", { status: 403 });
     const companyId = assertCompanyScope(c);
     const { error } = await supabaseAdmin
@@ -141,6 +143,7 @@ export const syncWhatsappNow = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin) throw new Response("Acesso negado", { status: 403 });
     const companyId = assertCompanyScope(c);
     const { error } = await supabaseAdmin

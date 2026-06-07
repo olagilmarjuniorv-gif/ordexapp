@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { usePedidoProntoNotify } from "@/hooks/use-pedido-pronto-notify";
 import { getCompanyById } from "@/lib/companies.functions";
+import { getTrialStatus } from "@/lib/trial.functions";
+import { TrialExpiredOverlay } from "@/components/TrialExpiredOverlay";
 
 export function AppLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -27,6 +29,17 @@ export function AppLayout() {
     staleTime: 60_000,
   });
   const companyName = (companyQuery.data as any)?.name as string | undefined;
+
+  // Trial: verifica expiração para exibir overlay
+  const getTrialStatusFn = useServerFn(getTrialStatus);
+  const trialQuery = useQuery({
+    queryKey: ["trial-status", companyId],
+    queryFn: () => getTrialStatusFn(),
+    enabled: !!companyId && !isSuperAdmin,
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const trialExpirado = !isSuperAdmin && (trialQuery.data as any)?.expirado === true;
 
   // Cozinha: layout minimal, vê só /cozinha e /pedidos
   if (isCozinha) {
@@ -185,6 +198,8 @@ export function AppLayout() {
           );
         })}
       </nav>
+
+      {trialExpirado ? <TrialExpiredOverlay canChoosePlan={isAdmin && !isSuperAdmin} /> : null}
     </div>
   );
 }

@@ -1,8 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { assertTrialAtivo, getCaller } from "./auth.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { audit } from "./audit.server";
+
+async function guardWrite(userId: string) {
+  await assertTrialAtivo(await getCaller(userId));
+}
 
 export const MESA_STATUSES = ["livre", "ocupada", "conta"] as const;
 export type MesaStatus = typeof MESA_STATUSES[number];
@@ -40,6 +45,7 @@ export const createMesa = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
+    await guardWrite(context.userId);
     if (!companyId) throw new Error("Sem empresa");
     const { data: created, error } = await supabaseAdmin
       .from("mesas")
@@ -58,6 +64,7 @@ export const updateMesaStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
+    await guardWrite(context.userId);
     if (!companyId) throw new Error("Sem empresa");
     const patch: { status: MesaStatus; opened_at?: string | null } = { status: data.status };
     if (data.status === "ocupada") patch.opened_at = new Date().toISOString();
@@ -82,6 +89,7 @@ export const updateMesa = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
+    await guardWrite(context.userId);
     if (!companyId) throw new Error("Sem empresa");
     const patch: { numero: string; capacidade?: number } = { numero: data.numero };
     if (data.capacidade) patch.capacidade = data.capacidade;
@@ -100,6 +108,7 @@ export const deleteMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
+    await guardWrite(context.userId);
     if (!companyId) throw new Error("Sem empresa");
     const { error } = await supabaseAdmin
       .from("mesas")
@@ -154,6 +163,7 @@ export const fecharContaMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
+    await guardWrite(context.userId);
     if (!companyId) throw new Error("Sem empresa");
     const { error } = await supabaseAdmin
       .from("mesas")
@@ -171,6 +181,7 @@ export const pagarMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase } = context;
+    await guardWrite(context.userId);
     const { error } = await (supabase as any).rpc("pagar_mesa", { _mesa_id: data.mesaId });
     if (error) throw new Error(error.message);
     const companyId = await getCompanyId(context.userId);
@@ -183,6 +194,7 @@ export const liberarMesa = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ mesaId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const companyId = await getCompanyId(context.userId);
+    await guardWrite(context.userId);
     if (!companyId) throw new Error("Sem empresa");
     const { error } = await supabaseAdmin
       .from("mesas")

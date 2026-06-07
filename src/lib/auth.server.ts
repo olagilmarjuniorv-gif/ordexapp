@@ -41,3 +41,26 @@ export function assertCompanyScope(c: Caller): string {
   if (!c.companyId) throw new Response("Usuário sem empresa", { status: 403 });
   return c.companyId;
 }
+
+/**
+ * Bloqueia operações de escrita quando o Trial expirou.
+ * Super admin nunca é bloqueado.
+ * Retorna silenciosamente quando o trial está ativo ou o status não é trial.
+ */
+export async function assertTrialAtivo(c: Caller): Promise<void> {
+  if (c.isSuperAdmin) return;
+  if (!c.companyId) return; // outro guard cuidará
+  const { data } = await supabaseAdmin
+    .from("company_subscriptions")
+    .select("status, vencimento")
+    .eq("company_id", c.companyId)
+    .maybeSingle();
+  if (!data) return;
+  if (data.status !== "trial") return;
+  if (!data.vencimento) return;
+  const venc = new Date(data.vencimento + "T23:59:59");
+  if (Number.isNaN(venc.getTime())) return;
+  if (venc.getTime() < Date.now()) {
+    throw new Response("Trial expirado. Solicite ao administrador que escolha um plano.", { status: 402 });
+  }
+}

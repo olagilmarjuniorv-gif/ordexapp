@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { dispatchWhatsapp, persistMessage, templateForStatus } from "./whatsapp.server";
-import { getCaller } from "./auth.server";
+import { getCaller, assertTrialAtivo } from "./auth.server";
 
 export const listMensagens = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -43,6 +43,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.companyId) throw new Response("Sem empresa", { status: 403 });
 
     let phone = data.phone ?? null;
@@ -77,6 +78,7 @@ export const notifyPedidoStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.companyId) throw new Response("Sem empresa", { status: 403 });
 
     const { data: pedido } = await supabaseAdmin
