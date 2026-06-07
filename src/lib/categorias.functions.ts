@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller, assertAdminish } from "./auth.server";
+import { getCaller, assertAdminish, assertTrialAtivo } from "./auth.server";
 
 async function getCompany(userId: string) {
   const { data } = await supabaseAdmin.from("profiles").select("company_id").eq("id", userId).maybeSingle();
@@ -36,6 +36,7 @@ export const upsertCategoria = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const company = caller.companyId;
@@ -60,6 +61,7 @@ export const reorderCategorias = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const company = caller.companyId;
@@ -78,6 +80,7 @@ export const deleteCategoria = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin.from("categorias").delete().eq("id", data.id).eq("company_id", caller.companyId);

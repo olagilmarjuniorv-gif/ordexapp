@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller, assertAdminish } from "./auth.server";
+import { getCaller, assertAdminish, assertTrialAtivo } from "./auth.server";
 
 export const listProdutos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -38,6 +38,7 @@ export const createProduto = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => produtoSchema.parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { data: created, error } = await supabaseAdmin
@@ -53,6 +54,7 @@ export const updateProduto = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => produtoSchema.extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { id, ...rest } = data;
@@ -72,6 +74,7 @@ export const setProdutoActive = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin
@@ -90,6 +93,7 @@ export const setProdutoAvailable = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const { error } = await supabaseAdmin
@@ -113,6 +117,7 @@ export const uploadProdutoImage = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const caller = await getCaller(context.userId);
+    await assertTrialAtivo(caller);
     assertAdminish(caller);
     if (!caller.companyId) throw new Response("Sem empresa", { status: 403 });
     const cleaned = data.dataBase64.includes(",") ? data.dataBase64.split(",")[1] : data.dataBase64;

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getCaller } from "./auth.server";
+import { getCaller, assertTrialAtivo } from "./auth.server";
 import {
   normalizeIfoodOrder,
   pollIfoodOrders,
@@ -80,6 +80,7 @@ export const connectIfood = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin || !c.companyId) throw new Response("Acesso negado", { status: 403 });
 
     let token: { access_token: string; expires_in: number; mocked: boolean };
@@ -118,6 +119,7 @@ export const disconnectIfood = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin || !c.companyId) throw new Response("Acesso negado", { status: 403 });
 
     let q = supabaseAdmin
@@ -136,6 +138,7 @@ export const syncIfoodNow = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     if (!c.isAdmin || !c.companyId) throw new Response("Acesso negado", { status: 403 });
 
     let q = supabaseAdmin.from("integracoes").select("*").eq("id", data.id);

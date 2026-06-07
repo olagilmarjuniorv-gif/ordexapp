@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { audit } from "./audit.server";
-import { getCaller, assertAdminish, ROLES, COMPANY_ROLES, type AppRole } from "./auth.server";
+import { getCaller, assertAdminish, ROLES, COMPANY_ROLES, type AppRole, assertTrialAtivo } from "./auth.server";
 
 export { ROLES, COMPANY_ROLES };
 export type { AppRole };
@@ -74,6 +74,7 @@ export const createUser = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     assertAdminish(c);
 
     let companyId: string | null = data.company_id ?? null;
@@ -136,6 +137,7 @@ export const setUserActive = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     assertAdminish(c);
     if (!c.isSuperAdmin) {
       const { data: target } = await supabaseAdmin
@@ -162,6 +164,7 @@ export const setUserRole = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const c = await getCaller(context.userId);
+    await assertTrialAtivo(c);
     assertAdminish(c);
 
     if (!c.isSuperAdmin) {
