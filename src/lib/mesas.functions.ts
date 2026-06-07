@@ -1,9 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { assertTrialAtivo } from "./auth.server";
+import { assertTrialAtivo, getCaller } from "./auth.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { audit } from "./audit.server";
+
+async function guardWrite(userId: string) {
+  await assertTrialAtivo(await getCaller(userId));
+}
 
 export const MESA_STATUSES = ["livre", "ocupada", "conta"] as const;
 export type MesaStatus = typeof MESA_STATUSES[number];
