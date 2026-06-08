@@ -108,6 +108,7 @@ export function AppLayout() {
       { to: "/suporte", label: "Suporte", icon: LifeBuoy },
       { to: "/historico", label: "Histórico", icon: History },
       { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
+      { to: "/assinatura/escolher-plano", label: "Assinatura", icon: CreditCard },
     ];
   } else {
     nav = [{ to: "/dashboard", label: "Início", icon: LayoutDashboard }];

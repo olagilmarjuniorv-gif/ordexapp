@@ -136,12 +136,14 @@ function AssinaturasPage() {
                   <TableHead>Customer ID</TableHead>
                   <TableHead>Subscription ID</TableHead>
                   <TableHead>Ext. status</TableHead>
+                  <TableHead>Intenção</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((r) => {
                   const s = r.subscription as any;
+                  const intent = (r as any).intent as any;
                   return (
                     <TableRow key={r.company_id}>
                       <TableCell className="font-medium">{r.company_name}</TableCell>
@@ -166,6 +168,14 @@ function AssinaturasPage() {
                       <TableCell className="text-muted-foreground font-mono text-xs">{s?.customer_id ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground font-mono text-xs">{s?.subscription_id ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{s?.external_status ?? "—"}</TableCell>
+                      <TableCell>
+                        {intent ? (
+                          <div className="text-xs leading-tight">
+                            <div className="font-medium uppercase">{intent.plano} · {intent.ciclo}</div>
+                            <div className="text-muted-foreground">{intent.status}</div>
+                          </div>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" variant="outline" onClick={() => setEditing(r)}>
                           Editar
@@ -176,7 +186,7 @@ function AssinaturasPage() {
                 })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={15} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={16} className="text-center text-muted-foreground py-8">
                       Nenhuma empresa encontrada.
                     </TableCell>
                   </TableRow>

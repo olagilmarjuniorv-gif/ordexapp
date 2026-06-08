@@ -1,5 +1,6 @@
 import { Lock, Mail, Phone } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ const PLANOS: Plano[] = [
 
 export function TrialExpiredOverlay({ canChoosePlan }: { canChoosePlan: boolean }) {
   const [ciclo, setCiclo] = useState<"mensal" | "anual">("mensal");
+  const navigate = useNavigate();
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-y-auto">
@@ -94,7 +96,11 @@ export function TrialExpiredOverlay({ canChoosePlan }: { canChoosePlan: boolean 
                     <li>✓ {p.conversas}</li>
                     <li>✓ {p.usuarios}</li>
                   </ul>
-                  <Button className="mt-auto" variant={p.destaque ? "default" : "outline"} disabled>
+                  <Button
+                    className="mt-auto"
+                    variant={p.destaque ? "default" : "outline"}
+                    onClick={() => navigate({ to: "/assinatura/escolher-plano" })}
+                  >
                     Escolher {p.nome}
                   </Button>
                 </div>
@@ -102,7 +108,7 @@ export function TrialExpiredOverlay({ canChoosePlan }: { canChoosePlan: boolean 
             </div>
 
             <p className="text-center text-xs text-muted-foreground">
-              A contratação de plano ainda não está disponível pela plataforma. Em breve.
+              Sua escolha será registrada. O pagamento online estará disponível em breve.
             </p>
           </div>
         ) : (

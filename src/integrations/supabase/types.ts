@@ -1050,6 +1050,50 @@ export type Database = {
           },
         ]
       }
+      subscription_intents: {
+        Row: {
+          ciclo: string
+          company_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          plano: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ciclo: string
+          company_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          plano: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ciclo?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          plano?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_intents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_mensagens: {
         Row: {
           author_id: string
