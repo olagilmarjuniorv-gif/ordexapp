@@ -44,6 +44,7 @@ import { Route as AppSuporteIdRouteImport } from './routes/_app/suporte/$id'
 import { Route as AppPedidosNovoRouteImport } from './routes/_app/pedidos/novo'
 import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
 import { Route as AppMesasIdRouteImport } from './routes/_app/mesas/$id'
+import { Route as AppAssinaturaEscolherPlanoRouteImport } from './routes/_app/assinatura.escolher-plano'
 import { Route as ApiPublicWebhooksWhatsappRouteImport } from './routes/api/public/webhooks/whatsapp'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -220,6 +221,12 @@ const AppMesasIdRoute = AppMesasIdRouteImport.update({
   path: '/mesas/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAssinaturaEscolherPlanoRoute =
+  AppAssinaturaEscolherPlanoRouteImport.update({
+    id: '/assinatura/escolher-plano',
+    path: '/assinatura/escolher-plano',
+    getParentRoute: () => AppRoute,
+  } as any)
 const ApiPublicWebhooksWhatsappRoute =
   ApiPublicWebhooksWhatsappRouteImport.update({
     id: '/api/public/webhooks/whatsapp',
@@ -253,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/pagamentos': typeof AppPagamentosRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
+  '/assinatura/escolher-plano': typeof AppAssinaturaEscolherPlanoRoute
   '/mesas/$id': typeof AppMesasIdRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
@@ -290,6 +298,7 @@ export interface FileRoutesByTo {
   '/pagamentos': typeof AppPagamentosRoute
   '/produtos': typeof AppProdutosRoute
   '/usuarios': typeof AppUsuariosRoute
+  '/assinatura/escolher-plano': typeof AppAssinaturaEscolherPlanoRoute
   '/mesas/$id': typeof AppMesasIdRoute
   '/pedidos/$id': typeof AppPedidosIdRoute
   '/pedidos/novo': typeof AppPedidosNovoRoute
@@ -329,6 +338,7 @@ export interface FileRoutesById {
   '/_app/pagamentos': typeof AppPagamentosRoute
   '/_app/produtos': typeof AppProdutosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
+  '/_app/assinatura/escolher-plano': typeof AppAssinaturaEscolherPlanoRoute
   '/_app/mesas/$id': typeof AppMesasIdRoute
   '/_app/pedidos/$id': typeof AppPedidosIdRoute
   '/_app/pedidos/novo': typeof AppPedidosNovoRoute
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/pagamentos'
     | '/produtos'
     | '/usuarios'
+    | '/assinatura/escolher-plano'
     | '/mesas/$id'
     | '/pedidos/$id'
     | '/pedidos/novo'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/pagamentos'
     | '/produtos'
     | '/usuarios'
+    | '/assinatura/escolher-plano'
     | '/mesas/$id'
     | '/pedidos/$id'
     | '/pedidos/novo'
@@ -443,6 +455,7 @@ export interface FileRouteTypes {
     | '/_app/pagamentos'
     | '/_app/produtos'
     | '/_app/usuarios'
+    | '/_app/assinatura/escolher-plano'
     | '/_app/mesas/$id'
     | '/_app/pedidos/$id'
     | '/_app/pedidos/novo'
@@ -714,6 +727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMesasIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/assinatura/escolher-plano': {
+      id: '/_app/assinatura/escolher-plano'
+      path: '/assinatura/escolher-plano'
+      fullPath: '/assinatura/escolher-plano'
+      preLoaderRoute: typeof AppAssinaturaEscolherPlanoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/public/webhooks/whatsapp': {
       id: '/api/public/webhooks/whatsapp'
       path: '/api/public/webhooks/whatsapp'
@@ -745,6 +765,7 @@ interface AppRouteChildren {
   AppPagamentosRoute: typeof AppPagamentosRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
+  AppAssinaturaEscolherPlanoRoute: typeof AppAssinaturaEscolherPlanoRoute
   AppMesasIdRoute: typeof AppMesasIdRoute
   AppPedidosIdRoute: typeof AppPedidosIdRoute
   AppPedidosNovoRoute: typeof AppPedidosNovoRoute
@@ -775,6 +796,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPagamentosRoute: AppPagamentosRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppUsuariosRoute: AppUsuariosRoute,
+  AppAssinaturaEscolherPlanoRoute: AppAssinaturaEscolherPlanoRoute,
   AppMesasIdRoute: AppMesasIdRoute,
   AppPedidosIdRoute: AppPedidosIdRoute,
   AppPedidosNovoRoute: AppPedidosNovoRoute,
