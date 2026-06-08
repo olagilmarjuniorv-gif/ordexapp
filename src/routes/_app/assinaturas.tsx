@@ -293,6 +293,24 @@ function EditDialog({
           </div>
         </div>
 
+        <div className="mt-4 rounded-md border border-dashed p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Cobrança (somente leitura)</p>
+            <span className="text-[10px] text-muted-foreground">preparado para integração futura</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div><span className="text-muted-foreground">Gateway: </span>{(s as any)?.gateway ?? "—"}</div>
+            <div><span className="text-muted-foreground">Ext. status: </span>{(s as any)?.external_status ?? "—"}</div>
+            <div className="col-span-2"><span className="text-muted-foreground">Customer ID: </span><span className="font-mono">{(s as any)?.customer_id ?? "—"}</span></div>
+            <div className="col-span-2"><span className="text-muted-foreground">Subscription ID: </span><span className="font-mono">{(s as any)?.subscription_id ?? "—"}</span></div>
+            <div><span className="text-muted-foreground">Forma pgto: </span>{(s as any)?.payment_method ?? "—"}</div>
+            <div><span className="text-muted-foreground">Sync: </span>{(s as any)?.external_sync_at ? new Date((s as any).external_sync_at).toLocaleString("pt-BR") : "—"}</div>
+            <div><span className="text-muted-foreground">Valor mensal: </span>{(s as any)?.valor_mensal ?? 0}</div>
+            <div><span className="text-muted-foreground">Valor anual: </span>{(s as any)?.valor_anual ?? 0}</div>
+            <div className="col-span-2"><span className="text-muted-foreground">Desconto anual %: </span>{(s as any)?.desconto_anual_pct ?? 0}</div>
+          </div>
+        </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
           <Button
