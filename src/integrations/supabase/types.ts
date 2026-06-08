@@ -195,6 +195,72 @@ export type Database = {
           },
         ]
       }
+      cobrancas: {
+        Row: {
+          ciclo: string | null
+          company_id: string
+          created_at: string
+          external_id: string | null
+          gateway: string | null
+          id: string
+          metadata: Json
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          valor: number
+          vencimento: string | null
+        }
+        Insert: {
+          ciclo?: string | null
+          company_id: string
+          created_at?: string
+          external_id?: string | null
+          gateway?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          valor?: number
+          vencimento?: string | null
+        }
+        Update: {
+          ciclo?: string | null
+          company_id?: string
+          created_at?: string
+          external_id?: string | null
+          gateway?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          valor?: number
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobrancas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobrancas_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "company_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       combo_itens: {
         Row: {
           combo_id: string
@@ -394,48 +460,75 @@ export type Database = {
           ciclo: string
           company_id: string
           created_at: string
+          customer_id: string | null
+          desconto_anual_pct: number
+          external_status: string | null
+          external_sync_at: string | null
+          gateway: string | null
           id: string
           inicio: string | null
           limite_conversas_mes: number
           limite_pedidos_mes: number
           limite_usuarios: number
+          payment_method: string | null
           plano: string
           proxima_cobranca: string | null
           status: string
+          subscription_id: string | null
           updated_at: string
           valor: number
+          valor_anual: number
+          valor_mensal: number
           vencimento: string | null
         }
         Insert: {
           ciclo?: string
           company_id: string
           created_at?: string
+          customer_id?: string | null
+          desconto_anual_pct?: number
+          external_status?: string | null
+          external_sync_at?: string | null
+          gateway?: string | null
           id?: string
           inicio?: string | null
           limite_conversas_mes?: number
           limite_pedidos_mes?: number
           limite_usuarios?: number
+          payment_method?: string | null
           plano?: string
           proxima_cobranca?: string | null
           status?: string
+          subscription_id?: string | null
           updated_at?: string
           valor?: number
+          valor_anual?: number
+          valor_mensal?: number
           vencimento?: string | null
         }
         Update: {
           ciclo?: string
           company_id?: string
           created_at?: string
+          customer_id?: string | null
+          desconto_anual_pct?: number
+          external_status?: string | null
+          external_sync_at?: string | null
+          gateway?: string | null
           id?: string
           inicio?: string | null
           limite_conversas_mes?: number
           limite_pedidos_mes?: number
           limite_usuarios?: number
+          payment_method?: string | null
           plano?: string
           proxima_cobranca?: string | null
           status?: string
+          subscription_id?: string | null
           updated_at?: string
           valor?: number
+          valor_anual?: number
+          valor_mensal?: number
           vencimento?: string | null
         }
         Relationships: []
@@ -752,6 +845,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      planos_catalogo: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          desconto_anual_pct: number
+          id: string
+          limite_conversas_mes: number
+          limite_pedidos_mes: number
+          limite_usuarios: number
+          nome: string
+          ordem: number
+          updated_at: string
+          valor_anual: number
+          valor_mensal: number
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          desconto_anual_pct?: number
+          id?: string
+          limite_conversas_mes?: number
+          limite_pedidos_mes?: number
+          limite_usuarios?: number
+          nome: string
+          ordem?: number
+          updated_at?: string
+          valor_anual?: number
+          valor_mensal?: number
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          desconto_anual_pct?: number
+          id?: string
+          limite_conversas_mes?: number
+          limite_pedidos_mes?: number
+          limite_usuarios?: number
+          nome?: string
+          ordem?: number
+          updated_at?: string
+          valor_anual?: number
+          valor_mensal?: number
+        }
+        Relationships: []
       }
       privacy_requests: {
         Row: {
