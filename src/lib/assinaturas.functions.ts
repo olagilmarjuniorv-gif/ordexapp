@@ -67,6 +67,7 @@ export const listAssinaturas = createServerFn({ method: "GET" })
         company_name: c.name,
         company_active: c.active,
         subscription: s,
+        intent: intentByCompany.get(c.id) ?? null,
         uso: {
           pedidos: pedidosMap.get(c.id) ?? 0,
           conversas: convMap.get(c.id) ?? 0,
