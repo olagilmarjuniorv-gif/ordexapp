@@ -96,7 +96,11 @@ export function TrialExpiredOverlay({ canChoosePlan }: { canChoosePlan: boolean 
                     <li>✓ {p.conversas}</li>
                     <li>✓ {p.usuarios}</li>
                   </ul>
-                  <Button className="mt-auto" variant={p.destaque ? "default" : "outline"} disabled>
+                  <Button
+                    className="mt-auto"
+                    variant={p.destaque ? "default" : "outline"}
+                    onClick={() => navigate({ to: "/assinatura/escolher-plano" })}
+                  >
                     Escolher {p.nome}
                   </Button>
                 </div>
@@ -104,7 +108,7 @@ export function TrialExpiredOverlay({ canChoosePlan }: { canChoosePlan: boolean 
             </div>
 
             <p className="text-center text-xs text-muted-foreground">
-              A contratação de plano ainda não está disponível pela plataforma. Em breve.
+              Sua escolha será registrada. O pagamento online estará disponível em breve.
             </p>
           </div>
         ) : (
