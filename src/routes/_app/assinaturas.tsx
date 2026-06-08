@@ -136,12 +136,14 @@ function AssinaturasPage() {
                   <TableHead>Customer ID</TableHead>
                   <TableHead>Subscription ID</TableHead>
                   <TableHead>Ext. status</TableHead>
+                  <TableHead>Intenção</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((r) => {
                   const s = r.subscription as any;
+                  const intent = (r as any).intent as any;
                   return (
                     <TableRow key={r.company_id}>
                       <TableCell className="font-medium">{r.company_name}</TableCell>
