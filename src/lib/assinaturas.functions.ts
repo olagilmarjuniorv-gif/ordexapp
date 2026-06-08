@@ -22,14 +22,19 @@ export const listAssinaturas = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertSuper(context.userId);
 
-    const [companiesRes, subsRes] = await Promise.all([
+    const [companiesRes, subsRes, intentsRes] = await Promise.all([
       supabaseAdmin.from("companies").select("id, name, active").order("name"),
       supabaseAdmin.from("company_subscriptions").select("*"),
+      supabaseAdmin.from("subscription_intents").select("*").order("created_at", { ascending: false }),
     ]);
 
     const companies = companiesRes.data ?? [];
     const subs = subsRes.data ?? [];
     const subByCompany = new Map(subs.map((s) => [s.company_id, s]));
+    const intentByCompany = new Map<string, any>();
+    for (const i of intentsRes.data ?? []) {
+      if (!intentByCompany.has(i.company_id)) intentByCompany.set(i.company_id, i);
+    }
 
     // contagem do mês corrente
     const startMonth = new Date();
