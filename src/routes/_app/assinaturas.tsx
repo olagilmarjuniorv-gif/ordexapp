@@ -118,6 +118,7 @@ function AssinaturasPage() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -131,12 +132,16 @@ function AssinaturasPage() {
                   <TableHead>Pedidos</TableHead>
                   <TableHead>Conversas</TableHead>
                   <TableHead>Usuários</TableHead>
+                  <TableHead>Gateway</TableHead>
+                  <TableHead>Customer ID</TableHead>
+                  <TableHead>Subscription ID</TableHead>
+                  <TableHead>Ext. status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((r) => {
-                  const s = r.subscription;
+                  const s = r.subscription as any;
                   return (
                     <TableRow key={r.company_id}>
                       <TableCell className="font-medium">{r.company_name}</TableCell>
@@ -157,6 +162,10 @@ function AssinaturasPage() {
                       <TableCell>{fmtLim(r.uso.pedidos, s?.limite_pedidos_mes ?? 0)}</TableCell>
                       <TableCell>{fmtLim(r.uso.conversas, s?.limite_conversas_mes ?? 0)}</TableCell>
                       <TableCell>{fmtLim(r.uso.usuarios, s?.limite_usuarios ?? 0)}</TableCell>
+                      <TableCell className="text-muted-foreground">{s?.gateway ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">{s?.customer_id ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">{s?.subscription_id ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{s?.external_status ?? "—"}</TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" variant="outline" onClick={() => setEditing(r)}>
                           Editar
@@ -167,13 +176,14 @@ function AssinaturasPage() {
                 })}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={15} className="text-center text-muted-foreground py-8">
                       Nenhuma empresa encontrada.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
