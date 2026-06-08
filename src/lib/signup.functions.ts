@@ -22,20 +22,7 @@ export const signupCompany = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    // 1. e-mail único em auth.users
-    const { data: existing } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1,
-    });
-    // listUsers não filtra por email; usamos getUserByEmail via query manual
-    const { data: emailMatch } = await supabaseAdmin
-      .rpc("noop_dummy_placeholder" as any)
-      .then(() => ({ data: null }))
-      .catch(() => ({ data: null }));
-    void existing;
-    void emailMatch;
-
-    // Confere e-mail pré-existente direto na tabela auth.users via admin API
+    // Confere e-mail pré-existente direto em auth.users via admin API
     const { data: userByEmail } = await supabaseAdmin.auth.admin.listUsers({
       page: 1,
       perPage: 1000,
