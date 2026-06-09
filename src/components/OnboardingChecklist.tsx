@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -81,65 +81,114 @@ const ITEMS: {
   },
 ];
 
+const DEFAULT_ITEMS: Record<OnboardingItemKey, boolean> = {
+  meu_restaurante: false,
+  cardapio: false,
+  pagamentos: false,
+  whatsapp: false,
+  pedido_teste: false,
+};
 
 function dismissKey(companyId: string | null) {
   return `saiupedido.onboarding.dismissed:${companyId ?? "none"}`;
 }
 
+// Boundary defensivo local — nunca propaga erro para a rota
+class LocalBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err: unknown) {
+    if (typeof console !== "undefined") console.warn("OnboardingChecklist boundary:", err);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+          Não foi possível carregar o onboarding agora.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function OnboardingChecklist() {
-  console.warn("[OC] 1 component render start");
+  return (
+    <LocalBoundary>
+      <OnboardingChecklistInner />
+    </LocalBoundary>
+  );
+}
+
+function OnboardingChecklistInner() {
   const getFn = useServerFn(getOnboardingStatus);
   const { data, isLoading, error } = useQuery({
     queryKey: ["onboarding-status"],
     queryFn: async () => {
-      console.warn("[OC] 2 queryFn called");
       try {
-        const r = await getFn();
-        console.warn("[OC] 3 queryFn resolved", r);
-        return r;
+        return await getFn();
       } catch (e) {
-        console.error("[OC] 3X queryFn threw", e);
-        throw e;
+        // Nunca propaga; devolve shape vazio para a UI seguir
+        if (typeof console !== "undefined") console.warn("onboarding queryFn:", e);
+        return null;
       }
     },
     staleTime: 10_000,
+    retry: false,
   });
-  console.warn("[OC] 4 query state", { isLoading, hasData: !!data, error });
 
-  // Recalcula quando dados-fonte mudam em tempo real
   useRealtimeInvalidate("pedidos", [["onboarding-status"]]);
   useRealtimeInvalidate("produtos", [["onboarding-status"]]);
 
   const [dismissed, setDismissed] = useState<boolean>(false);
   const [forceOpen, setForceOpen] = useState<boolean>(false);
 
-  // Carrega estado dismissed do localStorage assim que tivermos companyId
+  // Normalização defensiva — qualquer shape inesperado vira o padrão
+  const safe = (() => {
+    if (!data || typeof data !== "object") return null;
+    const d: any = data;
+    const companyId =
+      typeof d.companyId === "string" && d.companyId.length > 0 ? d.companyId : null;
+    if (!companyId) return null;
+    const rawItems = d.items && typeof d.items === "object" ? d.items : {};
+    const items: Record<OnboardingItemKey, boolean> = {
+      meu_restaurante: !!rawItems.meu_restaurante,
+      cardapio: !!rawItems.cardapio,
+      pagamentos: !!rawItems.pagamentos,
+      whatsapp: !!rawItems.whatsapp,
+      pedido_teste: !!rawItems.pedido_teste,
+    };
+    const total = 5;
+    const completed = Object.values(items).filter(Boolean).length;
+    const percent = Math.round((completed / total) * 100);
+    return { companyId, items, completed, total, percent, done: completed === total };
+  })();
+
   useEffect(() => {
-    if (!data?.companyId) return;
+    if (!safe?.companyId) return;
     try {
-      const v = localStorage.getItem(dismissKey(data.companyId));
+      const v = localStorage.getItem(dismissKey(safe.companyId));
       setDismissed(v === "1");
     } catch {}
-  }, [data?.companyId]);
+  }, [safe?.companyId]);
 
-  if (error) {
-    console.error("[OC] 5E render error branch", error);
-    return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
-        Onboarding falhou: {(error as Error)?.message ?? String(error)}
-      </div>
-    );
-  }
-  if (isLoading || !data || !data.companyId) {
-    console.warn("[OC] 5 render guard (loading or no data)", { isLoading, data });
+  // Erro de rede ou loading: render silencioso
+  if (isLoading) return null;
+  if (error || !safe) {
+    if (error) {
+      return (
+        <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+          Não foi possível carregar o onboarding agora.
+        </div>
+      );
+    }
     return null;
   }
 
-  const { items, completed, total, percent, done } = data;
-  console.warn("[OC] 6 derived progress", { items, completed, total, percent, done });
+  const { items, completed, total, percent, done } = safe;
 
-
-  // Quando 100%, oculta por padrão — usuário pode reabrir
   const hiddenByCompletion = done && !forceOpen;
   const hiddenByUser = dismissed && !forceOpen;
   if (hiddenByCompletion || hiddenByUser) {
@@ -156,9 +205,9 @@ export function OnboardingChecklist() {
   }
 
   function dismiss() {
-    if (!data?.companyId) return;
+    if (!safe?.companyId) return;
     try {
-      localStorage.setItem(dismissKey(data.companyId), "1");
+      localStorage.setItem(dismissKey(safe.companyId), "1");
     } catch {}
     setDismissed(true);
     setForceOpen(false);
@@ -194,7 +243,6 @@ export function OnboardingChecklist() {
         </button>
       </header>
 
-      {/* Próxima ação recomendada */}
       {nextItem && (
         <div className="px-4 pt-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3.5">
@@ -225,7 +273,6 @@ export function OnboardingChecklist() {
         </div>
       )}
 
-      {/* Barra de progresso */}
       <div className="px-4 pt-3">
         <div className="flex items-center justify-between text-xs mb-1.5">
           <span className="font-medium tabular-nums">{percent}%</span>
@@ -236,7 +283,6 @@ export function OnboardingChecklist() {
         <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
           <div
             className="h-full bg-primary transition-all duration-500"
-
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -244,7 +290,7 @@ export function OnboardingChecklist() {
 
       <ul className="divide-y divide-border">
         {ITEMS.map((it) => {
-          const ok = items[it.key];
+          const ok = !!items[it.key];
           const Icon = it.icon;
           return (
             <li key={it.key} className="flex items-center gap-3 p-3.5">
