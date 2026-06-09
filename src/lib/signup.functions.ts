@@ -8,6 +8,9 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  * - cria usuário Supabase Auth com e-mail real
  * - atualiza profile (full_name, phone, company_id)
  * - atribui role 'admin'
+ *
+ * NÃO usa listUsers para checar duplicidade — é O(N) e estoura o
+ * timeout do Worker. Deixa o próprio createUser falhar e mapeia o erro.
  */
 export const signupCompany = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
@@ -22,19 +25,7 @@ export const signupCompany = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    // Confere e-mail pré-existente direto em auth.users via admin API
-    const { data: userByEmail } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
-    const conflict = userByEmail?.users?.find(
-      (u) => (u.email ?? "").toLowerCase() === data.email,
-    );
-    if (conflict) {
-      throw new Response("Este e-mail já está cadastrado", { status: 400 });
-    }
-
-    // 2. cria empresa (trigger cria trial subscription)
+    // 1. cria empresa (trigger cria trial subscription + categorias padrão)
     const { data: company, error: cErr } = await supabaseAdmin
       .from("companies")
       .insert({
@@ -47,10 +38,14 @@ export const signupCompany = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (cErr || !company) {
-      throw new Response("Não foi possível criar o restaurante", { status: 500 });
+      console.error("[signupCompany] company insert failed", cErr);
+      throw new Response(
+        `Não foi possível criar o restaurante: ${cErr?.message ?? "erro desconhecido"}`,
+        { status: 500 },
+      );
     }
 
-    // 3. cria usuário auth
+    // 2. cria usuário auth (createUser falha com mensagem específica se e-mail já existe)
     const { data: created, error: uErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -58,14 +53,31 @@ export const signupCompany = createServerFn({ method: "POST" })
       user_metadata: { full_name: data.full_name, phone: data.whatsapp },
     });
     if (uErr || !created?.user) {
+      console.error("[signupCompany] createUser failed", uErr);
       // rollback empresa
       await supabaseAdmin.from("companies").delete().eq("id", company.id);
-      throw new Response(uErr?.message ?? "Falha ao criar usuário", { status: 400 });
+
+      const raw = (uErr?.message ?? "").toLowerCase();
+      if (
+        raw.includes("already") ||
+        raw.includes("registered") ||
+        raw.includes("exists") ||
+        raw.includes("duplicate")
+      ) {
+        throw new Response("Este e-mail já está cadastrado", { status: 400 });
+      }
+      if (raw.includes("password")) {
+        throw new Response("Senha inválida. Use pelo menos 6 caracteres.", { status: 400 });
+      }
+      throw new Response(
+        `Não foi possível criar o usuário: ${uErr?.message ?? "erro desconhecido"}`,
+        { status: 400 },
+      );
     }
     const uid = created.user.id;
 
-    // 4. atualiza profile (handle_new_user já criou linha)
-    await supabaseAdmin
+    // 3. atualiza profile (handle_new_user já criou linha)
+    const { error: pErr } = await supabaseAdmin
       .from("profiles")
       .update({
         full_name: data.full_name,
@@ -74,14 +86,27 @@ export const signupCompany = createServerFn({ method: "POST" })
         active: true,
       })
       .eq("id", uid);
+    if (pErr) {
+      console.error("[signupCompany] profile update failed", pErr);
+      await supabaseAdmin.auth.admin.deleteUser(uid).catch(() => {});
+      await supabaseAdmin.from("companies").delete().eq("id", company.id);
+      throw new Response(
+        `Não foi possível vincular usuário à empresa: ${pErr.message}`,
+        { status: 500 },
+      );
+    }
 
-    // 5. role admin
+    // 4. role admin
     await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: uid, role: "admin" });
     if (rErr) {
-      throw new Response(rErr.message, { status: 500 });
+      console.error("[signupCompany] user_roles insert failed", rErr);
+      throw new Response(
+        `Não foi possível atribuir permissões: ${rErr.message}`,
+        { status: 500 },
+      );
     }
 
     return { ok: true, company_id: company.id, user_id: uid, email: data.email };
