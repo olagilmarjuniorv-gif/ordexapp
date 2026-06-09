@@ -709,7 +709,7 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
                           {cobStatusLabel(c.status)}
                         </span>
                       </td>
-                      <td className="py-2 pr-3 uppercase">{c.payment_method ?? "—"}</td>
+                      <td className="py-2 pr-3">{paymentMethodLabel(c.payment_method)}</td>
                       <td className="py-2 pr-3">
                         {url ? (
                           <a href={url} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 hover:underline">
