@@ -7,7 +7,7 @@ import { listAuditLogs } from "@/lib/audit.functions";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/historico")({
-  component: HistoricoPage,
+  component: HistoricoPanel,
   head: () => ({ meta: [{ title: "Histórico — SaiuPedido" }] }),
 });
 
@@ -25,7 +25,7 @@ const ACTION_LABEL: Record<string, string> = {
   "mesa.liberar": "Mesa liberada",
 };
 
-function HistoricoPage() {
+export function HistoricoPanel() {
   const { isSuperAdmin } = useAuth();
   const fetchFn = useServerFn(listAuditLogs);
   const [companyId, setCompanyId] = useState<string>("");

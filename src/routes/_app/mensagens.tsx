@@ -15,7 +15,7 @@ import { MessageCircle, ArrowDownLeft, ArrowUpRight, UserCheck, UserX, Send } fr
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/mensagens")({
-  component: MensagensPage,
+  component: MensagensPanel,
   head: () => ({ meta: [{ title: "Mensagens — SaiuPedido" }] }),
 });
 
@@ -33,7 +33,7 @@ const ESTADO_LABEL: Record<string, string> = {
   conversa_encerrada: "Encerrada",
 };
 
-function MensagensPage() {
+export function MensagensPanel() {
   const { isSuperAdmin, isAdmin } = useAuth();
   const qc = useQueryClient();
 
