@@ -99,7 +99,10 @@ function EscolherPlanoPage() {
       qc.invalidateQueries({ queryKey: ["my-subscription-intent"] });
     },
     onError: (e: any) => {
-      const msg = typeof e?.message === "string" ? e.message : "Erro ao iniciar pagamento";
+      const msg =
+        typeof e?.message === "string" && e.message.trim()
+          ? e.message
+          : "Erro ao iniciar pagamento";
       toast.error(msg);
     },
   });
