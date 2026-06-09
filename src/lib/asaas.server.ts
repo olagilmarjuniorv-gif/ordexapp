@@ -29,6 +29,60 @@ export type AsaasFetchInit = Omit<RequestInit, "body"> & {
   timeoutMs?: number;
 };
 
+type AsaasErrorEntry = {
+  code?: unknown;
+  description?: unknown;
+};
+
+function maskDigits(value: unknown, visibleStart = 2, visibleEnd = 2): unknown {
+  if (typeof value !== "string" && typeof value !== "number") return value;
+  const raw = String(value);
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length <= visibleStart + visibleEnd) return "***";
+  return `${digits.slice(0, visibleStart)}${"*".repeat(Math.max(3, digits.length - visibleStart - visibleEnd))}${digits.slice(-visibleEnd)}`;
+}
+
+function maskEmail(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  const [local, domain] = value.split("@");
+  if (!local || !domain) return "***";
+  return `${local.slice(0, 2)}***@${domain}`;
+}
+
+function sanitizeForAsaasLog(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeForAsaasLog);
+  if (!value || typeof value !== "object") return value;
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, entry]) => {
+      const k = key.toLowerCase();
+      if (k.includes("token") || k.includes("apikey") || k.includes("api_key") || k.includes("secret")) {
+        return [key, "[redacted]"];
+      }
+      if (k === "cpfcnpj" || k.includes("cpf") || k.includes("cnpj")) return [key, maskDigits(entry, 2, 2)];
+      if (k.includes("email")) return [key, maskEmail(entry)];
+      if (k.includes("phone") || k.includes("telefone") || k.includes("whatsapp")) return [key, maskDigits(entry, 2, 2)];
+      return [key, sanitizeForAsaasLog(entry)];
+    }),
+  );
+}
+
+function getAsaasErrors(body: unknown): AsaasErrorEntry[] {
+  if (!body || typeof body !== "object" || !("errors" in body)) return [];
+  const errors = (body as { errors?: unknown }).errors;
+  return Array.isArray(errors) ? (errors as AsaasErrorEntry[]) : [];
+}
+
+function buildAsaasErrorMessage(path: string, status: number, body: unknown): string {
+  const descriptions = getAsaasErrors(body)
+    .map((e) => (typeof e.description === "string" ? e.description.trim() : ""))
+    .filter(Boolean);
+  if (!descriptions.length) return `Asaas responded ${status}`;
+
+  const target = path.startsWith("/customers") ? "os dados do cliente" : "a requisição";
+  return `Asaas recusou ${target}: ${descriptions.join("; ")}`;
+}
+
 /**
  * Server-side fetch helper for Asaas API.
  * - Selects base URL from ASAAS_ENV (sandbox default).
@@ -78,8 +132,19 @@ export async function asaasFetch<T = unknown>(path: string, init: AsaasFetchInit
 
     if (!res.ok) {
       // Log without secret values
-      console.error(`[asaas] ${init.method ?? "GET"} ${path} -> ${res.status}`);
-      throw new AsaasError(`Asaas responded ${res.status}`, res.status, parsed);
+      const errors = getAsaasErrors(parsed).map((e) => ({
+        code: e.code,
+        description: e.description,
+      }));
+      console.error("[asaas] request failed", {
+        method: init.method ?? "GET",
+        path,
+        status: res.status,
+        requestBody: sanitizeForAsaasLog(init.body),
+        responseBody: sanitizeForAsaasLog(parsed),
+        errors,
+      });
+      throw new AsaasError(buildAsaasErrorMessage(path, res.status, parsed), res.status, parsed);
     }
     return parsed as T;
   } catch (err) {
