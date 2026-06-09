@@ -602,3 +602,26 @@ function ComingSoonCard({ name }: { name: string }) {
     </div>
   );
 }
+
+export function IfoodPanel() {
+  const list = useServerFn(listIntegracoes);
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["integracoes"],
+    queryFn: () => list({}),
+    refetchInterval: 15_000,
+  });
+  const integ = (data ?? []).find((i: any) => i.provider === "ifood");
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  return (
+    <div className="max-w-xl">
+      <IfoodCard integ={integ} onChange={() => qc.invalidateQueries({ queryKey: ["integracoes"] })} />
+    </div>
+  );
+}
