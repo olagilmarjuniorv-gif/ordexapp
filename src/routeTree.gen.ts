@@ -33,6 +33,7 @@ import { Route as AppClientesRouteImport } from './routes/_app/clientes'
 import { Route as AppChamadosRouteImport } from './routes/_app/chamados'
 import { Route as AppCategoriasRouteImport } from './routes/_app/categorias'
 import { Route as AppCardapioRouteImport } from './routes/_app/cardapio'
+import { Route as AppAtendimentoRouteImport } from './routes/_app/atendimento'
 import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'
 import { Route as AppAdicionaisRouteImport } from './routes/_app/adicionais'
 import { Route as AppSuporteIndexRouteImport } from './routes/_app/suporte/index'
@@ -167,6 +168,11 @@ const AppCardapioRoute = AppCardapioRouteImport.update({
   path: '/cardapio',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAtendimentoRoute = AppAtendimentoRouteImport.update({
+  id: '/atendimento',
+  path: '/atendimento',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAssinaturasRoute = AppAssinaturasRouteImport.update({
   id: '/assinaturas',
   path: '/assinaturas',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
   '/assinaturas': typeof AppAssinaturasRoute
+  '/atendimento': typeof AppAtendimentoRoute
   '/cardapio': typeof AppCardapioRoute
   '/categorias': typeof AppCategoriasRoute
   '/chamados': typeof AppChamadosRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/adicionais': typeof AppAdicionaisRoute
   '/assinaturas': typeof AppAssinaturasRoute
+  '/atendimento': typeof AppAtendimentoRoute
   '/cardapio': typeof AppCardapioRoute
   '/categorias': typeof AppCategoriasRoute
   '/chamados': typeof AppChamadosRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_app/adicionais': typeof AppAdicionaisRoute
   '/_app/assinaturas': typeof AppAssinaturasRoute
+  '/_app/atendimento': typeof AppAtendimentoRoute
   '/_app/cardapio': typeof AppCardapioRoute
   '/_app/categorias': typeof AppCategoriasRoute
   '/_app/chamados': typeof AppChamadosRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/adicionais'
     | '/assinaturas'
+    | '/atendimento'
     | '/cardapio'
     | '/categorias'
     | '/chamados'
@@ -408,6 +418,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/adicionais'
     | '/assinaturas'
+    | '/atendimento'
     | '/cardapio'
     | '/categorias'
     | '/chamados'
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_app/adicionais'
     | '/_app/assinaturas'
+    | '/_app/atendimento'
     | '/_app/cardapio'
     | '/_app/categorias'
     | '/_app/chamados'
@@ -663,6 +675,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCardapioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/atendimento': {
+      id: '/_app/atendimento'
+      path: '/atendimento'
+      fullPath: '/atendimento'
+      preLoaderRoute: typeof AppAtendimentoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/assinaturas': {
       id: '/_app/assinaturas'
       path: '/assinaturas'
@@ -767,6 +786,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdicionaisRoute: typeof AppAdicionaisRoute
   AppAssinaturasRoute: typeof AppAssinaturasRoute
+  AppAtendimentoRoute: typeof AppAtendimentoRoute
   AppCardapioRoute: typeof AppCardapioRoute
   AppCategoriasRoute: typeof AppCategoriasRoute
   AppChamadosRoute: typeof AppChamadosRoute
@@ -798,6 +818,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdicionaisRoute: AppAdicionaisRoute,
   AppAssinaturasRoute: AppAssinaturasRoute,
+  AppAtendimentoRoute: AppAtendimentoRoute,
   AppCardapioRoute: AppCardapioRoute,
   AppCategoriasRoute: AppCategoriasRoute,
   AppChamadosRoute: AppChamadosRoute,
@@ -843,13 +864,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

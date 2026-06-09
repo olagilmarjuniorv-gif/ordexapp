@@ -214,7 +214,7 @@ function PedidosList() {
               : (p.cliente?.name ?? canalLabel[p.canal] ?? p.canal);
             return (
               <li key={p.id} className="order-enter">
-                <Link to={`/pedidos/${p.id}`} className={`block card-premium p-3.5 ${late ? "!border-destructive/50" : ""}`}>
+                <Link to="/pedidos/$id" params={{ id: p.id }} className={`block card-premium p-3.5 ${late ? "!border-destructive/50" : ""}`}>
                   <div className="flex items-start gap-3">
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${p.status === "novo" ? "bg-realtime/15 text-realtime" : "bg-primary-soft text-primary"}`}>
                       <ShoppingBag className="h-5 w-5" />

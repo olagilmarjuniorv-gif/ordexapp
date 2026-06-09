@@ -26,7 +26,7 @@ const ROLE_LABEL: Record<AppRole, string> = {
   cozinha: "Cozinha",
 };
 
-function UsersPage() {
+export function UsersPage() {
   const { isAdmin, isSuperAdmin, role, loading: authLoading } = useAuth();
 
   if (authLoading) {

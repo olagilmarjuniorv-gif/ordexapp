@@ -13,7 +13,7 @@ import { Loader2, User, Plus, Search, Trash2, Pencil, Phone } from "lucide-react
 import { WhatsappButton } from "@/components/WhatsappButton";
 
 export const Route = createFileRoute("/_app/clientes")({
-  component: Clientes,
+  component: ClientesPanel,
   head: () => ({ meta: [{ title: "Clientes — SaiuPedido" }] }),
 });
 
@@ -25,7 +25,7 @@ type Cliente = {
   address: string | null;
 };
 
-function Clientes() {
+export function ClientesPanel() {
   const qc = useQueryClient();
   const fetchFn = useServerFn(listClientes);
   const createFn = useServerFn(createCliente);

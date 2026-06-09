@@ -7,7 +7,7 @@ import { listTickets, createTicket, TICKET_PRIORITIES, TICKET_CATEGORIES } from 
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/suporte/")({
-  component: SuportePage,
+  component: SuportePanel,
   head: () => ({ meta: [{ title: "Suporte — SaiuPedido" }] }),
 });
 
@@ -25,7 +25,7 @@ const PRIO_META: Record<string, string> = {
   urgente: "bg-rose-100 text-rose-700",
 };
 
-function SuportePage() {
+export function SuportePanel() {
   const qc = useQueryClient();
   const fetchFn = useServerFn(listTickets);
   const createFn = useServerFn(createTicket);
