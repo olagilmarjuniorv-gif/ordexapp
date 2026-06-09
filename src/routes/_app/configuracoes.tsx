@@ -17,6 +17,7 @@ import { TrialBanner } from "@/components/TrialBanner";
 import { HistoricoPanel } from "./historico";
 import { UsersPage } from "./usuarios";
 import { SuportePanel } from "./suporte/index";
+import { WhatsappCard, IfoodPanel } from "./conectores";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   component: ConfiguracoesPage,
