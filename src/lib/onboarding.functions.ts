@@ -6,8 +6,10 @@ import { getCaller } from "./auth.server";
 export const getOnboardingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    console.log("[OBF] A handler start, userId=", context.userId);
     const caller = await getCaller(context.userId);
     const companyId = caller.companyId;
+    console.log("[OBF] B caller", { companyId, role: (caller as any).role });
 
     const empty = {
       companyId: null as string | null,
