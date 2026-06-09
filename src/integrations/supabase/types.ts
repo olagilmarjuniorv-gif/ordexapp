@@ -82,6 +82,39 @@ export type Database = {
           },
         ]
       }
+      asaas_webhook_events: {
+        Row: {
+          created_at: string
+          event: string
+          event_id: string
+          id: string
+          payload: Json
+          payment_id: string | null
+          processed_at: string | null
+          received_at: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          event_id: string
+          id?: string
+          payload?: Json
+          payment_id?: string | null
+          processed_at?: string | null
+          received_at?: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          event_id?: string
+          id?: string
+          payload?: Json
+          payment_id?: string | null
+          processed_at?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
