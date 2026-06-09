@@ -247,10 +247,10 @@ export async function createPixPayment(intentId: string): Promise<{
     .from("subscription_intents")
     .update({
       metadata: {
-        ...(intent.metadata ?? {}),
+        ...((intent.metadata as Record<string, unknown>) ?? {}),
         asaas_payment_id: payment.id,
         asaas_invoice_url: payment.invoiceUrl ?? null,
-      },
+      } as never,
     })
     .eq("id", intent.id);
 
