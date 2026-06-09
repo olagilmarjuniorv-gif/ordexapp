@@ -361,10 +361,12 @@ function CicloCard({ titulo, descricao, selected, onSelect, badge }: { id: Ciclo
 }
 
 function Step3({
-  plano, ciclo, onBack, onConfirm, saving, billingMissing, onGoToConfig,
+  plano, ciclo, metodo, onMetodoChange, onBack, onConfirm, saving, billingMissing, onGoToConfig,
 }: {
   plano: PlanoDef;
   ciclo: Ciclo;
+  metodo: "pix" | "cartao";
+  onMetodoChange: (m: "pix" | "cartao") => void;
   onBack: () => void;
   onConfirm: () => void;
   saving: boolean;
@@ -372,6 +374,7 @@ function Step3({
   onGoToConfig: () => void;
 }) {
   const blocked = !!billingMissing && billingMissing.length > 0;
+  const ctaLabel = metodo === "cartao" ? "Pagar com Cartão" : "Continuar";
   return (
     <div className="space-y-6">
       <Card>
@@ -384,10 +387,29 @@ function Step3({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <ResumoItem label="Ciclo" value={ciclo === "anual" ? "Anual" : "Mensal"} />
-            <ResumoItem label="Forma de pagamento" value="PIX" />
             <ResumoItem label="Limite de pedidos" value={plano.pedidos} />
             <ResumoItem label="Conversas WhatsApp" value={plano.conversas} />
             <ResumoItem label="Usuários" value={plano.usuarios} />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Forma de pagamento</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetodoCard
+                selected={metodo === "pix"}
+                onSelect={() => onMetodoChange("pix")}
+                icon={<QrCode className="h-5 w-5" />}
+                titulo="PIX"
+                descricao="QR Code instantâneo. Confirmação em segundos."
+              />
+              <MetodoCard
+                selected={metodo === "cartao"}
+                onSelect={() => onMetodoChange("cartao")}
+                icon={<CreditCard className="h-5 w-5" />}
+                titulo="Cartão de Crédito"
+                descricao="Checkout seguro no ambiente Asaas."
+              />
+            </div>
           </div>
 
           {blocked ? (
@@ -409,11 +431,16 @@ function Step3({
                 Ir para Configurações → Empresa
               </Button>
             </div>
+          ) : metodo === "cartao" ? (
+            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+              Ao continuar você será redirecionado para o checkout seguro do Asaas,
+              onde informa os dados do cartão. O SaiuPedido nunca recebe nem armazena
+              esses dados. Sua assinatura é ativada automaticamente após a aprovação.
+            </div>
           ) : (
             <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-              Ao continuar geramos uma cobrança PIX (ambiente Sandbox) e exibimos o QR Code
-              para pagamento. Sua assinatura é ativada automaticamente assim que o pagamento
-              for confirmado.
+              Ao continuar geramos uma cobrança PIX e exibimos o QR Code para pagamento.
+              Sua assinatura é ativada automaticamente assim que o pagamento for confirmado.
             </div>
           )}
         </CardContent>
@@ -424,10 +451,41 @@ function Step3({
           <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
         <Button onClick={onConfirm} disabled={saving || blocked}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : ctaLabel}
         </Button>
       </div>
     </div>
+  );
+}
+
+function MetodoCard({
+  selected, onSelect, icon, titulo, descricao,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  icon: React.ReactNode;
+  titulo: string;
+  descricao: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "text-left rounded-xl border bg-card p-4 transition-all flex gap-3 items-start",
+        "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40",
+        selected ? "border-primary ring-2 ring-primary/30" : "border-border",
+      )}
+    >
+      <div className={cn("mt-0.5", selected ? "text-primary" : "text-muted-foreground")}>{icon}</div>
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">{titulo}</h4>
+          {selected && <Check className="h-4 w-4 text-primary" />}
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
+      </div>
+    </button>
   );
 }
 
