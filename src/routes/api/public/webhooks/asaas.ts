@@ -11,6 +11,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { upsertCobranca } from "@/lib/asaas-payments";
+import { activateSubscriptionFromPayment } from "@/lib/asaas-activation";
+
+const ACTIVATE_EVENTS = new Set(["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"]);
 
 const SUPPORTED_EVENTS = new Set([
   "PAYMENT_CREATED",
@@ -154,6 +157,32 @@ export const Route = createFileRoute("/api/public/webhooks/asaas")({
                   invoice_url: payment.invoiceUrl ?? null,
                 },
               });
+            }
+
+            // Ativação automática da assinatura quando o pagamento for
+            // confirmado/recebido. Idempotente.
+            if (ACTIVATE_EVENTS.has(eventType)) {
+              const extRef: string | undefined = payment.externalReference;
+              const intentId = extRef?.startsWith("intent:")
+                ? extRef.slice("intent:".length)
+                : null;
+              if (intentId) {
+                try {
+                  await activateSubscriptionFromPayment({
+                    intentId,
+                    paymentExternalId: payment.id,
+                    asaasStatus: payment.status,
+                    invoiceUrl: payment.invoiceUrl ?? null,
+                    eventId,
+                    eventType,
+                  });
+                } catch (err) {
+                  console.error(
+                    "[asaas-webhook] activation failed",
+                    (err as Error)?.message ?? err,
+                  );
+                }
+              }
             }
 
             await supabaseAdmin
