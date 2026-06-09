@@ -165,6 +165,31 @@ function Cozinha() {
     onError: (e: any) => toast.error(e?.message ?? "Erro ao atualizar"),
   });
 
+  const faseM = useMutation({
+    mutationFn: (v: { id: string; fase: FaseCanal | null; finalizar?: boolean }) => faseFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      qc.invalidateQueries({ queryKey: ["mesas"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+  const voltarM = useMutation({
+    mutationFn: (id: string) => voltarFn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      toast.success("Devolvido à cozinha");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+  const pagoM = useMutation({
+    mutationFn: (id: string) => finFn({ data: { id, status_financeiro: "pago" } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      toast.success("Pagamento confirmado");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
   const dark = theme === "dark";
   const isFullscreen = tv;
   const containerClass = isFullscreen
