@@ -1,129 +1,68 @@
+# Reestruturação de Assinatura, UX e Onboarding
 
-# Módulo CONFIGURAÇÕES — Análise de Schema e Plano
+Apenas UX/navegação/formulários. Sem mexer em: integração Asaas, webhook, fluxo PIX, ativação automática, RLS, multiempresa, trial, regras de negócio.
 
-## 1. Análise do schema atual
+## 1. Consolidar Assinatura num único lugar
+- Remover item **"Assinatura"** do menu lateral (`AppLayout.tsx`, nav do admin).
+- Manter a rota `/assinatura/escolher-plano` viva (usada por trial expirado e fluxo de upgrade), mas acessada **somente** por dentro de **Configurações → Assinatura**.
+- Em Configurações, transformar a aba *Assinatura* na central única (hoje a aba existe, mas é fraca).
 
-### Tabela `companies` (já existe, parcial)
-**Campos já existentes:**
-- Identidade: `id, name, slug, active, created_at, updated_at`
-- Contato: `phone, whatsapp, email`
-- Endereço: `cep, rua, numero, complemento, bairro, cidade, estado`
-- Operação: `delivery_ativo, retirada_ativa, tempo_preparo_min, pedido_minimo, taxa_entrega`
-- Horários: `horarios` (jsonb por dia da semana — já cobre Aba 2)
-- Pagamentos: `pagamento_metodos` (jsonb), `exigir_pagamento_antes_cozinha`, `permitir_pagamento_entrega`, `permitir_pagamento_retirada`
+## 2. Tela central de Assinatura (aba em Configurações)
+Cards/seções:
+1. **Plano atual** — plano, status, ciclo, início, próxima cobrança, valor.
+2. **Consumo do plano** — barras (`Progress`) para Pedidos do mês, Conversas WhatsApp do mês, Usuários ativos. Formato `utilizado / limite`.
+3. **Excedentes acionáveis** — quando algo passa do limite, mostrar mensagem clara + botões: `Contratar usuário adicional` (placeholder/disabled "em breve") e `Alterar plano` (abre fluxo escolher-plano).
+4. **Forma de pagamento** — radios `PIX` (selecionado) e `Cartão de Crédito (Em breve)` desabilitado. Visual apenas, sem lógica.
+5. **Histórico de cobranças** — tabela com Data / Valor / Status / Forma / Link (quando houver `metadata.invoiceUrl` ou similar).
+6. **Botão "Alterar / Contratar plano"** → leva a `/assinatura/escolher-plano`.
 
-**Campos FALTANTES em `companies`:**
-- Fiscal/empresa: `razao_social`, `cnpj`, `inscricao_estadual`
-- E-mails segmentados: `email_financeiro`, `email_operacional`
-- Responsável: `responsavel_nome`, `responsavel_cpf`, `responsavel_telefone`
-- Público (vitrine): `nome_publico`, `telefone_publico`, `endereco_publico`
-- Operação extra: `tempo_entrega_min`, `raio_entrega_km`
-- Canais habilitados (Aba 2): `canais_ativos` jsonb `{whatsapp,balcao,mesa,delivery,ifood:boolean}`
-- Mensagens operacionais (Aba 2): `mensagens_operacionais` jsonb `{loja_fechada, recebido, preparo, pronto, finalizado}`
-- Chatbot (Aba 6): `chatbot_saudacao`, `chatbot_encerramento`, `chatbot_transferencia_humano`
-  - (já existe `whatsapp_fluxos` com 3 mensagens semelhantes — vamos REUTILIZAR, não duplicar)
+## 3. Anti-cobrança duplicada
+Em `createPixForIntent` (server fn), antes de criar nova cobrança Asaas: verificar se a empresa já possui `cobrancas` com `status = 'pendente'` e `payment_method = 'PIX'` ainda válida (não vencida). Se existir, **reutilizar** (retornar dados Pix da cobrança existente em vez de criar nova). Na UI de escolher-plano: se intent pendente já existe, exibir aviso "Você já possui uma cobrança pendente" + botão `Continuar pagamento` que abre o QR da cobrança existente.
 
-### Tabela `whatsapp_conexoes` (já cobre Aba 3 — leitura)
-Tem: `phone_number, phone_number_id, whatsapp_business_id, status, connected_at, last_sync_at, last_error, settings (jsonb)`
-- Recursos (bot/humano/auto-status) → guardar em `settings` jsonb (sem migration de coluna)
-- Indicadores de conversas/mês/qualidade → **somente UI placeholder** (Meta API não plugada ainda)
+Sem mudar fluxo Asaas em si — apenas curto-circuito antes da chamada.
 
-### Tabela `whatsapp_fluxos` (já cobre Aba 6)
-Já tem: `mensagem_boas_vindas, mensagem_fechamento, mensagem_sem_atendimento, ativo`
-→ Mapeia 1:1 com Aba 6. **Sem migration**.
+## 4. Simplificar Configurações → Empresa
+Reorganizar a aba "Empresa" em 4 blocos exatos:
+- **Dados da Empresa**: Razão Social\*, CNPJ\*, Telefone Principal\*, E-mail Principal\*
+- **Responsável**: Nome, CPF, Telefone
+- **Endereço**: CEP, Rua, Número, Complemento, Bairro, Cidade, Estado
+- **Informações Públicas**: Nome Exibido, Telefone Exibido, Endereço Exibido
 
-### Tabela `integracoes` (já cobre estrutura de gateways de pagamento — Aba 4)
-Tem: `provider, status, settings, active...` → suporta `asaas`, `mercado_pago` como novos `provider`. **Sem migration nova**, só UI.
+Remover dos formulários (campos do banco permanecem para não quebrar nada):
+- Nome Fantasia, Inscrição Estadual, E-mail Financeiro, E-mail Operacional
+- E-mail Financeiro/Operacional passam a ser preenchidos automaticamente com o E-mail Principal no save (para manter compat. com Asaas).
 
-### Assinatura (Aba 5)
-**Não existe** tabela de plano/assinatura. Para entregar somente leitura sem inventar billing:
-- Criar `company_subscriptions` (1 por empresa): `plano (base|pro|max)`, `ciclo (mensal|anual)`, `status`, `proxima_cobranca`, `valor`, `limite_pedidos_mes`, `limite_conversas_mes`, `limite_usuarios`
-- Contadores derivados em runtime (count em `pedidos`, `whatsapp_conversas`, `profiles` do mês corrente) — **sem nova tabela de uso**.
+Adicionar `*` nos obrigatórios + helper text:
+> "Esses dados são necessários para emissão de cobranças e ativação da assinatura."
 
-### Privacidade (Aba 7)
-- Links: estáticos no frontend (Termos, Privacidade, Cookies)
-- Solicitações: criar tabela `privacy_requests` (`tipo: exportacao|encerramento`, `status`, `solicitado_por`, `company_id`)
+## 5. Validação client-side antes do Asaas
+Na tela `escolher-plano`, antes de chamar `createPixForIntent`, validar localmente:
+- Razão Social, CNPJ, Telefone, E-mail (da empresa)
+- CPF, Nome, Telefone (do responsável)
 
----
+Se algum faltar: **não chamar Asaas**. Mostrar toast/inline error com link "Completar dados em Configurações → Empresa". (O backend continua validando como já faz hoje — não alteramos lógica de negócio.)
 
-## 2. Migrations propostas (3 migrations)
+## 6. Onboarding/UX geral
+- Reduzir cliques: trial expirado + admin → CTA direto para Configurações → Assinatura.
+- Banner de trial existente mantido.
+- Sem novas rotas; sem mudança de banco.
 
-### Migration 1 — Expandir `companies`
-```sql
-ALTER TABLE public.companies
-  ADD COLUMN razao_social text,
-  ADD COLUMN cnpj text,
-  ADD COLUMN inscricao_estadual text,
-  ADD COLUMN email_financeiro text,
-  ADD COLUMN email_operacional text,
-  ADD COLUMN responsavel_nome text,
-  ADD COLUMN responsavel_cpf text,
-  ADD COLUMN responsavel_telefone text,
-  ADD COLUMN nome_publico text,
-  ADD COLUMN telefone_publico text,
-  ADD COLUMN endereco_publico text,
-  ADD COLUMN tempo_entrega_min integer NOT NULL DEFAULT 45,
-  ADD COLUMN raio_entrega_km numeric NOT NULL DEFAULT 0,
-  ADD COLUMN canais_ativos jsonb NOT NULL DEFAULT
-    '{"whatsapp":true,"balcao":true,"mesa":true,"delivery":true,"ifood":false}'::jsonb,
-  ADD COLUMN mensagens_operacionais jsonb NOT NULL DEFAULT
-    '{"loja_fechada":"","recebido":"","preparo":"","pronto":"","finalizado":""}'::jsonb;
-```
-RLS já existe em `companies` — sem alteração.
+## Impacto
 
-### Migration 2 — `company_subscriptions`
-Tabela 1:1 com `companies`, RLS por `company_id`, GRANTs autenticated+service_role, política "Members view own subscription", "Super admins manage".
+**Arquivos a alterar:**
+- `src/components/AppLayout.tsx` — remover item Assinatura do menu admin.
+- `src/routes/_app/configuracoes.tsx` — simplificar aba Empresa + reformular aba Assinatura como central.
+- `src/routes/_app/assinatura.escolher-plano.tsx` — validação pré-Asaas + reaproveitar cobrança pendente.
+- `src/lib/asaas-payments.ts` (ou `asaas.functions.ts`) — `createPixForIntent` retorna cobrança pendente existente em vez de criar nova.
+- `src/lib/assinaturas.functions.ts` — nova server fn `getBillingOverview` (plano + consumo + excedentes + histórico).
+- `src/components/TrialExpiredOverlay.tsx` — CTA aponta para `/configuracoes?tab=assinatura`.
 
-### Migration 3 — `privacy_requests`
-`id, company_id, tipo, status, solicitado_por, created_at, resolved_at, notes`. RLS: admin da empresa cria/lê; super_admin gerencia.
+**Banco de dados:** zero migrações. Campos antigos (`inscricao_estadual`, `nome_fantasia` se existir, `email_financeiro`, `email_operacional`) permanecem; apenas saem do formulário e são auto-preenchidos a partir do email principal no save.
 
----
+**Integrações Asaas:** nenhuma mudança de payload, endpoint ou ordem de chamadas. Único acréscimo é o curto-circuito "se já existe cobrança pendente, reutiliza" — não altera contrato com Asaas.
 
-## 3. Backend (server functions)
+**Antes → Depois:**
+- Antes: 2 entradas (menu + aba), formulário Empresa com ~12 campos misturados, sem visão de consumo, possibilidade de gerar Pix duplicado, mensagem "excedente" sem ação.
+- Depois: 1 entrada (Configurações → Assinatura), formulário Empresa em 4 blocos enxutos com obrigatórios marcados, central de assinatura com plano + consumo + excedentes acionáveis + histórico + preparação cartão, Pix pendente reutilizado.
 
-Arquivo novo: `src/lib/configuracoes.functions.ts`
-- `getConfiguracoes` — retorna company + subscription + conexao whatsapp + fluxo chatbot
-- `updateEmpresa` (Aba 1) — dados/endereço/responsável/público
-- `updateOperacao` (Aba 2) — canais, funcionamento, horários, entrega, mensagens operacionais
-- `updateWhatsappConfig` (Aba 3) — settings jsonb (bot, humano, auto-status)
-- `updatePagamentos` (Aba 4) — reusar `updateCompanyPagamentos` existente
-- `updateChatbot` (Aba 6) — usa `whatsapp_fluxos`
-- `requestPrivacyAction` (Aba 7) — cria `privacy_requests`
-
-Todas com `requireSupabaseAuth` + checagem `isAdmin || isSuperAdmin` para escrita; atendente só lê.
-Validação com Zod: CNPJ (14), CPF (11), email, telefone, CEP (8), horários `HH:MM`.
-
----
-
-## 4. Frontend
-
-Nova rota: `src/routes/_app/configuracoes.tsx`
-- Componente único com `<Tabs>` (shadcn) — 7 abas
-- Subcomponentes por aba em `src/components/configuracoes/*` (Empresa, Operacao, Whatsapp, Pagamentos, Assinatura, Chatbot, Privacidade)
-- Cada aba salva isoladamente, `toast.success/error`, invalidate query
-- Atendente: campos `disabled`; Cozinha: redireciona p/ `/dashboard`
-- Reaproveitar tokens do design system (sem cores cruas)
-- Item na sidebar (`AppLayout`): "Configurações" (ícone `Settings`) — visível p/ admin/superadmin
-
----
-
-## 5. Itens explicitamente NÃO incluídos
-- Billing real / cobrança (Aba 5 é leitura, dados populados manualmente / via super admin)
-- Integração Meta para health score / qualidade do número (placeholders)
-- IA do chatbot / fluxos avançados (só estrutura base via `whatsapp_fluxos`)
-- Integração financeira Asaas/MP (só registro em `integracoes`)
-- Export real de dados (Aba 7 gera apenas a solicitação)
-
----
-
-## 6. Compatibilidade
-- `meu-restaurante.tsx` continua funcionando (subconjunto destes campos); pode ser removido em passo futuro ou marcado como legacy. **Não removerei nesta entrega** para evitar regressão.
-
----
-
-## Aprovação
-Aguardo seu OK para:
-1. Rodar as 3 migrations
-2. Criar `configuracoes.functions.ts`
-3. Criar rota + componentes de abas
-4. Adicionar item na sidebar
+Confirme para eu executar.
