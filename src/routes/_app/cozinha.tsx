@@ -362,15 +362,102 @@ function Cozinha() {
                               Marcar pronto
                             </button>
                           )}
-                          {col.key === "pronto" && (
-                            <Link
-                              to="/pedidos/$id"
-                              params={{ id: p.id }}
-                              className={`mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold ${dark ? "border-white/20 text-white hover:bg-white/5" : "border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`}
-                            >
-                              <ExternalLink className="h-4 w-4" /> Ver detalhes
-                            </Link>
-                          )}
+                          {col.key === "pronto" && (() => {
+                            const pago = p.status_financeiro === "pago";
+                            const btnPrimary = "flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 text-xs font-bold text-primary-foreground";
+                            const btnSec = `flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-semibold ${dark ? "border-white/20 text-white hover:bg-white/5" : "border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`;
+                            return (
+                              <div className="mt-3 space-y-2">
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase">
+                                  {pago ? (
+                                    <span className="rounded bg-emerald-500 text-white px-1.5 py-0.5">Pago</span>
+                                  ) : (
+                                    <span className="rounded bg-amber-500 text-white px-1.5 py-0.5">Pgto pendente</span>
+                                  )}
+                                  {p.fase_canal && (
+                                    <span className={dark ? "text-emerald-300" : "text-emerald-700"}>
+                                      {p.fase_canal === "em_consumo" ? "Em consumo" :
+                                       p.fase_canal === "aguardando_retirada" ? "Aguardando retirada" :
+                                       p.fase_canal === "saiu_entrega" ? "Saiu p/ entrega" :
+                                       p.fase_canal === "retirado" ? "Retirado" :
+                                       p.fase_canal === "entregue" ? "Entregue" : p.fase_canal}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {!pago && canMarkPago && p.status_financeiro !== "cancelado" && (
+                                  <button
+                                    onClick={() => pagoM.mutate(p.id)}
+                                    disabled={pagoM.isPending}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-2.5 py-2 text-xs font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
+                                  >
+                                    <BadgeCheck className="h-3.5 w-3.5" /> Marcar como pago
+                                  </button>
+                                )}
+
+                                <div className="flex flex-wrap gap-2">
+                                  {p.canal === "salao" && (
+                                    <>
+                                      {p.fase_canal !== "em_consumo" && (
+                                        <button onClick={() => faseM.mutate({ id: p.id, fase: "em_consumo" })} className={btnSec}>
+                                          <Utensils className="h-3.5 w-3.5" /> Servir mesa
+                                        </button>
+                                      )}
+                                      <button onClick={() => faseM.mutate({ id: p.id, fase: null, finalizar: true })} className={btnPrimary}>
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> Servido
+                                      </button>
+                                    </>
+                                  )}
+                                  {p.canal === "balcao" && (
+                                    <button onClick={() => faseM.mutate({ id: p.id, fase: "entregue", finalizar: true })} className={btnPrimary}>
+                                      <ShoppingBag className="h-3.5 w-3.5" /> Entregar
+                                    </button>
+                                  )}
+                                  {p.canal === "retirada" && (
+                                    <>
+                                      {p.fase_canal !== "aguardando_retirada" && (
+                                        <button onClick={() => faseM.mutate({ id: p.id, fase: "aguardando_retirada" })} className={btnSec}>
+                                          <PackageCheck className="h-3.5 w-3.5" /> Aguardando retirada
+                                        </button>
+                                      )}
+                                      <button onClick={() => faseM.mutate({ id: p.id, fase: "retirado", finalizar: true })} className={btnPrimary}>
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> Retirado
+                                      </button>
+                                    </>
+                                  )}
+                                  {p.canal === "delivery" && (
+                                    <>
+                                      {p.fase_canal !== "saiu_entrega" ? (
+                                        <button onClick={() => faseM.mutate({ id: p.id, fase: "saiu_entrega" })} className={btnSec}>
+                                          <Bike className="h-3.5 w-3.5" /> Saiu p/ entrega
+                                        </button>
+                                      ) : (
+                                        <button onClick={() => faseM.mutate({ id: p.id, fase: "entregue", finalizar: true })} className={btnPrimary}>
+                                          <CheckCircle2 className="h-3.5 w-3.5" /> Entregue
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+
+                                  <button
+                                    onClick={() => voltarM.mutate(p.id)}
+                                    title="Voltar para cozinha"
+                                    className={`inline-flex items-center justify-center rounded-lg border px-2.5 py-2 text-xs font-semibold ${dark ? "border-white/20 text-white hover:bg-white/5" : "border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`}
+                                  >
+                                    <Undo2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+
+                                <Link
+                                  to="/pedidos/$id"
+                                  params={{ id: p.id }}
+                                  className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs ${dark ? "text-zinc-400 hover:text-white" : "text-zinc-500 hover:text-zinc-700"}`}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" /> Ver detalhes
+                                </Link>
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })
