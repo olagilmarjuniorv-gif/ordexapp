@@ -9,7 +9,9 @@ import {
   CheckCircle2,
   ChevronLeft,
   Copy,
+  CreditCard,
   Loader2,
+  QrCode,
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -27,6 +29,7 @@ import {
   getSubscriptionPaymentStatus,
   type PixPaymentDTO,
 } from "@/lib/pix.functions";
+import { createCardCheckoutForIntent } from "@/lib/card.functions";
 import { getMyPendingCobranca } from "@/lib/assinaturas.functions";
 
 const BILLING_LABELS: Record<string, string> = {
@@ -69,12 +72,14 @@ function EscolherPlanoPage() {
   const [step, setStep] = useState<Step>(1);
   const [plano, setPlano] = useState<PlanoId | null>(null);
   const [ciclo, setCiclo] = useState<Ciclo>("mensal");
+  const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
   const [pix, setPix] = useState<PixPaymentDTO | null>(null);
 
   const createFn = useServerFn(createSubscriptionIntent);
   const getIntentFn = useServerFn(getMySubscriptionIntent);
   const checkBillingFn = useServerFn(checkBillingReadiness);
   const createPixFn = useServerFn(createPixForIntent);
+  const createCardFn = useServerFn(createCardCheckoutForIntent);
   const getPendingCobFn = useServerFn(getMyPendingCobranca);
 
   const intentQuery = useQuery({
@@ -96,15 +101,26 @@ function EscolherPlanoPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (input: { plano: PlanoId; ciclo: Ciclo }) => {
-      const intent = await createFn({ data: input });
-      const pixData = await createPixFn({ data: { intentId: (intent as any).id } });
-      return pixData;
+    mutationFn: async (input: { plano: PlanoId; ciclo: Ciclo; metodo: "pix" | "cartao" }) => {
+      const intent = await createFn({ data: { plano: input.plano, ciclo: input.ciclo } });
+      const intentId = (intent as any).id;
+      if (input.metodo === "cartao") {
+        const card = await createCardFn({ data: { intentId } });
+        return { kind: "cartao" as const, invoice_url: card.invoice_url };
+      }
+      const pixData = await createPixFn({ data: { intentId } });
+      return { kind: "pix" as const, pix: pixData };
     },
     onSuccess: (data) => {
-      setPix(data);
-      setStep(4);
       qc.invalidateQueries({ queryKey: ["my-subscription-intent"] });
+      qc.invalidateQueries({ queryKey: ["my-pending-cobranca"] });
+      if (data.kind === "cartao") {
+        toast.success("Redirecionando para o checkout seguro do Asaas…");
+        window.location.href = data.invoice_url;
+        return;
+      }
+      setPix(data.pix);
+      setStep(4);
     },
     onError: (e: any) => {
       const msg =
@@ -150,6 +166,13 @@ function EscolherPlanoPage() {
             size="sm"
             onClick={async () => {
               try {
+                const pend: any = pendingCobQuery.data;
+                const meta = (pend?.metadata ?? {}) as Record<string, any>;
+                const invoiceUrl = meta.invoice_url ?? meta.asaas_invoice_url ?? null;
+                if (pend?.payment_method === "cartao" && invoiceUrl) {
+                  window.location.href = invoiceUrl;
+                  return;
+                }
                 const pixData = await createPixFn({ data: { intentId: (intentQuery.data as any).id } });
                 setPix(pixData);
                 setStep(4);
@@ -177,13 +200,15 @@ function EscolherPlanoPage() {
         <Step3
           plano={planoEscolhido}
           ciclo={ciclo}
+          metodo={metodo}
+          onMetodoChange={setMetodo}
           onBack={() => setStep(2)}
           onConfirm={() => {
             if (billingQuery.data && !billingQuery.data.ok) {
               toast.error("Complete os dados fiscais da empresa antes de continuar.");
               return;
             }
-            mutation.mutate({ plano: planoEscolhido.id, ciclo });
+            mutation.mutate({ plano: planoEscolhido.id, ciclo, metodo });
           }}
           saving={mutation.isPending}
           billingMissing={billingQuery.data && !billingQuery.data.ok ? billingQuery.data.missing : null}
@@ -336,10 +361,12 @@ function CicloCard({ titulo, descricao, selected, onSelect, badge }: { id: Ciclo
 }
 
 function Step3({
-  plano, ciclo, onBack, onConfirm, saving, billingMissing, onGoToConfig,
+  plano, ciclo, metodo, onMetodoChange, onBack, onConfirm, saving, billingMissing, onGoToConfig,
 }: {
   plano: PlanoDef;
   ciclo: Ciclo;
+  metodo: "pix" | "cartao";
+  onMetodoChange: (m: "pix" | "cartao") => void;
   onBack: () => void;
   onConfirm: () => void;
   saving: boolean;
@@ -347,6 +374,7 @@ function Step3({
   onGoToConfig: () => void;
 }) {
   const blocked = !!billingMissing && billingMissing.length > 0;
+  const ctaLabel = metodo === "cartao" ? "Pagar com Cartão" : "Continuar";
   return (
     <div className="space-y-6">
       <Card>
@@ -359,10 +387,29 @@ function Step3({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <ResumoItem label="Ciclo" value={ciclo === "anual" ? "Anual" : "Mensal"} />
-            <ResumoItem label="Forma de pagamento" value="PIX" />
             <ResumoItem label="Limite de pedidos" value={plano.pedidos} />
             <ResumoItem label="Conversas WhatsApp" value={plano.conversas} />
             <ResumoItem label="Usuários" value={plano.usuarios} />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Forma de pagamento</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetodoCard
+                selected={metodo === "pix"}
+                onSelect={() => onMetodoChange("pix")}
+                icon={<QrCode className="h-5 w-5" />}
+                titulo="PIX"
+                descricao="QR Code instantâneo. Confirmação em segundos."
+              />
+              <MetodoCard
+                selected={metodo === "cartao"}
+                onSelect={() => onMetodoChange("cartao")}
+                icon={<CreditCard className="h-5 w-5" />}
+                titulo="Cartão de Crédito"
+                descricao="Checkout seguro no ambiente Asaas."
+              />
+            </div>
           </div>
 
           {blocked ? (
@@ -384,11 +431,16 @@ function Step3({
                 Ir para Configurações → Empresa
               </Button>
             </div>
+          ) : metodo === "cartao" ? (
+            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+              Ao continuar você será redirecionado para o checkout seguro do Asaas,
+              onde informa os dados do cartão. O SaiuPedido nunca recebe nem armazena
+              esses dados. Sua assinatura é ativada automaticamente após a aprovação.
+            </div>
           ) : (
             <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-              Ao continuar geramos uma cobrança PIX (ambiente Sandbox) e exibimos o QR Code
-              para pagamento. Sua assinatura é ativada automaticamente assim que o pagamento
-              for confirmado.
+              Ao continuar geramos uma cobrança PIX e exibimos o QR Code para pagamento.
+              Sua assinatura é ativada automaticamente assim que o pagamento for confirmado.
             </div>
           )}
         </CardContent>
@@ -399,10 +451,41 @@ function Step3({
           <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
         <Button onClick={onConfirm} disabled={saving || blocked}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : ctaLabel}
         </Button>
       </div>
     </div>
+  );
+}
+
+function MetodoCard({
+  selected, onSelect, icon, titulo, descricao,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  icon: React.ReactNode;
+  titulo: string;
+  descricao: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "text-left rounded-xl border bg-card p-4 transition-all flex gap-3 items-start",
+        "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40",
+        selected ? "border-primary ring-2 ring-primary/30" : "border-border",
+      )}
+    >
+      <div className={cn("mt-0.5", selected ? "text-primary" : "text-muted-foreground")}>{icon}</div>
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">{titulo}</h4>
+          {selected && <Check className="h-4 w-4 text-primary" />}
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
+      </div>
+    </button>
   );
 }
 

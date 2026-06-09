@@ -581,6 +581,15 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
     return "bg-muted text-muted-foreground";
   };
 
+  const paymentMethodLabel = (m: string | null | undefined) => {
+    if (!m) return "—";
+    const k = m.toLowerCase();
+    if (k === "pix") return "PIX";
+    if (k === "cartao" || k === "credit_card" || k === "card") return "Cartão";
+    if (k === "boleto") return "Boleto";
+    return k.charAt(0).toUpperCase() + k.slice(1);
+  };
+
   const cobrancas = (cobQuery.data ?? []) as any[];
 
   return (
@@ -652,23 +661,30 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
       </Section>
 
       <Section title="Forma de pagamento">
+        <p className="text-xs text-muted-foreground mb-3">
+          Escolha como pagar na próxima cobrança. A forma é definida no momento de iniciar o pagamento.
+        </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-md border border-primary bg-primary/5 px-3 py-2 cursor-pointer">
-            <input type="radio" name="forma_pagamento" defaultChecked />
+          <Link
+            to="/assinatura/escolher-plano"
+            className="flex items-center gap-3 rounded-md border border-border px-3 py-2 hover:border-primary/50 hover:bg-primary/5 transition"
+          >
             <div>
               <div className="text-sm font-medium">PIX</div>
-              <div className="text-xs text-muted-foreground">Disponível agora</div>
+              <div className="text-xs text-muted-foreground">QR Code instantâneo</div>
             </div>
-          </label>
-          <label className="flex items-center gap-3 rounded-md border border-border px-3 py-2 opacity-60 cursor-not-allowed">
-            <input type="radio" name="forma_pagamento" disabled />
+          </Link>
+          <Link
+            to="/assinatura/escolher-plano"
+            className="flex items-center gap-3 rounded-md border border-border px-3 py-2 hover:border-primary/50 hover:bg-primary/5 transition"
+          >
             <div>
               <div className="text-sm font-medium flex items-center gap-2">
                 <CreditCard className="h-4 w-4" /> Cartão de Crédito
               </div>
-              <div className="text-xs text-muted-foreground">Em breve</div>
+              <div className="text-xs text-muted-foreground">Checkout seguro Asaas</div>
             </div>
-          </label>
+          </Link>
         </div>
       </Section>
 
@@ -702,7 +718,7 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
                           {cobStatusLabel(c.status)}
                         </span>
                       </td>
-                      <td className="py-2 pr-3 uppercase">{c.payment_method ?? "—"}</td>
+                      <td className="py-2 pr-3">{paymentMethodLabel(c.payment_method)}</td>
                       <td className="py-2 pr-3">
                         {url ? (
                           <a href={url} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 hover:underline">

@@ -285,3 +285,122 @@ export async function createPixPayment(intentId: string): Promise<{
     vencimento: dueDate,
   };
 }
+
+// ---------- CARTÃO DE CRÉDITO (checkout hospedado Asaas) ----------
+
+/**
+ * Cria cobrança CREDIT_CARD no Asaas e retorna a invoiceUrl (checkout hospedado).
+ * SaiuPedido NÃO captura dados de cartão — o cliente preenche tudo no domínio Asaas.
+ * Reusa cobrança existente (mesma intent) quando possível.
+ * NÃO ativa plano nem altera company_subscriptions.status — webhook cuida disso.
+ */
+export async function createCardPayment(intentId: string): Promise<{
+  payment_id: string;
+  invoice_url: string;
+  valor: number;
+  vencimento: string;
+}> {
+  const { data: intent, error: iErr } = await supabaseAdmin
+    .from("subscription_intents")
+    .select("*")
+    .eq("id", intentId)
+    .maybeSingle();
+  if (iErr) throw new Error(iErr.message);
+  if (!intent) throw new Error("Intent não encontrada");
+  if (intent.status !== "aguardando_pagamento") {
+    throw new Error(`Intent não está aguardando pagamento (status=${intent.status})`);
+  }
+
+  const { data: plano, error: pErr } = await supabaseAdmin
+    .from("planos_catalogo")
+    .select("valor_mensal, valor_anual")
+    .eq("codigo", intent.plano)
+    .maybeSingle();
+  if (pErr) throw new Error(pErr.message);
+  if (!plano) throw new Error("Plano não encontrado no catálogo");
+
+  const valor = Number(intent.ciclo === "anual" ? plano.valor_anual : plano.valor_mensal);
+  if (!valor || valor <= 0) throw new Error("Valor do plano inválido");
+
+  // Anti-duplicidade: reaproveita a cobrança Asaas vinculada à intent quando reutilizável.
+  const intentMeta = (intent.metadata as Record<string, unknown> | null) ?? {};
+  const existingPaymentId = (intentMeta.asaas_payment_id as string | undefined) ?? null;
+  if (existingPaymentId) {
+    try {
+      const existing = await asaasFetch<AsaasPayment>(`/payments/${existingPaymentId}`, { method: "GET" });
+      const reusable =
+        existing &&
+        ["PENDING", "AWAITING_PAYMENT", "OVERDUE"].includes(String(existing.status).toUpperCase()) &&
+        !!existing.invoiceUrl;
+      if (reusable) {
+        return {
+          payment_id: existing.id,
+          invoice_url: existing.invoiceUrl!,
+          valor: Number(existing.value ?? valor),
+          vencimento: existing.dueDate ?? addDaysISO(3),
+        };
+      }
+    } catch {
+      // segue criando nova
+    }
+  }
+
+  const customerId = await ensureAsaasCustomer(intent.company_id);
+  const dueDate = addDaysISO(3);
+
+  const payment = await asaasFetch<AsaasPayment>("/payments", {
+    method: "POST",
+    body: {
+      customer: customerId,
+      billingType: "CREDIT_CARD",
+      value: valor,
+      dueDate,
+      description: `SaiuPedido — plano ${intent.plano} (${intent.ciclo})`,
+      externalReference: `intent:${intent.id}`,
+    },
+  });
+
+  if (!payment?.invoiceUrl) {
+    throw new AsaasError("Asaas não retornou invoiceUrl para CREDIT_CARD", 502, payment);
+  }
+
+  const { data: sub } = await supabaseAdmin
+    .from("company_subscriptions")
+    .select("id")
+    .eq("company_id", intent.company_id)
+    .maybeSingle();
+
+  await upsertCobranca({
+    company_id: intent.company_id,
+    subscription_id: sub?.id ?? null,
+    external_id: payment.id,
+    status: payment.status?.toLowerCase() ?? "pendente",
+    payment_method: "cartao",
+    valor,
+    vencimento: dueDate,
+    ciclo: intent.ciclo,
+    metadata: {
+      intent_id: intent.id,
+      plano: intent.plano,
+      invoice_url: payment.invoiceUrl,
+    },
+  });
+
+  await supabaseAdmin
+    .from("subscription_intents")
+    .update({
+      metadata: {
+        ...((intent.metadata as Record<string, unknown>) ?? {}),
+        asaas_payment_id: payment.id,
+        asaas_invoice_url: payment.invoiceUrl,
+      } as never,
+    })
+    .eq("id", intent.id);
+
+  return {
+    payment_id: payment.id,
+    invoice_url: payment.invoiceUrl,
+    valor,
+    vencimento: dueDate,
+  };
+}
