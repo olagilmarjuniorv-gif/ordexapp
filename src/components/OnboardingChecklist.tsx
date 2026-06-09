@@ -126,14 +126,7 @@ function OnboardingChecklistInner() {
   const getFn = useServerFn(getOnboardingStatus);
   const { data, isLoading, error } = useQuery({
     queryKey: ["onboarding-status"],
-    queryFn: async () => {
-      try {
-        return await getFn();
-      } catch (e) {
-        if (typeof console !== "undefined") console.warn("onboarding queryFn:", e);
-        return null;
-      }
-    },
+    queryFn: () => getFn(),
     staleTime: 10_000,
     retry: 1,
     retryDelay: 500,
