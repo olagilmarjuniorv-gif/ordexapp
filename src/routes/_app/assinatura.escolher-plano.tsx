@@ -9,7 +9,9 @@ import {
   CheckCircle2,
   ChevronLeft,
   Copy,
+  CreditCard,
   Loader2,
+  QrCode,
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -27,6 +29,7 @@ import {
   getSubscriptionPaymentStatus,
   type PixPaymentDTO,
 } from "@/lib/pix.functions";
+import { createCardCheckoutForIntent } from "@/lib/card.functions";
 import { getMyPendingCobranca } from "@/lib/assinaturas.functions";
 
 const BILLING_LABELS: Record<string, string> = {
