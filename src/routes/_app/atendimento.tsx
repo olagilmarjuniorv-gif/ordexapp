@@ -5,7 +5,6 @@ import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { MensagensPanel } from "./mensagens";
 import { ClientesPanel } from "./clientes";
-import { HistoricoPanel } from "./historico";
 
 export const Route = createFileRoute("/_app/atendimento")({
   component: AtendimentoPage,
