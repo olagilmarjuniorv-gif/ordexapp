@@ -85,7 +85,7 @@ function ConectoresPage() {
   );
 }
 
-function WhatsappCard() {
+export function WhatsappCard() {
   const getConn = useServerFn(getWhatsappConexao);
   const getStats = useServerFn(getWhatsappStats);
   const connect = useServerFn(connectWhatsapp);
