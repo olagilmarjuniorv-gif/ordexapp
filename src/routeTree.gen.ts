@@ -46,6 +46,7 @@ import { Route as AppPedidosIdRouteImport } from './routes/_app/pedidos/$id'
 import { Route as AppMesasIdRouteImport } from './routes/_app/mesas/$id'
 import { Route as AppAssinaturaEscolherPlanoRouteImport } from './routes/_app/assinatura.escolher-plano'
 import { Route as ApiPublicWebhooksWhatsappRouteImport } from './routes/api/public/webhooks/whatsapp'
+import { Route as ApiPublicWebhooksAsaasRouteImport } from './routes/api/public/webhooks/asaas'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -233,6 +234,11 @@ const ApiPublicWebhooksWhatsappRoute =
     path: '/api/public/webhooks/whatsapp',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksAsaasRoute = ApiPublicWebhooksAsaasRouteImport.update({
+  id: '/api/public/webhooks/asaas',
+  path: '/api/public/webhooks/asaas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/mesas/': typeof AppMesasIndexRoute
   '/pedidos/': typeof AppPedidosIndexRoute
   '/suporte/': typeof AppSuporteIndexRoute
+  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRoutesByTo {
@@ -308,6 +315,7 @@ export interface FileRoutesByTo {
   '/mesas': typeof AppMesasIndexRoute
   '/pedidos': typeof AppPedidosIndexRoute
   '/suporte': typeof AppSuporteIndexRoute
+  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRoutesById {
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/_app/mesas/': typeof AppMesasIndexRoute
   '/_app/pedidos/': typeof AppPedidosIndexRoute
   '/_app/suporte/': typeof AppSuporteIndexRoute
+  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRouteTypes {
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/mesas/'
     | '/pedidos/'
     | '/suporte/'
+    | '/api/public/webhooks/asaas'
     | '/api/public/webhooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/mesas'
     | '/pedidos'
     | '/suporte'
+    | '/api/public/webhooks/asaas'
     | '/api/public/webhooks/whatsapp'
   id:
     | '__root__'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/_app/mesas/'
     | '/_app/pedidos/'
     | '/_app/suporte/'
+    | '/api/public/webhooks/asaas'
     | '/api/public/webhooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
@@ -477,6 +489,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ImprimirMesaIdRoute: typeof ImprimirMesaIdRoute
   ImprimirPedidoIdRoute: typeof ImprimirPedidoIdRoute
+  ApiPublicWebhooksAsaasRoute: typeof ApiPublicWebhooksAsaasRoute
   ApiPublicWebhooksWhatsappRoute: typeof ApiPublicWebhooksWhatsappRoute
 }
 
@@ -741,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/asaas': {
+      id: '/api/public/webhooks/asaas'
+      path: '/api/public/webhooks/asaas'
+      fullPath: '/api/public/webhooks/asaas'
+      preLoaderRoute: typeof ApiPublicWebhooksAsaasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -817,6 +837,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ImprimirMesaIdRoute: ImprimirMesaIdRoute,
   ImprimirPedidoIdRoute: ImprimirPedidoIdRoute,
+  ApiPublicWebhooksAsaasRoute: ApiPublicWebhooksAsaasRoute,
   ApiPublicWebhooksWhatsappRoute: ApiPublicWebhooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
