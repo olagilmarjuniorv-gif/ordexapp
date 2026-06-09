@@ -200,13 +200,15 @@ function EscolherPlanoPage() {
         <Step3
           plano={planoEscolhido}
           ciclo={ciclo}
+          metodo={metodo}
+          onMetodoChange={setMetodo}
           onBack={() => setStep(2)}
           onConfirm={() => {
             if (billingQuery.data && !billingQuery.data.ok) {
               toast.error("Complete os dados fiscais da empresa antes de continuar.");
               return;
             }
-            mutation.mutate({ plano: planoEscolhido.id, ciclo });
+            mutation.mutate({ plano: planoEscolhido.id, ciclo, metodo });
           }}
           saving={mutation.isPending}
           billingMissing={billingQuery.data && !billingQuery.data.ok ? billingQuery.data.missing : null}
