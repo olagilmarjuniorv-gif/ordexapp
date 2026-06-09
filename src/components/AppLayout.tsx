@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState, Navigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Users, ShoppingBag, LogOut, Settings,
-  ShieldCheck, Building2, ChefHat, LayoutGrid, History, BookOpen, MessageCircle, LifeBuoy, Plug, Wallet, DollarSign, ClipboardList, CreditCard,
+  LayoutDashboard, ShoppingBag, LogOut, Settings,
+  ChefHat, LayoutGrid, BookOpen, MessageCircle, DollarSign, ClipboardList, CreditCard, Building2, ShieldCheck, LifeBuoy, History, Plug, Wallet,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -73,8 +73,7 @@ export function AppLayout() {
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
       { to: "/expedicao", label: "Expedição", icon: ClipboardList },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
-      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
-      { to: "/clientes", label: "Clientes", icon: Users },
+      { to: "/atendimento", label: "Atendimento", icon: MessageCircle },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
     ];
   } else if (isSuperAdmin) {
@@ -92,22 +91,15 @@ export function AppLayout() {
     ];
   } else if (isAdmin) {
     nav = [
-      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
       { to: "/expedicao", label: "Expedição", icon: ClipboardList },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/cozinha", label: "Cozinha", icon: ChefHat },
       { to: "/cardapio", label: "Cardápio", icon: BookOpen },
-      { to: "/clientes", label: "Clientes", icon: Users },
-      { to: "/mensagens", label: "Mensagens", icon: MessageCircle },
-      { to: "/conectores", label: "Conectores", icon: Plug },
-      
-      { to: "/configuracoes", label: "Configurações", icon: Settings },
-      { to: "/pagamentos", label: "Pagamentos", icon: Wallet },
+      { to: "/atendimento", label: "Atendimento", icon: MessageCircle },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
-      { to: "/suporte", label: "Suporte", icon: LifeBuoy },
-      { to: "/historico", label: "Histórico", icon: History },
-      { to: "/usuarios", label: "Usuários", icon: ShieldCheck },
+      { to: "/configuracoes", label: "Configurações", icon: Settings },
     ];
   } else {
     nav = [{ to: "/dashboard", label: "Início", icon: LayoutDashboard }];
