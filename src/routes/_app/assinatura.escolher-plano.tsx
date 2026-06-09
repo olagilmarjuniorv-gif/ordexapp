@@ -126,8 +126,16 @@ function EscolherPlanoPage() {
           plano={planoEscolhido}
           ciclo={ciclo}
           onBack={() => setStep(2)}
-          onConfirm={() => mutation.mutate({ plano: planoEscolhido.id, ciclo })}
+          onConfirm={() => {
+            if (billingQuery.data && !billingQuery.data.ok) {
+              toast.error("Complete os dados fiscais da empresa antes de continuar.");
+              return;
+            }
+            mutation.mutate({ plano: planoEscolhido.id, ciclo });
+          }}
           saving={mutation.isPending}
+          billingMissing={billingQuery.data && !billingQuery.data.ok ? billingQuery.data.missing : null}
+          onGoToConfig={() => navigate({ to: "/configuracoes" })}
         />
       )}
     </div>
