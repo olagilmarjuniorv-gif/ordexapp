@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy, MessageSquare, Activity, TrendingDown, Clock } from "lucide-react";
+import { ArrowUpRight, ShoppingBag, TrendingUp, Users, Plus, Building2, ShieldCheck, BadgeCheck, Loader2, ChefHat, AlarmClock, LayoutGrid, Trophy, MessageSquare, Activity, TrendingDown, Clock, Utensils, Bike, PackageCheck, CheckCircle2, Wallet, CircleDollarSign, AlertTriangle, MessageCircle, WifiOff } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { getCompanyDashboardData } from "@/lib/dashboard.functions";
 import { getCompanyById } from "@/lib/companies.functions";
