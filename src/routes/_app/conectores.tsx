@@ -295,7 +295,7 @@ function healthMeta(h: Health) {
   }
 }
 
-function IfoodCard({ integ, onChange }: { integ: any; onChange: () => void }) {
+export function IfoodCard({ integ, onChange }: { integ: any; onChange: () => void }) {
   const [merchantId, setMerchantId] = useState(integ?.merchant_id ?? "");
   const [showWizard, setShowWizard] = useState(false);
   const connect = useServerFn(connectIfood);
