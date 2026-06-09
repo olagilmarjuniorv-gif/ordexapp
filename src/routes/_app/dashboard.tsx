@@ -701,6 +701,10 @@ function CompanyDashboard() {
 
       <TrialBanner trial={(cfg as any)?.trial ?? null} />
 
+      {/* Onboarding guiado — fica acima de tudo até 100% concluído */}
+      <OnboardingChecklist />
+
+
       {/* BLOCO 8 — Alertas */}
       <AlertasExecutivos
         atrasados={data.atrasados}
