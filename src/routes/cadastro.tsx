@@ -77,8 +77,27 @@ function CadastroPage() {
       toast.success("Conta criada! Bem-vindo ao SaiuPedido.");
       navigate({ to: "/" });
     } catch (err: any) {
-      const msg = err?.message ?? "Não foi possível criar sua conta";
-      toast.error(msg.includes("já está cadastrado") ? msg : "Não foi possível criar sua conta. Tente novamente.");
+      console.error("[cadastro] signup failed", err);
+      const raw =
+        (typeof err?.message === "string" && err.message) ||
+        (typeof err?.body === "string" && err.body) ||
+        (typeof err === "string" && err) ||
+        "";
+      const friendly =
+        raw.includes("já está cadastrado")
+          ? "Este e-mail já está cadastrado"
+          : raw.includes("Senha inválida")
+            ? "Senha inválida. Use pelo menos 6 caracteres."
+            : raw.includes("criar o restaurante")
+              ? "Não foi possível criar o restaurante. Tente novamente."
+              : raw.includes("criar o usuário")
+                ? "Não foi possível criar o usuário. Tente novamente."
+                : raw.includes("vincular usuário")
+                  ? "Não foi possível vincular o usuário à empresa."
+                  : raw.includes("permissões")
+                    ? "Não foi possível atribuir permissões à conta."
+                    : "Não foi possível criar sua conta. Tente novamente.";
+      toast.error(friendly);
     } finally {
       setLoading(false);
     }
