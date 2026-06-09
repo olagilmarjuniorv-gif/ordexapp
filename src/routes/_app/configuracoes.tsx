@@ -443,17 +443,17 @@ function AbaWhatsapp({ company, conexao, readOnly, onSaved }:
   };
   return (
     <div className="space-y-5">
-      <Section title="Integração">
-        <div className="grid gap-4 sm:grid-cols-2 text-sm">
-          <div><span className="text-muted-foreground">Número:</span> {conexao?.phone_number ?? "—"}</div>
-          <div><span className="text-muted-foreground">Phone Number ID:</span> {conexao?.phone_number_id ?? "—"}</div>
-          <div><span className="text-muted-foreground">Status:</span> {conexao?.status ?? "desconectado"}</div>
-          <div><span className="text-muted-foreground">Conectado em:</span> {conexao?.connected_at ? new Date(conexao.connected_at).toLocaleString("pt-BR") : "—"}</div>
-          <div><span className="text-muted-foreground">Última sincronização:</span> {conexao?.last_sync_at ? new Date(conexao.last_sync_at).toLocaleString("pt-BR") : "—"}</div>
+      <Section title="Conexão WhatsApp Business (Meta Cloud API)">
+        <p className="text-xs text-muted-foreground -mt-2">
+          Conecte, valide e monitore o número WhatsApp Business usado pelo SaiuPedido.
+          Toda a configuração da conexão fica aqui.
+        </p>
+        <div className="max-w-xl">
+          <WhatsappCard />
         </div>
       </Section>
 
-      <Section title="Recursos">
+      <Section title="Recursos do atendimento">
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="flex items-center justify-between rounded-md border border-border px-3 py-2">
             <span className="text-sm">Bot habilitado</span>
@@ -473,7 +473,7 @@ function AbaWhatsapp({ company, conexao, readOnly, onSaved }:
         </div>
       </Section>
 
-      <Section title="Indicadores">
+      <Section title="Indicadores Meta">
         <div className="grid gap-4 sm:grid-cols-3 text-sm">
           <div><span className="text-muted-foreground">Conversas no mês:</span> —</div>
           <div><span className="text-muted-foreground">Conversas disponíveis:</span> —</div>
