@@ -1,16 +1,18 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Save, Settings as SettingsIcon, Download, AlertTriangle } from "lucide-react";
+import { Loader2, Save, Settings as SettingsIcon, Download, AlertTriangle, CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import {
   getConfiguracoes, updateEmpresa, updateOperacao,
   updateWhatsappConfig, updateChatbot, createPrivacyRequest,
 } from "@/lib/configuracoes.functions";
 import { updateCompanyPagamentos, type HorariosFuncionamento } from "@/lib/companies.functions";
+import { listMyCobrancas } from "@/lib/assinaturas.functions";
 import { TrialBanner } from "@/components/TrialBanner";
 
 export const Route = createFileRoute("/_app/configuracoes")({
