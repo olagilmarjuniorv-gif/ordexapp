@@ -166,6 +166,13 @@ function EscolherPlanoPage() {
             size="sm"
             onClick={async () => {
               try {
+                const pend: any = pendingCobQuery.data;
+                const meta = (pend?.metadata ?? {}) as Record<string, any>;
+                const invoiceUrl = meta.invoice_url ?? meta.asaas_invoice_url ?? null;
+                if (pend?.payment_method === "cartao" && invoiceUrl) {
+                  window.location.href = invoiceUrl;
+                  return;
+                }
                 const pixData = await createPixFn({ data: { intentId: (intentQuery.data as any).id } });
                 setPix(pixData);
                 setStep(4);
