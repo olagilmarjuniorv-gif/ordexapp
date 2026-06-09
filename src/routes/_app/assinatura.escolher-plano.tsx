@@ -75,6 +75,7 @@ function EscolherPlanoPage() {
   const getIntentFn = useServerFn(getMySubscriptionIntent);
   const checkBillingFn = useServerFn(checkBillingReadiness);
   const createPixFn = useServerFn(createPixForIntent);
+  const getPendingCobFn = useServerFn(getMyPendingCobranca);
 
   const intentQuery = useQuery({
     queryKey: ["my-subscription-intent"],
@@ -85,6 +86,12 @@ function EscolherPlanoPage() {
   const billingQuery = useQuery({
     queryKey: ["billing-readiness"],
     queryFn: () => checkBillingFn(),
+    enabled: isAdmin && !isSuperAdmin,
+  });
+
+  const pendingCobQuery = useQuery({
+    queryKey: ["my-pending-cobranca"],
+    queryFn: () => getPendingCobFn(),
     enabled: isAdmin && !isSuperAdmin,
   });
 
