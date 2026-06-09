@@ -28,12 +28,15 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
 
     const { data: company } = await supabaseAdmin
       .from("companies")
-      .select("name, phone, pagamento_metodos")
+      .select("name, phone, email, pagamento_metodos")
       .eq("id", companyId)
       .maybeSingle();
 
     const meu_restaurante =
-      !!company?.name?.trim() && !!company?.phone?.toString().trim();
+      !!company?.name?.trim() &&
+      !!company?.phone?.toString().trim() &&
+      !!company?.email?.toString().trim();
+
 
     const metodos = (company?.pagamento_metodos ?? {}) as Record<string, boolean>;
     const pagamentos = Object.values(metodos).some((v) => v === true);

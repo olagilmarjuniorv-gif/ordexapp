@@ -1,68 +1,91 @@
-# Reestruturação de Assinatura, UX e Onboarding
+## Plano — Onboarding Guiado + Limpeza Final
 
-Apenas UX/navegação/formulários. Sem mexer em: integração Asaas, webhook, fluxo PIX, ativação automática, RLS, multiempresa, trial, regras de negócio.
+### ETAPA 1 — Remover elementos Lovable do ambiente publicado
 
-## 1. Consolidar Assinatura num único lugar
-- Remover item **"Assinatura"** do menu lateral (`AppLayout.tsx`, nav do admin).
-- Manter a rota `/assinatura/escolher-plano` viva (usada por trial expirado e fluxo de upgrade), mas acessada **somente** por dentro de **Configurações → Assinatura**.
-- Em Configurações, transformar a aba *Assinatura* na central única (hoje a aba existe, mas é fraca).
+**Diagnóstico:**
+- O único elemento visível ao cliente final do tipo "Edit with Lovable" é o **badge injetado automaticamente nas publicações** (não está no código-fonte do projeto — é controlado pela plataforma).
+- Não há referências hard-coded a Lovable em componentes, headers, footers ou metadados do app (`__root.tsx`, `AppLayout`, login, dashboard).
+- Favicon, manifest, title e meta tags já estão com a marca **SaiuPedido**.
 
-## 2. Tela central de Assinatura (aba em Configurações)
-Cards/seções:
-1. **Plano atual** — plano, status, ciclo, início, próxima cobrança, valor.
-2. **Consumo do plano** — barras (`Progress`) para Pedidos do mês, Conversas WhatsApp do mês, Usuários ativos. Formato `utilizado / limite`.
-3. **Excedentes acionáveis** — quando algo passa do limite, mostrar mensagem clara + botões: `Contratar usuário adicional` (placeholder/disabled "em breve") e `Alterar plano` (abre fluxo escolher-plano).
-4. **Forma de pagamento** — radios `PIX` (selecionado) e `Cartão de Crédito (Em breve)` desabilitado. Visual apenas, sem lógica.
-5. **Histórico de cobranças** — tabela com Data / Valor / Status / Forma / Link (quando houver `metadata.invoiceUrl` ou similar).
-6. **Botão "Alterar / Contratar plano"** → leva a `/assinatura/escolher-plano`.
+**Ação:** chamar `publish_settings--set_badge_visibility` com `hide_badge: true` (requer plano Pro+ — se não estiver disponível, informo no relatório final).
 
-## 3. Anti-cobrança duplicada
-Em `createPixForIntent` (server fn), antes de criar nova cobrança Asaas: verificar se a empresa já possui `cobrancas` com `status = 'pendente'` e `payment_method = 'PIX'` ainda válida (não vencida). Se existir, **reutilizar** (retornar dados Pix da cobrança existente em vez de criar nova). Na UI de escolher-plano: se intent pendente já existe, exibir aviso "Você já possui uma cobrança pendente" + botão `Continuar pagamento` que abre o QR da cobrança existente.
+**Relatório pós-execução:** confirmar onde o badge aparecia (rodapé das páginas publicadas), o que foi removido e varredura final.
 
-Sem mudar fluxo Asaas em si — apenas curto-circuito antes da chamada.
+---
 
-## 4. Simplificar Configurações → Empresa
-Reorganizar a aba "Empresa" em 4 blocos exatos:
-- **Dados da Empresa**: Razão Social\*, CNPJ\*, Telefone Principal\*, E-mail Principal\*
-- **Responsável**: Nome, CPF, Telefone
-- **Endereço**: CEP, Rua, Número, Complemento, Bairro, Cidade, Estado
-- **Informações Públicas**: Nome Exibido, Telefone Exibido, Endereço Exibido
+### ETAPAS 2–6 — Onboarding Guiado no Dashboard
 
-Remover dos formulários (campos do banco permanecem para não quebrar nada):
-- Nome Fantasia, Inscrição Estadual, E-mail Financeiro, E-mail Operacional
-- E-mail Financeiro/Operacional passam a ser preenchidos automaticamente com o E-mail Principal no save (para manter compat. com Asaas).
+**Boa notícia:** já existe a base sólida em `src/components/OnboardingChecklist.tsx` + `src/lib/onboarding.functions.ts`. Ela já entrega:
+- Checklist de 5 itens (Meu Restaurante, Cardápio, Pagamentos, WhatsApp, Pedido Teste)
+- Barra de progresso percentual
+- Botões diretos por item (deep-links)
+- Auto-ocultar quando 100% concluído
+- Critérios baseados em dados existentes (companies, produtos, categorias, whatsapp_conexoes, pedidos)
+- Realtime invalidation
 
-Adicionar `*` nos obrigatórios + helper text:
-> "Esses dados são necessários para emissão de cobranças e ativação da assinatura."
+**O que falta para atender ao briefing:**
 
-## 5. Validação client-side antes do Asaas
-Na tela `escolher-plano`, antes de chamar `createPixForIntent`, validar localmente:
-- Razão Social, CNPJ, Telefone, E-mail (da empresa)
-- CPF, Nome, Telefone (do responsável)
+1. **Fixar no topo do Dashboard Executivo** (hoje não está renderizado no `CompanyDashboard` reformulado). Precisa entrar como primeiro bloco, acima dos KPIs, apenas quando incompleto.
 
-Se algum faltar: **não chamar Asaas**. Mostrar toast/inline error com link "Completar dados em Configurações → Empresa". (O backend continua validando como já faz hoje — não alteramos lógica de negócio.)
+2. **Próxima ação recomendada (ETAPA 4):** banner destacado no topo do checklist mostrando **apenas** o próximo passo pendente, com CTA grande. Mensagens:
+   - meu_restaurante → "Complete os dados do seu restaurante"
+   - cardapio → "Cadastre seus primeiros produtos"
+   - pagamentos → "Configure uma forma de pagamento"
+   - whatsapp → "Conecte seu WhatsApp para começar a receber pedidos"
+   - pedido_teste → "Realize seu primeiro pedido teste"
 
-## 6. Onboarding/UX geral
-- Reduzir cliques: trial expirado + admin → CTA direto para Configurações → Assinatura.
-- Banner de trial existente mantido.
-- Sem novas rotas; sem mudança de banco.
+3. **Refinar critério "Meu Restaurante"** — hoje exige nome + telefone. Briefing pede nome + telefone + email. Adicionar verificação de `companies.email` em `getOnboardingStatus`.
 
-## Impacto
+4. **Mensagem de sucesso "Restaurante configurado"** quando 100% — já existe, manter.
 
-**Arquivos a alterar:**
-- `src/components/AppLayout.tsx` — remover item Assinatura do menu admin.
-- `src/routes/_app/configuracoes.tsx` — simplificar aba Empresa + reformular aba Assinatura como central.
-- `src/routes/_app/assinatura.escolher-plano.tsx` — validação pré-Asaas + reaproveitar cobrança pendente.
-- `src/lib/asaas-payments.ts` (ou `asaas.functions.ts`) — `createPixForIntent` retorna cobrança pendente existente em vez de criar nova.
-- `src/lib/assinaturas.functions.ts` — nova server fn `getBillingOverview` (plano + consumo + excedentes + histórico).
-- `src/components/TrialExpiredOverlay.tsx` — CTA aponta para `/configuracoes?tab=assinatura`.
+5. **Texto da barra de progresso:** ajustar para "Seu restaurante está X% configurado".
 
-**Banco de dados:** zero migrações. Campos antigos (`inscricao_estadual`, `nome_fantasia` se existir, `email_financeiro`, `email_operacional`) permanecem; apenas saem do formulário e são auto-preenchidos a partir do email principal no save.
+### Wireframe (Dashboard ao abrir)
 
-**Integrações Asaas:** nenhuma mudança de payload, endpoint ou ordem de chamadas. Único acréscimo é o curto-circuito "se já existe cobrança pendente, reutiliza" — não altera contrato com Asaas.
+```text
+┌──────────────────────────────────────────────────────────┐
+│ Olá, João · Restaurante XYZ          [Novo pedido]      │
+├──────────────────────────────────────────────────────────┤
+│ ★ PRÓXIMA AÇÃO                                           │
+│ Conecte seu WhatsApp para começar a receber pedidos.    │
+│                                       [Conectar agora →] │
+├──────────────────────────────────────────────────────────┤
+│ Configuração inicial · Seu restaurante está 60% pronto  │
+│ ████████████░░░░░░░  3/5                                │
+│ ✔ Meu Restaurante                                        │
+│ ✔ Cardápio                                               │
+│ ✔ Pagamentos                                             │
+│ ○ WhatsApp                              [Configurar →]   │
+│ ○ Pedido Teste                          [Configurar →]   │
+├──────────────────────────────────────────────────────────┤
+│ [Alertas executivos]                                     │
+│ [KPIs · Pipeline · Financeiro · Canais · etc.]          │
+└──────────────────────────────────────────────────────────┘
+```
 
-**Antes → Depois:**
-- Antes: 2 entradas (menu + aba), formulário Empresa com ~12 campos misturados, sem visão de consumo, possibilidade de gerar Pix duplicado, mensagem "excedente" sem ação.
-- Depois: 1 entrada (Configurações → Assinatura), formulário Empresa em 4 blocos enxutos com obrigatórios marcados, central de assinatura com plano + consumo + excedentes acionáveis + histórico + preparação cartão, Pix pendente reutilizado.
+Quando 100% → checklist some, fica apenas o chip discreto "Configuração inicial · 100%" no canto (comportamento atual).
 
-Confirme para eu executar.
+### Critérios de conclusão (somente dados existentes)
+| Item | Critério |
+|---|---|
+| Meu Restaurante | `companies.name` + `companies.phone` + `companies.email` preenchidos |
+| Cardápio | ≥1 categoria ativa **e** ≥1 produto ativo |
+| Pagamentos | ≥1 método em `companies.pagamento_metodos` = true |
+| WhatsApp | ≥1 `whatsapp_conexoes` com `active=true` e `status='conectado'` |
+| Pedido Teste | ≥1 registro em `pedidos` da empresa |
+
+### Cálculo do percentual
+`percent = round(itens_concluídos / 5 * 100)` — cada item vale 20%. (Já implementado.)
+
+### Arquivos a alterar
+1. `src/lib/onboarding.functions.ts` — adicionar checagem de `email` no critério `meu_restaurante` (campo já existe em `companies`, apenas adicionar ao select e ao boolean).
+2. `src/components/OnboardingChecklist.tsx` — adicionar bloco "Próxima ação recomendada" no topo + ajustar texto da barra ("Seu restaurante está X% configurado").
+3. `src/routes/_app/dashboard.tsx` — montar `<OnboardingChecklist />` como primeiro elemento do `CompanyDashboard`, acima dos alertas/KPIs.
+
+### Ferramenta de plataforma
+- `publish_settings--set_badge_visibility({ hide_badge: true })` para a ETAPA 1.
+
+### Sem alterações em
+banco, migrations, RLS, webhooks, Asaas, WhatsApp, integrações, regras de negócio, server functions de pedidos/financeiro.
+
+**Aguardando aprovação para implementar.**
