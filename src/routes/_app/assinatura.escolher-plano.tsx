@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, ChevronLeft, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,14 @@ import {
   createSubscriptionIntent,
   getMySubscriptionIntent,
 } from "@/lib/subscription-intents.functions";
+import { checkBillingReadiness } from "@/lib/asaas.functions";
+
+const BILLING_LABELS: Record<string, string> = {
+  cpf_cnpj: "CNPJ ou CPF do responsável",
+  nome: "Razão social / Nome da empresa",
+  email: "E-mail",
+  telefone: "Telefone / WhatsApp",
+};
 
 export const Route = createFileRoute("/_app/assinatura/escolher-plano")({
   component: EscolherPlanoPage,
