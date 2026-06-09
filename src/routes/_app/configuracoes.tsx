@@ -14,6 +14,9 @@ import {
 import { updateCompanyPagamentos, type HorariosFuncionamento } from "@/lib/companies.functions";
 import { listMyCobrancas } from "@/lib/assinaturas.functions";
 import { TrialBanner } from "@/components/TrialBanner";
+import { HistoricoPanel } from "./historico";
+import { UsersPage } from "./usuarios";
+import { SuportePanel } from "./suporte/index";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   component: ConfiguracoesPage,
@@ -122,8 +125,12 @@ function ConfiguracoesPage() {
             <TabsTrigger value="empresa">Empresa</TabsTrigger>
             <TabsTrigger value="operacao">Operação</TabsTrigger>
             <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+            <TabsTrigger value="ifood">iFood</TabsTrigger>
             <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
             <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
+            <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+            <TabsTrigger value="suporte">Suporte</TabsTrigger>
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
             <TabsTrigger value="chatbot">Chatbot</TabsTrigger>
             <TabsTrigger value="privacidade">Privacidade</TabsTrigger>
           </TabsList>
@@ -137,11 +144,23 @@ function ConfiguracoesPage() {
           <TabsContent value="whatsapp">
             <AbaWhatsapp company={company} conexao={data.conexao} readOnly={readOnly} onSaved={refetch} />
           </TabsContent>
+          <TabsContent value="ifood">
+            <AbaIfood />
+          </TabsContent>
           <TabsContent value="pagamentos">
             <AbaPagamentos company={company} readOnly={readOnly} onSaved={refetch} />
           </TabsContent>
           <TabsContent value="assinatura">
             <AbaAssinatura subscription={data.subscription} uso={data.uso} trial={(data as any).trial} />
+          </TabsContent>
+          <TabsContent value="usuarios">
+            <UsersPage />
+          </TabsContent>
+          <TabsContent value="suporte">
+            <SuportePanel />
+          </TabsContent>
+          <TabsContent value="historico">
+            <HistoricoPanel />
           </TabsContent>
           <TabsContent value="chatbot">
             <AbaChatbot company={company} fluxo={data.fluxo} readOnly={readOnly} onSaved={refetch} />
