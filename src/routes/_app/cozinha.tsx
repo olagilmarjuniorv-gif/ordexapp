@@ -94,8 +94,13 @@ function beep() {
 
 function Cozinha() {
   const qc = useQueryClient();
+  const { isAdmin, isAtendente } = useAuth();
+  const canMarkPago = isAdmin || isAtendente;
   const fetchFn = useServerFn(listPedidos);
   const updateFn = useServerFn(updatePedidoStatus);
+  const faseFn = useServerFn(setFaseCanal);
+  const voltarFn = useServerFn(voltarParaCozinha);
+  const finFn = useServerFn(updatePedidoStatusFinanceiro);
   const { data } = useQuery({
     queryKey: ["pedidos"],
     queryFn: () => fetchFn({}),
