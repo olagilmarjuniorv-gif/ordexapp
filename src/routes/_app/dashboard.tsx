@@ -129,6 +129,45 @@ function CanalBars({ data }: { data: { canal: string; count: number }[] }) {
   );
 }
 
+function AlertasSection({ atrasados, trial }: { atrasados: number; trial: any }) {
+  const itens: { label: string; hint: string; to: string; tone: string }[] = [];
+  if (atrasados > 0) {
+    itens.push({
+      label: `${atrasados} pedido${atrasados === 1 ? "" : "s"} atrasado${atrasados === 1 ? "" : "s"}`,
+      hint: "Precisam de atenção na cozinha",
+      to: "/cozinha",
+      tone: "bg-rose-100 text-rose-700",
+    });
+  }
+  if (trial?.diasRestantes != null && trial.diasRestantes <= 3 && !trial.expirado) {
+    itens.push({
+      label: `Trial termina em ${trial.diasRestantes} dia${trial.diasRestantes === 1 ? "" : "s"}`,
+      hint: "Escolha um plano para continuar",
+      to: "/configuracoes?tab=assinatura",
+      tone: "bg-amber-100 text-amber-700",
+    });
+  }
+  if (itens.length === 0) return null;
+  return (
+    <section className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 shadow-card">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-3">Alertas importantes</h2>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {itens.map((a) => (
+          <Link key={a.label} to={a.to} className="flex items-start gap-2 rounded-md bg-card border border-border p-3 hover:border-amber-300 transition">
+            <span className={`flex h-7 w-7 items-center justify-center rounded-md ${a.tone}`}>
+              <AlarmClock className="h-3.5 w-3.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium leading-tight">{a.label}</p>
+              <p className="text-xs text-muted-foreground">{a.hint}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SuperAdminDashboard() {
   const fetchFn = useServerFn(getSaasOverview);
   const { data, isLoading, error } = useQuery({
@@ -443,6 +482,9 @@ function CompanyDashboard() {
         <h2 className="font-display font-semibold mb-3">Pedidos por canal</h2>
         <CanalBars data={data.porCanal} />
       </section>
+
+      <AlertasSection atrasados={data.atrasados} trial={(cfg as any)?.trial ?? null} />
+
 
       <Link
         to="/pedidos/novo"
