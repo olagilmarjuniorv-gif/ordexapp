@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { Loader2, UserPlus, ShieldCheck, Power } from "lucide-react";
 
 export const Route = createFileRoute("/_app/usuarios")({
-  component: UsersPanel,
+  component: UsersPage,
   head: () => ({ meta: [{ title: "Usuários — SaiuPedido" }] }),
 });
 
@@ -26,7 +26,7 @@ const ROLE_LABEL: Record<AppRole, string> = {
   cozinha: "Cozinha",
 };
 
-export function UsersPanel() {
+export function UsersPage() {
   const { isAdmin, isSuperAdmin, role, loading: authLoading } = useAuth();
 
   if (authLoading) {
