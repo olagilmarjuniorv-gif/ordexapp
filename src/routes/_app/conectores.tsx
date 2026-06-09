@@ -85,7 +85,7 @@ function ConectoresPage() {
   );
 }
 
-function WhatsappCard() {
+export function WhatsappCard() {
   const getConn = useServerFn(getWhatsappConexao);
   const getStats = useServerFn(getWhatsappStats);
   const connect = useServerFn(connectWhatsapp);
@@ -295,7 +295,7 @@ function healthMeta(h: Health) {
   }
 }
 
-function IfoodCard({ integ, onChange }: { integ: any; onChange: () => void }) {
+export function IfoodCard({ integ, onChange }: { integ: any; onChange: () => void }) {
   const [merchantId, setMerchantId] = useState(integ?.merchant_id ?? "");
   const [showWizard, setShowWizard] = useState(false);
   const connect = useServerFn(connectIfood);
@@ -599,6 +599,29 @@ function ComingSoonCard({ name }: { name: string }) {
     <div className="rounded-xl border border-dashed border-border bg-card/50 p-4 opacity-60">
       <p className="font-semibold">{name}</p>
       <p className="text-xs text-muted-foreground mt-1">Em breve</p>
+    </div>
+  );
+}
+
+export function IfoodPanel() {
+  const list = useServerFn(listIntegracoes);
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["integracoes"],
+    queryFn: () => list({}),
+    refetchInterval: 15_000,
+  });
+  const integ = (data ?? []).find((i: any) => i.provider === "ifood");
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  return (
+    <div className="max-w-xl">
+      <IfoodCard integ={integ} onChange={() => qc.invalidateQueries({ queryKey: ["integracoes"] })} />
     </div>
   );
 }

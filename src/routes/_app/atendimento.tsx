@@ -5,7 +5,6 @@ import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { MensagensPanel } from "./mensagens";
 import { ClientesPanel } from "./clientes";
-import { HistoricoPanel } from "./historico";
 
 export const Route = createFileRoute("/_app/atendimento")({
   component: AtendimentoPage,
@@ -50,7 +49,6 @@ function AtendimentoPage() {
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="conversas">Conversas</TabsTrigger>
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="conversas">
@@ -58,9 +56,6 @@ function AtendimentoPage() {
         </TabsContent>
         <TabsContent value="clientes">
           <ClientesPanel />
-        </TabsContent>
-        <TabsContent value="historico">
-          <HistoricoPanel />
         </TabsContent>
       </Tabs>
     </div>
