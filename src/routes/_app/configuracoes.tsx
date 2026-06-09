@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_app/configuracoes")({
 const inputCls =
   "w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60";
 
-function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+function Field({ label, children, hint }: { label: React.ReactNode; children: React.ReactNode; hint?: string }) {
   return (
     <label className="block">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
