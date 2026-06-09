@@ -117,7 +117,7 @@ function ConfiguracoesPage() {
           <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
         </div>
       ) : (
-        <Tabs defaultValue="empresa" className="space-y-4">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
             <TabsTrigger value="empresa">Empresa</TabsTrigger>
             <TabsTrigger value="operacao">Operação</TabsTrigger>
