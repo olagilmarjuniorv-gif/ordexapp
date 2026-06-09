@@ -11,7 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime";
 import { SalesChart } from "@/components/SalesChart";
-import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+// import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { type Granularity, GRANULARITY_LABELS, getPeriodRange } from "@/lib/period";
 import { getConfiguracoes } from "@/lib/configuracoes.functions";
 import { TrialBanner } from "@/components/TrialBanner";
