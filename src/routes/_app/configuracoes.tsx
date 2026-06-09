@@ -174,6 +174,35 @@ function ConfiguracoesPage() {
   );
 }
 
+// ============== ABA — iFOOD (placeholder estrutural) ==============
+function AbaIfood() {
+  return (
+    <div className="space-y-5">
+      <Section title="Integração iFood">
+        <p className="text-sm text-muted-foreground">
+          A integração iFood está em preparação. Os campos abaixo refletirão o status real assim que ativada.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 text-sm">
+          <div><span className="text-muted-foreground">Merchant ID:</span> —</div>
+          <div><span className="text-muted-foreground">Status da integração:</span> Não conectado</div>
+          <div><span className="text-muted-foreground">Última sincronização:</span> —</div>
+          <div><span className="text-muted-foreground">Pedidos sincronizados:</span> —</div>
+        </div>
+      </Section>
+
+      <Section title="Configurações de sincronização">
+        <p className="text-sm text-muted-foreground">
+          Sincronização automática de cardápio, pedidos e status estará disponível em breve.
+        </p>
+      </Section>
+
+      <Section title="Logs">
+        <p className="text-sm text-muted-foreground">Sem eventos registrados.</p>
+      </Section>
+    </div>
+  );
+}
+
 // ============== ABA 1 — EMPRESA ==============
 function ReqLabel({ label }: { label: string }) {
   return <span>{label} <span className="text-destructive">*</span></span>;
