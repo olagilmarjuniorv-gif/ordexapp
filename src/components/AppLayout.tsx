@@ -71,7 +71,7 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
-      { to: "/expedicao", label: "Expedição", icon: ClipboardList },
+      { to: "/cozinha", label: "Cozinha", icon: ChefHat },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/atendimento", label: "Atendimento", icon: MessageCircle },
       { to: "/financeiro", label: "Financeiro", icon: DollarSign },
@@ -93,7 +93,6 @@ export function AppLayout() {
     nav = [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { to: "/pedidos", label: "Pedidos", icon: ShoppingBag },
-      { to: "/expedicao", label: "Expedição", icon: ClipboardList },
       { to: "/mesas", label: "Mesas", icon: LayoutGrid },
       { to: "/cozinha", label: "Cozinha", icon: ChefHat },
       { to: "/cardapio", label: "Cardápio", icon: BookOpen },
