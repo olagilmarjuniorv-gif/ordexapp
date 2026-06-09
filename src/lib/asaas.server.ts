@@ -136,14 +136,14 @@ export async function asaasFetch<T = unknown>(path: string, init: AsaasFetchInit
         code: e.code,
         description: e.description,
       }));
-      console.error("[asaas] request failed", {
+      console.error("[asaas] request failed", JSON.stringify({
         method: init.method ?? "GET",
         path,
         status: res.status,
         requestBody: sanitizeForAsaasLog(init.body),
         responseBody: sanitizeForAsaasLog(parsed),
         errors,
-      });
+      }));
       throw new AsaasError(buildAsaasErrorMessage(path, res.status, parsed), res.status, parsed);
     }
     return parsed as T;
