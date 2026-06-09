@@ -49,7 +49,6 @@ function AtendimentoPage() {
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="conversas">Conversas</TabsTrigger>
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="conversas">
@@ -57,9 +56,6 @@ function AtendimentoPage() {
         </TabsContent>
         <TabsContent value="clientes">
           <ClientesPanel />
-        </TabsContent>
-        <TabsContent value="historico">
-          <HistoricoPanel />
         </TabsContent>
       </Tabs>
     </div>
