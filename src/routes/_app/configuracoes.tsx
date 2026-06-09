@@ -581,6 +581,15 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
     return "bg-muted text-muted-foreground";
   };
 
+  const paymentMethodLabel = (m: string | null | undefined) => {
+    if (!m) return "—";
+    const k = m.toLowerCase();
+    if (k === "pix") return "PIX";
+    if (k === "cartao" || k === "credit_card" || k === "card") return "Cartão";
+    if (k === "boleto") return "Boleto";
+    return k.charAt(0).toUpperCase() + k.slice(1);
+  };
+
   const cobrancas = (cobQuery.data ?? []) as any[];
 
   return (
