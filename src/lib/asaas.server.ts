@@ -107,6 +107,7 @@ export async function asaasFetch<T = unknown>(path: string, init: AsaasFetchInit
   const headers = new Headers(init.headers as HeadersInit | undefined);
   headers.set("access_token", apiKey);
   headers.set("Accept", "application/json");
+  if (!headers.has("User-Agent")) headers.set("User-Agent", "SaiuPedido/1.0");
   if (init.body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
