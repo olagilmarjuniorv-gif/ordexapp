@@ -135,7 +135,7 @@ export async function upsertCobranca(input: {
     valor: input.valor,
     vencimento: input.vencimento ?? existing?.vencimento ?? null,
     ciclo: input.ciclo ?? existing?.ciclo ?? null,
-    metadata: mergedMeta,
+    metadata: mergedMeta as never,
   };
 
   if (existing) {
