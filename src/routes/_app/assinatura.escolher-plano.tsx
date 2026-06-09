@@ -283,8 +283,17 @@ function CicloCard({
 }
 
 function Step3({
-  plano, ciclo, onBack, onConfirm, saving,
-}: { plano: PlanoDef; ciclo: Ciclo; onBack: () => void; onConfirm: () => void; saving: boolean }) {
+  plano, ciclo, onBack, onConfirm, saving, billingMissing, onGoToConfig,
+}: {
+  plano: PlanoDef;
+  ciclo: Ciclo;
+  onBack: () => void;
+  onConfirm: () => void;
+  saving: boolean;
+  billingMissing: string[] | null;
+  onGoToConfig: () => void;
+}) {
+  const blocked = !!billingMissing && billingMissing.length > 0;
   return (
     <div className="space-y-6">
       <Card>
@@ -303,10 +312,31 @@ function Step3({
             <ResumoItem label="Usuários" value={plano.usuarios} />
           </div>
 
-          <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-            A integração de pagamento ainda não está disponível. Ao continuar, sua escolha
-            será salva e nossa equipe entrará em contato para concluir a contratação.
-          </div>
+          {blocked ? (
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium text-amber-900 dark:text-amber-200">
+                    Complete os dados fiscais da empresa antes de continuar com a assinatura.
+                  </p>
+                  <ul className="mt-1 list-disc list-inside text-xs text-amber-900/80 dark:text-amber-200/80">
+                    {billingMissing!.map((m) => (
+                      <li key={m}>{BILLING_LABELS[m] ?? m}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={onGoToConfig}>
+                Ir para Configurações → Empresa
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+              A integração de pagamento ainda não está disponível. Ao continuar, sua escolha
+              será salva e nossa equipe entrará em contato para concluir a contratação.
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -314,13 +344,14 @@ function Step3({
         <Button variant="outline" onClick={onBack} disabled={saving}>
           <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
-        <Button onClick={onConfirm} disabled={saving}>
+        <Button onClick={onConfirm} disabled={saving || blocked}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
         </Button>
       </div>
     </div>
   );
 }
+
 
 function ResumoItem({ label, value }: { label: string; value: string }) {
   return (
