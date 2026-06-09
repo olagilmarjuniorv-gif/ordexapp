@@ -10,12 +10,38 @@ const FALLBACK_TOKEN = process.env.WHATSAPP_META_TOKEN;
 const FALLBACK_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
-  if (!APP_SECRET) return true; // dev: pula quando secret não está configurado
-  if (!signature) return false;
-  const expected = "sha256=" + createHmac("sha256", APP_SECRET).update(rawBody).digest("hex");
+  const runtimeSecret = process.env.WHATSAPP_APP_SECRET ?? APP_SECRET;
+  // [DEBUG-HMAC] logs temporários para auditoria
+  console.log("[DEBUG-HMAC] secret_exists_module_scope:", !!APP_SECRET);
+  console.log("[DEBUG-HMAC] secret_exists_runtime:", !!runtimeSecret);
+  console.log("[DEBUG-HMAC] secret_length:", runtimeSecret?.length ?? 0);
+  console.log("[DEBUG-HMAC] raw_body_length:", rawBody.length);
+  console.log("[DEBUG-HMAC] signature_received:", signature);
+
+  if (!runtimeSecret) {
+    console.log("[DEBUG-HMAC] APP_SECRET ausente — pulando verificação");
+    return true;
+  }
+  if (!signature) {
+    console.log("[DEBUG-HMAC] header x-hub-signature-256 ausente");
+    return false;
+  }
+  const expected = "sha256=" + createHmac("sha256", runtimeSecret).update(rawBody).digest("hex");
+  console.log("[DEBUG-HMAC] signature_expected:", expected);
+  console.log("[DEBUG-HMAC] lengths recv/exp:", signature.length, expected.length);
+
   try {
-    return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
-  } catch {
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) {
+      console.log("[DEBUG-HMAC] buffer length mismatch — retornando false");
+      return false;
+    }
+    const ok = timingSafeEqual(a, b);
+    console.log("[DEBUG-HMAC] timingSafeEqual result:", ok);
+    return ok;
+  } catch (e: any) {
+    console.log("[DEBUG-HMAC] exceção em timingSafeEqual:", e?.message);
     return false;
   }
 }
