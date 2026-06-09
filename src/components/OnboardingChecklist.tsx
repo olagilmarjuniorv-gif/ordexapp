@@ -25,13 +25,19 @@ const ITEMS: {
   desc: string;
   to: string;
   icon: any;
+  cta: string;
+  nextActionTitle: string;
+  nextActionDesc: string;
 }[] = [
   {
     key: "meu_restaurante",
     title: "Meu Restaurante",
-    desc: "Informe nome e telefone do estabelecimento.",
+    desc: "Informe nome, telefone e e-mail do estabelecimento.",
     to: "/configuracoes",
     icon: Store,
+    cta: "Completar dados",
+    nextActionTitle: "Complete os dados do seu restaurante",
+    nextActionDesc: "Nome, telefone e e-mail são essenciais para começar a operar.",
   },
   {
     key: "cardapio",
@@ -39,6 +45,9 @@ const ITEMS: {
     desc: "Cadastre ao menos 1 categoria e 1 produto ativo.",
     to: "/cardapio",
     icon: BookOpen,
+    cta: "Cadastrar produtos",
+    nextActionTitle: "Cadastre seus primeiros produtos",
+    nextActionDesc: "Sem cardápio, você não consegue receber pedidos.",
   },
   {
     key: "pagamentos",
@@ -46,6 +55,9 @@ const ITEMS: {
     desc: "Ative ao menos uma forma de pagamento.",
     to: "/pagamentos",
     icon: Wallet,
+    cta: "Configurar pagamento",
+    nextActionTitle: "Configure uma forma de pagamento",
+    nextActionDesc: "Defina como seus clientes vão pagar (PIX, cartão, dinheiro).",
   },
   {
     key: "whatsapp",
@@ -53,6 +65,9 @@ const ITEMS: {
     desc: "Conecte um número para receber pedidos.",
     to: "/conectores",
     icon: MessageCircle,
+    cta: "Conectar agora",
+    nextActionTitle: "Conecte seu WhatsApp para começar a receber pedidos",
+    nextActionDesc: "Centralize conversas e pedidos em um único painel.",
   },
   {
     key: "pedido_teste",
@@ -60,8 +75,12 @@ const ITEMS: {
     desc: "Crie um pedido (balcão, mesa ou delivery).",
     to: "/pedidos/novo",
     icon: ShoppingBag,
+    cta: "Criar pedido teste",
+    nextActionTitle: "Realize seu primeiro pedido teste",
+    nextActionDesc: "Valide o fluxo completo antes de operar com clientes reais.",
   },
 ];
+
 
 function dismissKey(companyId: string | null) {
   return `saiupedido.onboarding.dismissed:${companyId ?? "none"}`;
