@@ -130,13 +130,15 @@ function OnboardingChecklistInner() {
       try {
         return await getFn();
       } catch (e) {
-        // Nunca propaga; devolve shape vazio para a UI seguir
         if (typeof console !== "undefined") console.warn("onboarding queryFn:", e);
         return null;
       }
     },
     staleTime: 10_000,
-    retry: false,
+    retry: 1,
+    retryDelay: 500,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   useRealtimeInvalidate("pedidos", [["onboarding-status"]]);
