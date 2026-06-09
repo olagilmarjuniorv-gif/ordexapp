@@ -27,6 +27,7 @@ import {
   getSubscriptionPaymentStatus,
   type PixPaymentDTO,
 } from "@/lib/pix.functions";
+import { getMyPendingCobranca } from "@/lib/assinaturas.functions";
 
 const BILLING_LABELS: Record<string, string> = {
   cpf_cnpj: "CNPJ ou CPF do responsável",
