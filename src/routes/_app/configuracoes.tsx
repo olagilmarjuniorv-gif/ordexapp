@@ -211,10 +211,10 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
           Esses dados são necessários para emissão de cobranças e ativação da assinatura.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={<ReqLabel label="Razão Social" /> as any}><input className={inputCls} disabled={readOnly} value={f.razao_social} onChange={upd("razao_social")} /></Field>
-          <Field label={<ReqLabel label="CNPJ" /> as any}><input className={inputCls} disabled={readOnly} value={f.cnpj} onChange={upd("cnpj")} placeholder="00.000.000/0000-00" /></Field>
-          <Field label={<ReqLabel label="Telefone Principal" /> as any}><input className={inputCls} disabled={readOnly} value={f.phone} onChange={upd("phone")} /></Field>
-          <Field label={<ReqLabel label="E-mail Principal" /> as any}><input className={inputCls} disabled={readOnly} value={f.email} onChange={upd("email")} /></Field>
+          <Field label={<ReqLabel label="Razão Social" />}><input className={inputCls} disabled={readOnly} value={f.razao_social} onChange={upd("razao_social")} /></Field>
+          <Field label={<ReqLabel label="CNPJ" />}><input className={inputCls} disabled={readOnly} value={f.cnpj} onChange={upd("cnpj")} placeholder="00.000.000/0000-00" /></Field>
+          <Field label={<ReqLabel label="Telefone Principal" />}><input className={inputCls} disabled={readOnly} value={f.phone} onChange={upd("phone")} /></Field>
+          <Field label={<ReqLabel label="E-mail Principal" />}><input className={inputCls} disabled={readOnly} value={f.email} onChange={upd("email")} /></Field>
         </div>
       </Section>
 
