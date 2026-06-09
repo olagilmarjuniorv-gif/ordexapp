@@ -6,8 +6,10 @@ import { getCaller } from "./auth.server";
 export const getOnboardingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    console.warn("[OBF] A handler start, userId=", context.userId);
     const caller = await getCaller(context.userId);
     const companyId = caller.companyId;
+    console.warn("[OBF] B caller", { companyId, role: (caller as any).role });
 
     const empty = {
       companyId: null as string | null,
@@ -24,24 +26,26 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
       done: false,
     };
 
-    if (!companyId) return empty;
+    if (!companyId) { console.warn("[OBF] C no companyId, return empty"); return empty; }
 
-    const { data: company } = await supabaseAdmin
+    const companyRes = await supabaseAdmin
       .from("companies")
       .select("name, phone, email, pagamento_metodos")
       .eq("id", companyId)
       .maybeSingle();
+    console.warn("[OBF] D company", { error: companyRes.error, data: companyRes.data });
+    const company = companyRes.data;
 
     const meu_restaurante =
       !!company?.name?.trim() &&
       !!company?.phone?.toString().trim() &&
       !!company?.email?.toString().trim();
 
-
     const metodos = (company?.pagamento_metodos ?? {}) as Record<string, boolean>;
     const pagamentos = Object.values(metodos).some((v) => v === true);
+    console.warn("[OBF] E meu_restaurante/pagamentos", { meu_restaurante, pagamentos, metodosType: typeof company?.pagamento_metodos });
 
-    const [{ count: catCount }, { count: prodCount }] = await Promise.all([
+    const [catRes, prodRes] = await Promise.all([
       supabaseAdmin
         .from("categorias")
         .select("id", { count: "exact", head: true })
@@ -53,21 +57,24 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
         .eq("company_id", companyId)
         .eq("active", true),
     ]);
-    const cardapio = (catCount ?? 0) > 0 && (prodCount ?? 0) > 0;
+    console.warn("[OBF] F cat/prod", { catErr: catRes.error, catCount: catRes.count, prodErr: prodRes.error, prodCount: prodRes.count });
+    const cardapio = (catRes.count ?? 0) > 0 && (prodRes.count ?? 0) > 0;
 
-    const { count: waCount } = await supabaseAdmin
+    const waRes = await supabaseAdmin
       .from("whatsapp_conexoes")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId)
       .eq("active", true)
       .eq("status", "conectado");
-    const whatsapp = (waCount ?? 0) > 0;
+    console.warn("[OBF] G whatsapp", { err: waRes.error, count: waRes.count });
+    const whatsapp = (waRes.count ?? 0) > 0;
 
-    const { count: pedCount } = await supabaseAdmin
+    const pedRes = await supabaseAdmin
       .from("pedidos")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId);
-    const pedido_teste = (pedCount ?? 0) > 0;
+    console.warn("[OBF] H pedidos", { err: pedRes.error, count: pedRes.count });
+    const pedido_teste = (pedRes.count ?? 0) > 0;
 
     const items = { meu_restaurante, cardapio, pagamentos, whatsapp, pedido_teste };
     const completed = Object.values(items).filter(Boolean).length;
