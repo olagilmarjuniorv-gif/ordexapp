@@ -153,7 +153,7 @@ function AlertasSection({ atrasados, trial }: { atrasados: number; trial: any })
       <h2 className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-3">Alertas importantes</h2>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {itens.map((a) => (
-          <Link key={a.label} to={a.to} className="flex items-start gap-2 rounded-md bg-card border border-border p-3 hover:border-amber-300 transition">
+          <a key={a.label} href={a.to} className="flex items-start gap-2 rounded-md bg-card border border-border p-3 hover:border-amber-300 transition">
             <span className={`flex h-7 w-7 items-center justify-center rounded-md ${a.tone}`}>
               <AlarmClock className="h-3.5 w-3.5" />
             </span>
@@ -161,7 +161,7 @@ function AlertasSection({ atrasados, trial }: { atrasados: number; trial: any })
               <p className="text-sm font-medium leading-tight">{a.label}</p>
               <p className="text-xs text-muted-foreground">{a.hint}</p>
             </div>
-          </Link>
+          </a>
         ))}
       </div>
     </section>
