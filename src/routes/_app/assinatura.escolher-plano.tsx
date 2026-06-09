@@ -72,12 +72,14 @@ function EscolherPlanoPage() {
   const [step, setStep] = useState<Step>(1);
   const [plano, setPlano] = useState<PlanoId | null>(null);
   const [ciclo, setCiclo] = useState<Ciclo>("mensal");
+  const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
   const [pix, setPix] = useState<PixPaymentDTO | null>(null);
 
   const createFn = useServerFn(createSubscriptionIntent);
   const getIntentFn = useServerFn(getMySubscriptionIntent);
   const checkBillingFn = useServerFn(checkBillingReadiness);
   const createPixFn = useServerFn(createPixForIntent);
+  const createCardFn = useServerFn(createCardCheckoutForIntent);
   const getPendingCobFn = useServerFn(getMyPendingCobranca);
 
   const intentQuery = useQuery({
@@ -99,15 +101,26 @@ function EscolherPlanoPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (input: { plano: PlanoId; ciclo: Ciclo }) => {
-      const intent = await createFn({ data: input });
-      const pixData = await createPixFn({ data: { intentId: (intent as any).id } });
-      return pixData;
+    mutationFn: async (input: { plano: PlanoId; ciclo: Ciclo; metodo: "pix" | "cartao" }) => {
+      const intent = await createFn({ data: { plano: input.plano, ciclo: input.ciclo } });
+      const intentId = (intent as any).id;
+      if (input.metodo === "cartao") {
+        const card = await createCardFn({ data: { intentId } });
+        return { kind: "cartao" as const, invoice_url: card.invoice_url };
+      }
+      const pixData = await createPixFn({ data: { intentId } });
+      return { kind: "pix" as const, pix: pixData };
     },
     onSuccess: (data) => {
-      setPix(data);
-      setStep(4);
       qc.invalidateQueries({ queryKey: ["my-subscription-intent"] });
+      qc.invalidateQueries({ queryKey: ["my-pending-cobranca"] });
+      if (data.kind === "cartao") {
+        toast.success("Redirecionando para o checkout seguro do Asaas…");
+        window.location.href = data.invoice_url;
+        return;
+      }
+      setPix(data.pix);
+      setStep(4);
     },
     onError: (e: any) => {
       const msg =
