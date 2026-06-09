@@ -701,8 +701,8 @@ function CompanyDashboard() {
 
       <TrialBanner trial={(cfg as any)?.trial ?? null} />
 
-      {/* Onboarding guiado — reativado com instrumentação */}
-      <OnboardingChecklist />
+      {/* Onboarding guiado — pausado temporariamente */}
+      {/* <OnboardingChecklist /> */}
 
 
 
