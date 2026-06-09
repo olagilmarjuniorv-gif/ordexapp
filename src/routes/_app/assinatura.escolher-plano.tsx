@@ -1,9 +1,17 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, Check, ChevronLeft, Loader2, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  ChevronLeft,
+  Copy,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,6 +22,11 @@ import {
   getMySubscriptionIntent,
 } from "@/lib/subscription-intents.functions";
 import { checkBillingReadiness } from "@/lib/asaas.functions";
+import {
+  createPixForIntent,
+  getSubscriptionPaymentStatus,
+  type PixPaymentDTO,
+} from "@/lib/pix.functions";
 
 const BILLING_LABELS: Record<string, string> = {
   cpf_cnpj: "CNPJ ou CPF do responsável",
@@ -45,18 +58,22 @@ const PLANOS: PlanoDef[] = [
   { id: "max", nome: "Max", resumo: "Para operações de alto volume.", pedidos: "Pedidos ilimitados", conversas: "3.000 conversas WhatsApp/mês", usuarios: "8 usuários" },
 ];
 
+type Step = 1 | 2 | 3 | 4 | 5;
+
 function EscolherPlanoPage() {
   const { isAdmin, isSuperAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<Step>(1);
   const [plano, setPlano] = useState<PlanoId | null>(null);
   const [ciclo, setCiclo] = useState<Ciclo>("mensal");
+  const [pix, setPix] = useState<PixPaymentDTO | null>(null);
 
   const createFn = useServerFn(createSubscriptionIntent);
   const getIntentFn = useServerFn(getMySubscriptionIntent);
   const checkBillingFn = useServerFn(checkBillingReadiness);
+  const createPixFn = useServerFn(createPixForIntent);
 
   const intentQuery = useQuery({
     queryKey: ["my-subscription-intent"],
@@ -71,17 +88,23 @@ function EscolherPlanoPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: (input: { plano: PlanoId; ciclo: Ciclo }) => createFn({ data: input }),
-    onSuccess: () => {
-      toast.success("Escolha registrada! Em breve o pagamento estará disponível.");
-      qc.invalidateQueries({ queryKey: ["my-subscription-intent"] });
-      navigate({ to: "/dashboard" });
+    mutationFn: async (input: { plano: PlanoId; ciclo: Ciclo }) => {
+      const intent = await createFn({ data: input });
+      const pixData = await createPixFn({ data: { intentId: (intent as any).id } });
+      return pixData;
     },
-    onError: (e: any) => toast.error(e?.message ?? "Erro ao registrar escolha"),
+    onSuccess: (data) => {
+      setPix(data);
+      setStep(4);
+      qc.invalidateQueries({ queryKey: ["my-subscription-intent"] });
+    },
+    onError: (e: any) => {
+      const msg = typeof e?.message === "string" ? e.message : "Erro ao iniciar pagamento";
+      toast.error(msg);
+    },
   });
 
   if (loading) return null;
-  // somente admin (não atendente/cozinha). Super admin não contrata.
   if (!isAdmin || isSuperAdmin) return <Navigate to="/dashboard" />;
 
   const planoEscolhido = plano ? PLANOS.find((p) => p.id === plano)! : null;
@@ -105,20 +128,11 @@ function EscolherPlanoPage() {
       <Stepper step={step} />
 
       {step === 1 && (
-        <Step1
-          plano={plano}
-          onSelect={(p) => setPlano(p)}
-          onNext={() => plano && setStep(2)}
-        />
+        <Step1 plano={plano} onSelect={(p) => setPlano(p)} onNext={() => plano && setStep(2)} />
       )}
 
       {step === 2 && (
-        <Step2
-          ciclo={ciclo}
-          onChange={setCiclo}
-          onBack={() => setStep(1)}
-          onNext={() => setStep(3)}
-        />
+        <Step2 ciclo={ciclo} onChange={setCiclo} onBack={() => setStep(1)} onNext={() => setStep(3)} />
       )}
 
       {step === 3 && planoEscolhido && (
@@ -138,18 +152,34 @@ function EscolherPlanoPage() {
           onGoToConfig={() => navigate({ to: "/configuracoes" })}
         />
       )}
+
+      {step === 4 && pix && (
+        <Step4Pix
+          pix={pix}
+          onPaid={() => setStep(5)}
+          onCancel={() => {
+            setPix(null);
+            setStep(3);
+          }}
+        />
+      )}
+
+      {step === 5 && (
+        <Step5Sucesso onGo={() => navigate({ to: "/dashboard" })} />
+      )}
     </div>
   );
 }
 
-function Stepper({ step }: { step: 1 | 2 | 3 }) {
+function Stepper({ step }: { step: Step }) {
   const items = [
     { n: 1, label: "Plano" },
     { n: 2, label: "Ciclo" },
     { n: 3, label: "Resumo" },
+    { n: 4, label: "Pagamento" },
   ];
   return (
-    <ol className="flex items-center gap-2 text-sm">
+    <ol className="flex items-center gap-2 text-sm flex-wrap">
       {items.map((it, idx) => {
         const active = step === it.n;
         const done = step > it.n;
@@ -228,21 +258,8 @@ function Step2({ ciclo, onChange, onBack, onNext }: { ciclo: Ciclo; onChange: (c
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
-        <CicloCard
-          id="mensal"
-          titulo="Mensal"
-          descricao="Cobrança todo mês. Cancele quando quiser."
-          selected={ciclo === "mensal"}
-          onSelect={() => onChange("mensal")}
-        />
-        <CicloCard
-          id="anual"
-          titulo="Anual"
-          descricao="Pague uma vez por ano e economize."
-          selected={ciclo === "anual"}
-          onSelect={() => onChange("anual")}
-          badge="Economize no anual"
-        />
+        <CicloCard id="mensal" titulo="Mensal" descricao="Cobrança todo mês. Cancele quando quiser." selected={ciclo === "mensal"} onSelect={() => onChange("mensal")} />
+        <CicloCard id="anual" titulo="Anual" descricao="Pague uma vez por ano e economize." selected={ciclo === "anual"} onSelect={() => onChange("anual")} badge="Economize no anual" />
       </div>
 
       <div className="flex justify-between">
@@ -255,9 +272,7 @@ function Step2({ ciclo, onChange, onBack, onNext }: { ciclo: Ciclo; onChange: (c
   );
 }
 
-function CicloCard({
-  titulo, descricao, selected, onSelect, badge,
-}: { id: Ciclo; titulo: string; descricao: string; selected: boolean; onSelect: () => void; badge?: string }) {
+function CicloCard({ titulo, descricao, selected, onSelect, badge }: { id: Ciclo; titulo: string; descricao: string; selected: boolean; onSelect: () => void; badge?: string }) {
   return (
     <button
       type="button"
@@ -306,7 +321,7 @@ function Step3({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <ResumoItem label="Ciclo" value={ciclo === "anual" ? "Anual" : "Mensal"} />
-            <ResumoItem label="Status" value="Aguardando pagamento" />
+            <ResumoItem label="Forma de pagamento" value="PIX" />
             <ResumoItem label="Limite de pedidos" value={plano.pedidos} />
             <ResumoItem label="Conversas WhatsApp" value={plano.conversas} />
             <ResumoItem label="Usuários" value={plano.usuarios} />
@@ -333,8 +348,9 @@ function Step3({
             </div>
           ) : (
             <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-              A integração de pagamento ainda não está disponível. Ao continuar, sua escolha
-              será salva e nossa equipe entrará em contato para concluir a contratação.
+              Ao continuar geramos uma cobrança PIX (ambiente Sandbox) e exibimos o QR Code
+              para pagamento. Sua assinatura é ativada automaticamente assim que o pagamento
+              for confirmado.
             </div>
           )}
         </CardContent>
@@ -352,6 +368,110 @@ function Step3({
   );
 }
 
+function formatBRL(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function Step4Pix({ pix, onPaid, onCancel }: { pix: PixPaymentDTO; onPaid: () => void; onCancel: () => void }) {
+  const getStatusFn = useServerFn(getSubscriptionPaymentStatus);
+
+  const statusQuery = useQuery({
+    queryKey: ["payment-status", pix.intent_id],
+    queryFn: () => getStatusFn({ data: { intentId: pix.intent_id } }),
+    refetchInterval: (q) => {
+      const s = q.state.data?.status;
+      if (s === "pago" || s === "cancelado" || s === "expirado") return false;
+      return 10_000;
+    },
+    refetchIntervalInBackground: false,
+  });
+
+  useEffect(() => {
+    if (statusQuery.data?.status === "pago") onPaid();
+  }, [statusQuery.data?.status, onPaid]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(pix.qr_code_payload);
+      toast.success("Código PIX copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Pagamento PIX</p>
+            <h3 className="text-2xl font-bold mt-1">Plano {pix.plano.toUpperCase()}</h3>
+            <p className="text-sm text-muted-foreground capitalize">Ciclo: {pix.ciclo}</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ResumoItem label="Valor" value={formatBRL(pix.valor)} />
+            <ResumoItem label="Vencimento" value={new Date(pix.vencimento + "T00:00:00").toLocaleDateString("pt-BR")} />
+          </div>
+          <div className="rounded-md border bg-muted/30 p-3">
+            <p className="text-xs text-muted-foreground mb-1">Código copia-e-cola</p>
+            <p className="text-xs font-mono break-all leading-relaxed">{pix.qr_code_payload}</p>
+            <Button size="sm" variant="outline" className="mt-3" onClick={copy}>
+              <Copy className="h-4 w-4 mr-1" /> Copiar código PIX
+            </Button>
+          </div>
+          {pix.invoice_url && (
+            <a
+              href={pix.invoice_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-primary underline"
+            >
+              Abrir fatura no Asaas
+            </a>
+          )}
+          <div className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Aguardando confirmação do pagamento…</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            Voltar e escolher outro plano
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6 flex flex-col items-center justify-center space-y-3">
+          <p className="text-sm font-medium">Aponte a câmera do seu app bancário</p>
+          <img
+            src={`data:image/png;base64,${pix.qr_code_image}`}
+            alt="QR Code PIX"
+            className="h-64 w-64 rounded-md border bg-white p-2"
+          />
+          <p className="text-xs text-muted-foreground text-center max-w-xs">
+            A assinatura é ativada automaticamente assim que o Asaas confirmar o pagamento.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Step5Sucesso({ onGo }: { onGo: () => void }) {
+  return (
+    <Card>
+      <CardContent className="p-8 text-center space-y-4">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+          <CheckCircle2 className="h-8 w-8" />
+        </div>
+        <div>
+          <h3 className="text-2xl font-bold">Pagamento confirmado com sucesso</h3>
+          <p className="text-sm text-muted-foreground mt-1">Seu plano foi ativado.</p>
+        </div>
+        <Button onClick={onGo}>Ir para Dashboard</Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 function ResumoItem({ label, value }: { label: string; value: string }) {
   return (
