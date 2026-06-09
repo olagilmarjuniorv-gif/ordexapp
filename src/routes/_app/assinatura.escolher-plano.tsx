@@ -56,10 +56,17 @@ function EscolherPlanoPage() {
 
   const createFn = useServerFn(createSubscriptionIntent);
   const getIntentFn = useServerFn(getMySubscriptionIntent);
+  const checkBillingFn = useServerFn(checkBillingReadiness);
 
   const intentQuery = useQuery({
     queryKey: ["my-subscription-intent"],
     queryFn: () => getIntentFn(),
+    enabled: isAdmin && !isSuperAdmin,
+  });
+
+  const billingQuery = useQuery({
+    queryKey: ["billing-readiness"],
+    queryFn: () => checkBillingFn(),
     enabled: isAdmin && !isSuperAdmin,
   });
 
