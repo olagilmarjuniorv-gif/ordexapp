@@ -140,6 +140,13 @@ export const updateEmpresa = createServerFn({ method: "POST" })
     const payload = Object.fromEntries(
       Object.entries(rest).map(([k, v]) => [k, v === "" ? null : v]),
     ) as any;
+    // UX simplificado: name (fantasia) é alimentado a partir da razão social,
+    // e e-mail financeiro/operacional refletem o e-mail principal (compatibilidade Asaas).
+    if (payload.razao_social && !payload.name) payload.name = payload.razao_social;
+    if (payload.email) {
+      payload.email_financeiro = payload.email;
+      payload.email_operacional = payload.email;
+    }
     const { error } = await supabaseAdmin.from("companies").update(payload).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
