@@ -418,8 +418,234 @@ function AtendenteDashboard() {
   );
 }
 
+// ============================================================
+// EXECUTIVO — blocos do novo Dashboard
+// ============================================================
+
+function AlertasExecutivos({ atrasados, trial, pixPendentes, whatsappOff }: {
+  atrasados: number; trial: any; pixPendentes: number; whatsappOff: boolean;
+}) {
+  const itens: { label: string; hint: string; to: string; tone: string; icon: any }[] = [];
+  if (atrasados > 0) {
+    itens.push({ label: `${atrasados} pedido${atrasados === 1 ? "" : "s"} atrasado${atrasados === 1 ? "" : "s"}`, hint: "Verifique a cozinha", to: "/cozinha", tone: "bg-rose-100 text-rose-700", icon: AlertTriangle });
+  }
+  if (whatsappOff) {
+    itens.push({ label: "WhatsApp desconectado", hint: "Reconecte em Configurações", to: "/configuracoes?tab=whatsapp", tone: "bg-amber-100 text-amber-700", icon: WifiOff });
+  }
+  if (pixPendentes > 0) {
+    itens.push({ label: `${pixPendentes} PIX pendente${pixPendentes === 1 ? "" : "s"}`, hint: "Acompanhe os pagamentos", to: "/financeiro", tone: "bg-amber-100 text-amber-700", icon: CircleDollarSign });
+  }
+  if (trial?.diasRestantes != null && trial.diasRestantes <= 3 && !trial.expirado) {
+    itens.push({ label: `Trial termina em ${trial.diasRestantes} dia${trial.diasRestantes === 1 ? "" : "s"}`, hint: "Escolha um plano", to: "/configuracoes?tab=assinatura", tone: "bg-amber-100 text-amber-700", icon: AlarmClock });
+  }
+  if (itens.length === 0) return null;
+  return (
+    <section className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 shadow-card">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-amber-900 mr-1">Alertas</span>
+        {itens.map((a) => (
+          <a key={a.label} href={a.to} className="inline-flex items-center gap-2 rounded-md bg-card border border-border px-2.5 py-1.5 text-xs font-medium hover:border-amber-300 transition">
+            <span className={`flex h-5 w-5 items-center justify-center rounded ${a.tone}`}>
+              <a.icon className="h-3 w-3" />
+            </span>
+            <span>{a.label}</span>
+            <span className="text-muted-foreground">· {a.hint}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function OperacaoPipeline({ aguardando, preparo, prontos, emEntrega, finalizados }: {
+  aguardando: number; preparo: number; prontos: number; emEntrega: number; finalizados: number;
+}) {
+  const steps = [
+    { label: "Aguardando", value: aguardando, icon: Clock, tone: "bg-amber-100 text-amber-700" },
+    { label: "Em preparo", value: preparo, icon: ChefHat, tone: "bg-orange-100 text-orange-700" },
+    { label: "Prontos", value: prontos, icon: CheckCircle2, tone: "bg-emerald-100 text-emerald-700" },
+    { label: "Em entrega", value: emEntrega, icon: Bike, tone: "bg-info/15 text-info" },
+    { label: "Finalizados", value: finalizados, icon: BadgeCheck, tone: "bg-muted text-muted-foreground" },
+  ];
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+      <header className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="font-display font-semibold inline-flex items-center gap-2"><Activity className="h-4 w-4" /> Operação em tempo real</h2>
+          <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 mt-0.5"><span className="realtime-dot" /> atualização ao vivo</p>
+        </div>
+        <Link to="/cozinha" className="text-xs text-primary inline-flex items-center gap-1">Ver cozinha <ArrowUpRight className="h-3 w-3" /></Link>
+      </header>
+      <div className="grid grid-cols-5 gap-2">
+        {steps.map((s, i) => (
+          <div key={s.label} className="relative">
+            <div className="rounded-lg border border-border bg-background p-3 text-center">
+              <div className={`mx-auto flex h-7 w-7 items-center justify-center rounded-md ${s.tone}`}>
+                <s.icon className="h-3.5 w-3.5" />
+              </div>
+              <p className="mt-1.5 font-display text-xl font-bold leading-none">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wide">{s.label}</p>
+            </div>
+            {i < steps.length - 1 && (
+              <span className="hidden lg:block absolute top-1/2 -right-1 h-px w-2 bg-border" />
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FinanceiroCard({ recebido, aReceber, pgtoPendentes, pixPendentes }: {
+  recebido: number; aReceber: number; pgtoPendentes: number; pixPendentes: number | null;
+}) {
+  const linhas = [
+    { label: "Recebido hoje", value: formatBRL(recebido), tone: "text-success" },
+    { label: "A receber", value: formatBRL(aReceber), tone: "text-foreground" },
+    { label: "Pgto pendente", value: `${pgtoPendentes} pedido${pgtoPendentes === 1 ? "" : "s"}`, tone: "text-amber-700" },
+    { label: "PIX pendentes", value: pixPendentes == null ? "—" : String(pixPendentes), tone: "text-amber-700" },
+  ];
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+      <header className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-semibold inline-flex items-center gap-2"><Wallet className="h-4 w-4" /> Financeiro</h2>
+        <Link to="/financeiro" className="text-xs text-primary inline-flex items-center gap-1">Detalhes <ArrowUpRight className="h-3 w-3" /></Link>
+      </header>
+      <ul className="space-y-2">
+        {linhas.map((l) => (
+          <li key={l.label} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+            <span className="text-muted-foreground">{l.label}</span>
+            <span className={`font-semibold tabular-nums ${l.tone}`}>{l.value}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function AtendimentoCard() {
+  // Dados ainda não agregados centralmente — placeholder consistente.
+  const linhas = [
+    { label: "Conversas abertas", value: "—" },
+    { label: "Não lidas", value: "—" },
+    { label: "Aguardando humano", value: "—" },
+  ];
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+      <header className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-semibold inline-flex items-center gap-2"><MessageCircle className="h-4 w-4" /> Atendimento</h2>
+        <Link to="/atendimento" className="text-xs text-primary inline-flex items-center gap-1">Abrir <ArrowUpRight className="h-3 w-3" /></Link>
+      </header>
+      <ul className="space-y-2">
+        {linhas.map((l) => (
+          <li key={l.label} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+            <span className="text-muted-foreground">{l.label}</span>
+            <span className="font-semibold tabular-nums text-muted-foreground">{l.value}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[11px] text-muted-foreground italic">Indicadores agregados em breve.</p>
+    </section>
+  );
+}
+
+function CanaisDonut({ data }: { data: { canal: string; count: number }[] }) {
+  const total = data.reduce((s, d) => s + d.count, 0);
+  const colors = ["hsl(var(--primary))", "#f97316", "#10b981", "#3b82f6", "#a855f7", "#ef4444"];
+  if (total === 0) {
+    return (
+      <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+        <h2 className="font-display font-semibold mb-3">Canais de venda</h2>
+        <p className="text-sm text-muted-foreground">Sem pedidos no período.</p>
+      </section>
+    );
+  }
+  let acc = 0;
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const segs = data.map((d, i) => {
+    const pct = d.count / total;
+    const dash = pct * c;
+    const offset = -acc * c;
+    acc += pct;
+    return { d, pct, dash, offset, color: colors[i % colors.length] };
+  });
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-card">
+      <h2 className="font-display font-semibold mb-3">Canais de venda</h2>
+      <div className="flex items-center gap-5 flex-wrap">
+        <svg viewBox="0 0 100 100" className="h-32 w-32 shrink-0 -rotate-90">
+          <circle cx="50" cy="50" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="14" />
+          {segs.map((s, i) => (
+            <circle key={i} cx="50" cy="50" r={r} fill="none" stroke={s.color} strokeWidth="14"
+              strokeDasharray={`${s.dash} ${c - s.dash}`} strokeDashoffset={s.offset} />
+          ))}
+          <text x="50" y="50" textAnchor="middle" dominantBaseline="central" className="rotate-90 origin-center fill-foreground font-display font-bold" style={{ fontSize: 14, transform: "rotate(90deg)", transformOrigin: "50px 50px" }}>
+            {total}
+          </text>
+        </svg>
+        <ul className="flex-1 min-w-[180px] space-y-1.5">
+          {segs.map((s, i) => (
+            <li key={i} className="flex items-center justify-between text-sm">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: s.color }} />
+                {canalLabel[s.d.canal] ?? s.d.canal}
+              </span>
+              <span className="tabular-nums text-muted-foreground">{s.d.count} · {Math.round(s.pct * 100)}%</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function UltimosPedidosTable({ pedidos }: { pedidos: any[] }) {
+  return (
+    <section className="rounded-xl border border-border bg-card shadow-card">
+      <header className="flex items-center justify-between p-4 border-b border-border">
+        <h2 className="font-display font-semibold">Últimos pedidos</h2>
+        <Link to="/pedidos" className="text-xs text-primary inline-flex items-center gap-1">Ver todos <ArrowUpRight className="h-3 w-3" /></Link>
+      </header>
+      {pedidos.length === 0 ? (
+        <p className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido recente.</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {pedidos.slice(0, 6).map((o: any) => (
+            <li key={o.id}>
+              <Link to="/pedidos/$id" params={{ id: o.id }} className="flex items-center gap-3 p-3 hover:bg-muted/40">
+                <span className="text-[11px] font-bold tabular-nums text-muted-foreground w-12 shrink-0">#{String(o.id).slice(0, 4).toUpperCase()}</span>
+                <span className="flex-1 min-w-0 text-sm font-medium truncate">{o.cliente?.name ?? (o.mesa_id ? `Mesa ${o.mesa?.numero ?? ""}` : canalLabel[o.canal] ?? "Balcão")}</span>
+                <span className="text-xs text-muted-foreground w-20 truncate hidden sm:block">{canalLabel[o.canal] ?? o.canal}</span>
+                <span className="text-[10px] font-semibold uppercase rounded px-1.5 py-0.5 bg-muted text-muted-foreground w-20 text-center">{statusLabel[o.status] ?? o.status}</span>
+                <span className="text-sm font-semibold tabular-nums w-20 text-right">{formatBRL(Number(o.total_amount))}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function UltimasConversasList() {
+  return (
+    <section className="rounded-xl border border-border bg-card shadow-card">
+      <header className="flex items-center justify-between p-4 border-b border-border">
+        <h2 className="font-display font-semibold">Últimas conversas</h2>
+        <Link to="/atendimento" className="text-xs text-primary inline-flex items-center gap-1">Ver atendimento <ArrowUpRight className="h-3 w-3" /></Link>
+      </header>
+      <div className="p-6 text-center">
+        <MessageCircle className="h-8 w-8 text-muted-foreground/40 mx-auto" />
+        <p className="mt-2 text-sm text-muted-foreground">Lista consolidada em breve.</p>
+        <Link to="/atendimento" className="mt-2 inline-block text-xs text-primary">Abrir caixa de entrada →</Link>
+      </div>
+    </section>
+  );
+}
+
 function CompanyDashboard() {
-  const [granularity, setGranularity] = useState<Granularity>("day");
+  const granularity: Granularity = "day";
   const fetchFn = useServerFn(getCompanyDashboardData);
   const range = getPeriodRange(granularity);
 
@@ -427,8 +653,11 @@ function CompanyDashboard() {
     queryKey: ["dashboard", granularity],
     queryFn: () => fetchFn({ data: { granularity, ...range } }),
   });
-  useRealtimeInvalidate("pedidos", [["dashboard", granularity]]);
+  useRealtimeInvalidate("pedidos", [["dashboard", granularity], ["pedidos"]]);
   useRealtimeInvalidate("mesas", [["dashboard", granularity]]);
+
+  const fetchPedidos = useServerFn(listPedidos);
+  const { data: allPedidos = [] } = useQuery({ queryKey: ["pedidos"], queryFn: () => fetchPedidos({}) });
 
   const getCfg = useServerFn(getConfiguracoes);
   const { data: cfg } = useQuery({
@@ -440,88 +669,84 @@ function CompanyDashboard() {
   if (isLoading && !data) return <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (error || !data) return <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">Erro ao carregar painel: {(error as Error)?.message ?? "desconhecido"}</div>;
 
+  // ----- derivações a partir de listPedidos (mesmo dia) -----
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const pedidosHoje = (allPedidos as any[]).filter((p) => new Date(p.created_at) >= startOfDay);
+  const aguardando = (allPedidos as any[]).filter((p) => p.status === "novo").length;
+  const emEntrega = (allPedidos as any[]).filter((p) => p.fase_canal === "saiu_entrega").length;
+  const pendentesPgto = pedidosHoje.filter((p) => p.status_financeiro !== "pago" && p.status_financeiro !== "cancelado");
+  const aReceber = pendentesPgto.reduce((s, p) => s + Number(p.total_amount ?? 0), 0);
+  const pgtoPendentes = pendentesPgto.length;
+
+  // WhatsApp / PIX: dados consolidados ainda inexistentes → ocultar / placeholder.
+  const whatsappOff = false;
+  const pixPendentes: number | null = null;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">Operação de hoje 🍔</p>
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Painel</h1>
+          <CompanyNameTag />
         </div>
-        <div className="flex items-center gap-2">
-          <PeriodTabs value={granularity} onChange={setGranularity} />
-          <Link
-            to="/pedidos/novo"
-            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all"
-          >
-            <Plus className="h-4 w-4" /> Novo pedido
-          </Link>
-        </div>
+        <Link
+          to="/pedidos/novo"
+          className="inline-flex items-center gap-2 rounded-lg bg-cta px-3.5 py-2 text-sm font-semibold text-cta-foreground shadow hover:brightness-110 hover:shadow-glow-cta transition-all"
+        >
+          <Plus className="h-4 w-4" /> Novo pedido
+        </Link>
       </div>
 
       <TrialBanner trial={(cfg as any)?.trial ?? null} />
 
-      {/* <OnboardingChecklist /> removido temporariamente */}
+      {/* BLOCO 8 — Alertas */}
+      <AlertasExecutivos
+        atrasados={data.atrasados}
+        trial={(cfg as any)?.trial ?? null}
+        pixPendentes={pixPendentes ?? 0}
+        whatsappOff={whatsappOff}
+      />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Vendas pagas" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/pedidos" />
-        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={ShoppingBag} tone="bg-info/15 text-info" to="/pedidos" />
-        <StatCard label="Em preparo" value={data.emPreparo} icon={ChefHat} tone="bg-amber-100 text-amber-700" to="/cozinha" />
+      {/* BLOCO 1 — Resumo do dia */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatCard label="Faturamento hoje" value={formatBRL(data.valorTotalVendido)} icon={TrendingUp} tone="bg-success/15 text-success" to="/financeiro" />
+        <StatCard label="Pedidos hoje" value={pedidosHoje.length} icon={ShoppingBag} tone="bg-primary/10 text-primary" to="/pedidos" />
+        <StatCard label="Ticket médio" value={formatBRL(data.ticketMedio)} icon={BadgeCheck} tone="bg-info/15 text-info" />
+        <StatCard label="Pedidos ativos" value={data.pedidosAtivos} icon={Activity} tone="bg-amber-100 text-amber-700" to="/cozinha" />
         <StatCard label="Atrasados" value={data.atrasados} icon={AlarmClock} tone="bg-rose-100 text-rose-600" to="/cozinha" />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Mesas abertas" value={data.mesasAbertas} icon={LayoutGrid} tone="bg-primary/10 text-primary" to="/mesas" />
-        <StatCard label="Vendas pagas" value={data.vendasConcluidas} icon={BadgeCheck} tone="bg-success/15 text-success" to="/pedidos" />
-        <StatCard label="Ticket médio" value={formatBRL(data.ticketMedio)} icon={TrendingUp} tone="bg-primary/10 text-primary" />
-        <StatCard label="Top item" value={data.topItem?.name ?? "—"} icon={Trophy} tone="bg-warning/20 text-warning-foreground" />
+      {/* BLOCO 2 — Operação em tempo real */}
+      <OperacaoPipeline
+        aguardando={aguardando}
+        preparo={data.emPreparo}
+        prontos={data.prontos}
+        emEntrega={emEntrega}
+        finalizados={data.finalizados}
+      />
+
+      {/* BLOCOS 3 + 4 — Financeiro + Atendimento */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <FinanceiroCard
+          recebido={data.valorTotalVendido}
+          aReceber={aReceber}
+          pgtoPendentes={pgtoPendentes}
+          pixPendentes={pixPendentes}
+        />
+        <AtendimentoCard />
       </div>
 
-      <ChartSection chart={data.chart} granularity={granularity} onChange={setGranularity} loading={isLoading} />
+      {/* BLOCO 5 — Canais */}
+      <CanaisDonut data={data.porCanal} />
 
-      <section className="rounded-xl border border-border bg-card p-4 shadow-card">
-        <h2 className="font-display font-semibold mb-3">Pedidos por canal</h2>
-        <CanalBars data={data.porCanal} />
-      </section>
-
-      <AlertasSection atrasados={data.atrasados} trial={(cfg as any)?.trial ?? null} />
-
-
-      <Link
-        to="/pedidos/novo"
-        className="sm:hidden flex items-center justify-between rounded-xl p-4 text-cta-foreground shadow-glow-cta bg-gradient-cta"
-      >
-        <div>
-          <p className="text-xs opacity-80">Atalho rápido</p>
-          <p className="font-semibold">Novo pedido</p>
-        </div>
-        <Plus className="h-5 w-5" />
-      </Link>
-
-      <section className="rounded-xl border border-border bg-card shadow-card">
-        <header className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="font-display font-semibold">Pedidos ativos</h2>
-          <Link to="/pedidos" className="text-xs text-primary inline-flex items-center gap-1">
-            Ver todos <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </header>
-        <ul className="divide-y divide-border">
-          {data.recentPedidos.length === 0 && (
-            <li className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido ativo.</li>
-          )}
-          {data.recentPedidos.map((o: any) => (
-            <li key={o.id} className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary text-xs font-bold">
-                #{String(o.id).slice(0, 3).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{o.cliente?.name ?? (o.mesa_id ? "Mesa" : canalLabel[o.canal] ?? "Balcão")}</p>
-                <p className="text-xs text-muted-foreground">{statusLabel[o.status]} · {formatBRL(Number(o.total_amount))}</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* BLOCOS 6 + 7 — Últimos pedidos + Últimas conversas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <UltimosPedidosTable pedidos={data.recentPedidos as any[]} />
+        <UltimasConversasList />
+      </div>
     </div>
   );
 }
+
