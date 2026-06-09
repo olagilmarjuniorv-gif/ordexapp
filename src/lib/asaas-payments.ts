@@ -123,7 +123,7 @@ export async function upsertCobranca(input: {
   metadata?: Record<string, unknown>;
 }) {
   const existing = await findCobrancaByExternalId(input.external_id);
-  const mergedMeta = { ...(existing?.metadata ?? {}), ...(input.metadata ?? {}) };
+  const mergedMeta = { ...((existing?.metadata as Record<string, unknown>) ?? {}), ...(input.metadata ?? {}) };
 
   const row = {
     company_id: input.company_id,
