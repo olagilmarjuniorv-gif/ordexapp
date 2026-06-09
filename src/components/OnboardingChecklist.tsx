@@ -126,17 +126,12 @@ function OnboardingChecklistInner() {
   const getFn = useServerFn(getOnboardingStatus);
   const { data, isLoading, error } = useQuery({
     queryKey: ["onboarding-status"],
-    queryFn: async () => {
-      try {
-        return await getFn();
-      } catch (e) {
-        // Nunca propaga; devolve shape vazio para a UI seguir
-        if (typeof console !== "undefined") console.warn("onboarding queryFn:", e);
-        return null;
-      }
-    },
+    queryFn: () => getFn(),
     staleTime: 10_000,
-    retry: false,
+    retry: 1,
+    retryDelay: 500,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   useRealtimeInvalidate("pedidos", [["onboarding-status"]]);
