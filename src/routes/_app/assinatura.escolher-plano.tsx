@@ -27,6 +27,7 @@ import {
   getSubscriptionPaymentStatus,
   type PixPaymentDTO,
 } from "@/lib/pix.functions";
+import { getMyPendingCobranca } from "@/lib/assinaturas.functions";
 
 const BILLING_LABELS: Record<string, string> = {
   cpf_cnpj: "CNPJ ou CPF do responsável",
@@ -74,6 +75,7 @@ function EscolherPlanoPage() {
   const getIntentFn = useServerFn(getMySubscriptionIntent);
   const checkBillingFn = useServerFn(checkBillingReadiness);
   const createPixFn = useServerFn(createPixForIntent);
+  const getPendingCobFn = useServerFn(getMyPendingCobranca);
 
   const intentQuery = useQuery({
     queryKey: ["my-subscription-intent"],
@@ -84,6 +86,12 @@ function EscolherPlanoPage() {
   const billingQuery = useQuery({
     queryKey: ["billing-readiness"],
     queryFn: () => checkBillingFn(),
+    enabled: isAdmin && !isSuperAdmin,
+  });
+
+  const pendingCobQuery = useQuery({
+    queryKey: ["my-pending-cobranca"],
+    queryFn: () => getPendingCobFn(),
     enabled: isAdmin && !isSuperAdmin,
   });
 
@@ -127,6 +135,33 @@ function EscolherPlanoPage() {
           Compare os planos e selecione o que faz mais sentido para o seu restaurante.
         </p>
       </div>
+
+      {pendingCobQuery.data && intentQuery.data && (intentQuery.data as any).status === "aguardando_pagamento" && step < 4 ? (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex flex-wrap items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+          <div className="text-sm flex-1 min-w-[220px]">
+            <p className="font-medium text-amber-900 dark:text-amber-200">Você já possui uma cobrança pendente.</p>
+            <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
+              Valor: {Number((pendingCobQuery.data as any).valor ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              {" "}· Vencimento: {(pendingCobQuery.data as any).vencimento ? new Date((pendingCobQuery.data as any).vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "—"}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={async () => {
+              try {
+                const pixData = await createPixFn({ data: { intentId: (intentQuery.data as any).id } });
+                setPix(pixData);
+                setStep(4);
+              } catch (e: any) {
+                toast.error(e?.message ?? "Erro ao abrir cobrança");
+              }
+            }}
+          >
+            Continuar pagamento
+          </Button>
+        </div>
+      ) : null}
 
       <Stepper step={step} />
 

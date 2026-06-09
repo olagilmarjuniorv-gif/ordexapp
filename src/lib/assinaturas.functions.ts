@@ -126,3 +126,40 @@ export const updateAssinatura = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// =========== LIST MY COBRANCAS (admin da empresa) ===========
+export const listMyCobrancas = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const c = await getCaller(context.userId);
+    if (!c.companyId) return [];
+    if (!c.isCompanyAdmin && !c.isSuperAdmin) return [];
+    const { data, error } = await supabaseAdmin
+      .from("cobrancas")
+      .select("id, valor, vencimento, paid_at, status, payment_method, metadata, created_at, external_id")
+      .eq("company_id", c.companyId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+// =========== PENDING COBRANCA (anti-duplicidade) ===========
+export const getMyPendingCobranca = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const c = await getCaller(context.userId);
+    if (!c.companyId) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabaseAdmin
+      .from("cobrancas")
+      .select("id, external_id, valor, vencimento, status, payment_method, metadata, created_at")
+      .eq("company_id", c.companyId)
+      .in("status", ["pendente", "pending", "awaiting_payment"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) return null;
+    if (data.vencimento && data.vencimento < today) return null;
+    return data;
+  });

@@ -201,6 +201,29 @@ export async function createPixPayment(intentId: string): Promise<{
   const valor = Number(intent.ciclo === "anual" ? plano.valor_anual : plano.valor_mensal);
   if (!valor || valor <= 0) throw new Error("Valor do plano inválido");
 
+  // Anti-duplicidade: se a intent já tem um payment Asaas registrado,
+  // reaproveita em vez de criar nova cobrança.
+  const intentMeta = (intent.metadata as Record<string, unknown> | null) ?? {};
+  const existingPaymentId = (intentMeta.asaas_payment_id as string | undefined) ?? null;
+  if (existingPaymentId) {
+    try {
+      const existing = await asaasFetch<AsaasPayment>(`/payments/${existingPaymentId}`, { method: "GET" });
+      const reusable = existing && ["PENDING", "AWAITING_PAYMENT", "OVERDUE"].includes(String(existing.status).toUpperCase());
+      if (reusable) {
+        const pix = await asaasFetch<AsaasPixQrCode>(`/payments/${existingPaymentId}/pixQrCode`, { method: "GET" });
+        return {
+          payment_id: existing.id,
+          invoice_url: existing.invoiceUrl,
+          pix,
+          valor: Number(existing.value ?? valor),
+          vencimento: existing.dueDate ?? addDaysISO(3),
+        };
+      }
+    } catch {
+      // se falhar a recuperação, segue criando uma nova
+    }
+  }
+
   const customerId = await ensureAsaasCustomer(intent.company_id);
   const dueDate = addDaysISO(3);
 

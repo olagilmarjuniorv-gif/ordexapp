@@ -99,7 +99,7 @@ export function TrialExpiredOverlay({ canChoosePlan }: { canChoosePlan: boolean 
                   <Button
                     className="mt-auto"
                     variant={p.destaque ? "default" : "outline"}
-                    onClick={() => navigate({ to: "/assinatura/escolher-plano" })}
+                    onClick={() => navigate({ to: "/configuracoes", search: { tab: "assinatura" } as any })}
                   >
                     Escolher {p.nome}
                   </Button>

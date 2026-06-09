@@ -1,16 +1,18 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Save, Settings as SettingsIcon, Download, AlertTriangle } from "lucide-react";
+import { Loader2, Save, Settings as SettingsIcon, Download, AlertTriangle, CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import {
   getConfiguracoes, updateEmpresa, updateOperacao,
   updateWhatsappConfig, updateChatbot, createPrivacyRequest,
 } from "@/lib/configuracoes.functions";
 import { updateCompanyPagamentos, type HorariosFuncionamento } from "@/lib/companies.functions";
+import { listMyCobrancas } from "@/lib/assinaturas.functions";
 import { TrialBanner } from "@/components/TrialBanner";
 
 export const Route = createFileRoute("/_app/configuracoes")({
@@ -21,7 +23,7 @@ export const Route = createFileRoute("/_app/configuracoes")({
 const inputCls =
   "w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60";
 
-function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+function Field({ label, children, hint }: { label: React.ReactNode; children: React.ReactNode; hint?: string }) {
   return (
     <label className="block">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
@@ -67,6 +69,20 @@ function ConfiguracoesPage() {
   const qc = useQueryClient();
   const getFn = useServerFn(getConfiguracoes);
 
+  const initialTab = (() => {
+    if (typeof window === "undefined") return "empresa";
+    return new URLSearchParams(window.location.search).get("tab") || "empresa";
+  })();
+  const [tab, setTab] = useState<string>(initialTab);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") !== tab) {
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [tab]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["configuracoes"],
     queryFn: () => getFn({ data: {} }),
@@ -101,7 +117,7 @@ function ConfiguracoesPage() {
           <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
         </div>
       ) : (
-        <Tabs defaultValue="empresa" className="space-y-4">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
             <TabsTrigger value="empresa">Empresa</TabsTrigger>
             <TabsTrigger value="operacao">Operação</TabsTrigger>
@@ -140,6 +156,10 @@ function ConfiguracoesPage() {
 }
 
 // ============== ABA 1 — EMPRESA ==============
+function ReqLabel({ label }: { label: string }) {
+  return <span>{label} <span className="text-destructive">*</span></span>;
+}
+
 function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: boolean; onSaved: () => void }) {
   const saveFn = useServerFn(updateEmpresa);
   const [saving, setSaving] = useState(false);
@@ -166,6 +186,14 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
   const upd = (k: keyof typeof f) => (e: any) => setF({ ...f, [k]: e.target.value });
 
   const save = async () => {
+    // validação amigável dos obrigatórios
+    const faltam: string[] = [];
+    if (!f.razao_social.trim()) faltam.push("Razão Social");
+    if (!f.cnpj.trim()) faltam.push("CNPJ");
+    if (!f.phone.trim()) faltam.push("Telefone Principal");
+    if (!f.email.trim()) faltam.push("E-mail Principal");
+    if (faltam.length) { toast.error(`Preencha: ${faltam.join(", ")}`); return; }
+
     setSaving(true);
     try {
       await saveFn({ data: f });
@@ -179,15 +207,14 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
   return (
     <div className="space-y-5">
       <Section title="Dados da empresa">
+        <p className="text-xs text-muted-foreground -mt-2">
+          Esses dados são necessários para emissão de cobranças e ativação da assinatura.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nome fantasia"><input className={inputCls} disabled={readOnly} value={f.name} onChange={upd("name")} /></Field>
-          <Field label="Razão social"><input className={inputCls} disabled={readOnly} value={f.razao_social} onChange={upd("razao_social")} /></Field>
-          <Field label="CNPJ"><input className={inputCls} disabled={readOnly} value={f.cnpj} onChange={upd("cnpj")} placeholder="00.000.000/0000-00" /></Field>
-          <Field label="Inscrição estadual"><input className={inputCls} disabled={readOnly} value={f.inscricao_estadual} onChange={upd("inscricao_estadual")} /></Field>
-          <Field label="Telefone principal"><input className={inputCls} disabled={readOnly} value={f.phone} onChange={upd("phone")} /></Field>
-          <Field label="E-mail principal"><input className={inputCls} disabled={readOnly} value={f.email} onChange={upd("email")} /></Field>
-          <Field label="E-mail financeiro"><input className={inputCls} disabled={readOnly} value={f.email_financeiro} onChange={upd("email_financeiro")} /></Field>
-          <Field label="E-mail operacional"><input className={inputCls} disabled={readOnly} value={f.email_operacional} onChange={upd("email_operacional")} /></Field>
+          <Field label={<ReqLabel label="Razão Social" />}><input className={inputCls} disabled={readOnly} value={f.razao_social} onChange={upd("razao_social")} /></Field>
+          <Field label={<ReqLabel label="CNPJ" />}><input className={inputCls} disabled={readOnly} value={f.cnpj} onChange={upd("cnpj")} placeholder="00.000.000/0000-00" /></Field>
+          <Field label={<ReqLabel label="Telefone Principal" />}><input className={inputCls} disabled={readOnly} value={f.phone} onChange={upd("phone")} /></Field>
+          <Field label={<ReqLabel label="E-mail Principal" />}><input className={inputCls} disabled={readOnly} value={f.email} onChange={upd("email")} /></Field>
         </div>
       </Section>
 
@@ -216,13 +243,6 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
           <Field label="Nome exibido"><input className={inputCls} disabled={readOnly} value={f.nome_publico} onChange={upd("nome_publico")} /></Field>
           <Field label="Telefone exibido"><input className={inputCls} disabled={readOnly} value={f.telefone_publico} onChange={upd("telefone_publico")} /></Field>
           <div className="sm:col-span-2"><Field label="Endereço exibido"><input className={inputCls} disabled={readOnly} value={f.endereco_publico} onChange={upd("endereco_publico")} /></Field></div>
-        </div>
-      </Section>
-
-      <Section title="Histórico">
-        <div className="grid gap-4 sm:grid-cols-2 text-sm text-muted-foreground">
-          <div>Criada em: {company.created_at ? new Date(company.created_at).toLocaleString("pt-BR") : "—"}</div>
-          <div>Atualizada em: {company.updated_at ? new Date(company.updated_at).toLocaleString("pt-BR") : "—"}</div>
         </div>
       </Section>
 
@@ -517,7 +537,13 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
     limite_pedidos_mes: 300, limite_conversas_mes: 300, limite_usuarios: 1,
     proxima_cobranca: null, inicio: null, vencimento: null };
 
-  const fmtRest = (v: number | null | undefined) => v === null || v === undefined ? "Ilimitado" : String(v);
+  const listCobFn = useServerFn(listMyCobrancas);
+  const cobQuery = useQuery({
+    queryKey: ["my-cobrancas"],
+    queryFn: () => listCobFn(),
+    staleTime: 30_000,
+  });
+
   const pct = (used: number, lim: number) => lim > 0 ? Math.min(100, Math.round((used / lim) * 100)) : 0;
   const items = useMemo(() => ([
     { key: "pedidos", label: "Pedidos", used: uso?.pedidos ?? 0, lim: s.limite_pedidos_mes },
@@ -526,6 +552,7 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
   ]), [uso, s]);
 
   const fmtDate = (v: string | null | undefined) => v ? new Date(v).toLocaleDateString("pt-BR") : "—";
+  const fmtMoney = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const statusBadgeClass = (st: string) => {
     switch (st) {
@@ -539,6 +566,23 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
     }
   };
 
+  const cobStatusLabel = (st: string) => {
+    const m: Record<string, string> = {
+      pendente: "Pendente", pending: "Pendente", awaiting_payment: "Pendente",
+      pago: "Pago", paid: "Pago", confirmed: "Pago", received: "Pago",
+      cancelado: "Cancelado", refunded: "Reembolsado", overdue: "Vencido",
+    };
+    return m[st?.toLowerCase()] ?? st;
+  };
+  const cobStatusClass = (st: string) => {
+    const s = st?.toLowerCase();
+    if (["pago", "paid", "confirmed", "received"].includes(s)) return "bg-success/15 text-success";
+    if (["pendente", "pending", "awaiting_payment"].includes(s)) return "bg-warning/20 text-warning-foreground";
+    return "bg-muted text-muted-foreground";
+  };
+
+  const cobrancas = (cobQuery.data ?? []) as any[];
+
   return (
     <div className="space-y-5">
       <TrialBanner trial={trial} />
@@ -548,23 +592,32 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
           <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-semibold text-primary uppercase">{s.plano}</span>
           <span className={`rounded-md px-2.5 py-1 text-xs font-semibold uppercase ${statusBadgeClass(s.status)}`}>{s.status}</span>
           <span className="text-sm text-muted-foreground">Ciclo: {s.ciclo}</span>
+          <div className="ml-auto">
+            <Link to="/assinatura/escolher-plano">
+              <Button size="sm">Alterar / Contratar plano</Button>
+            </Link>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3 text-sm mt-4">
+          <div><span className="text-muted-foreground">Início:</span> {fmtDate(s.inicio)}</div>
+          <div><span className="text-muted-foreground">Próxima cobrança:</span> {fmtDate(s.proxima_cobranca)}</div>
+          <div><span className="text-muted-foreground">Valor:</span> {fmtMoney(Number(s.valor ?? 0))}</div>
         </div>
       </Section>
 
-      <Section title="Indicadores de uso">
+      <Section title="Consumo do plano">
         <div className="space-y-4">
           {items.map((it) => {
             const ilimitado = !it.lim || it.lim <= 0;
             const p = ilimitado ? 0 : pct(it.used, it.lim);
             const color = p >= 100 ? "bg-destructive" : p >= 90 ? "bg-orange-500" : p >= 80 ? "bg-yellow-500" : "bg-primary";
-            const restante = uso?.restantes?.[it.key];
             const excedente = uso?.excedentes?.[it.key] ?? 0;
             return (
               <div key={it.label}>
                 <div className="flex items-center justify-between text-sm">
-                  <span>{it.label}</span>
+                  <span className="font-medium">{it.label}</span>
                   <span className="text-muted-foreground">
-                    {it.used} / {ilimitado ? "∞" : it.lim} {ilimitado ? "" : `(${p}%)`} · Restante: {fmtRest(restante)}
+                    {it.used} / {ilimitado ? "∞" : it.lim}{ilimitado ? "" : ` (${p}%)`}
                   </span>
                 </div>
                 {!ilimitado && (
@@ -572,14 +625,24 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
                     <div className={`h-full ${color}`} style={{ width: `${p}%` }} />
                   </div>
                 )}
-                {it.key === "usuarios" && excedente > 0 && (
-                  <div className="mt-1 flex items-center gap-1 text-xs text-destructive">
-                    <AlertTriangle className="h-3 w-3" /> Excedente de usuários: {excedente}
-                  </div>
-                )}
-                {!ilimitado && p >= 80 && it.key !== "usuarios" && (
-                  <div className="mt-1 flex items-center gap-1 text-xs text-orange-600">
-                    <AlertTriangle className="h-3 w-3" /> Atenção: {p}% do limite atingido.
+                {excedente > 0 && (
+                  <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm space-y-2">
+                    <div className="flex items-start gap-2 text-destructive">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <div>
+                        Você possui <strong>{excedente}</strong> {it.label.toLowerCase()} acima do limite do plano.
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {it.key === "usuarios" && (
+                        <Button size="sm" variant="outline" disabled title="Em breve">
+                          Contratar usuário adicional
+                        </Button>
+                      )}
+                      <Link to="/assinatura/escolher-plano">
+                        <Button size="sm">Alterar plano</Button>
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -588,15 +651,72 @@ function AbaAssinatura({ subscription, uso, trial }: { subscription: any; uso: a
         </div>
       </Section>
 
-      <Section title="Financeiro">
-        <div className="grid gap-3 sm:grid-cols-2 text-sm">
-          <div><span className="text-muted-foreground">Início:</span> {fmtDate(s.inicio)}</div>
-          <div><span className="text-muted-foreground">Vencimento:</span> {fmtDate(s.vencimento)}</div>
-          <div><span className="text-muted-foreground">Próxima cobrança:</span> {fmtDate(s.proxima_cobranca)}</div>
-          <div><span className="text-muted-foreground">Valor do plano:</span> R$ {Number(s.valor ?? 0).toFixed(2)}</div>
-          <div><span className="text-muted-foreground">Ciclo:</span> {s.ciclo}</div>
-          <div><span className="text-muted-foreground">Status:</span> {s.status}</div>
+      <Section title="Forma de pagamento">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex items-center gap-3 rounded-md border border-primary bg-primary/5 px-3 py-2 cursor-pointer">
+            <input type="radio" name="forma_pagamento" defaultChecked />
+            <div>
+              <div className="text-sm font-medium">PIX</div>
+              <div className="text-xs text-muted-foreground">Disponível agora</div>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 rounded-md border border-border px-3 py-2 opacity-60 cursor-not-allowed">
+            <input type="radio" name="forma_pagamento" disabled />
+            <div>
+              <div className="text-sm font-medium flex items-center gap-2">
+                <CreditCard className="h-4 w-4" /> Cartão de Crédito
+              </div>
+              <div className="text-xs text-muted-foreground">Em breve</div>
+            </div>
+          </label>
         </div>
+      </Section>
+
+      <Section title="Histórico de cobranças">
+        {cobQuery.isLoading ? (
+          <div className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
+        ) : cobrancas.length === 0 ? (
+          <div className="text-sm text-muted-foreground">Nenhuma cobrança registrada ainda.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs text-muted-foreground border-b border-border">
+                <tr>
+                  <th className="text-left py-2 pr-3">Data</th>
+                  <th className="text-left py-2 pr-3">Valor</th>
+                  <th className="text-left py-2 pr-3">Status</th>
+                  <th className="text-left py-2 pr-3">Forma</th>
+                  <th className="text-left py-2 pr-3">Link</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cobrancas.map((c) => {
+                  const meta = (c.metadata ?? {}) as Record<string, any>;
+                  const url = meta.invoice_url ?? meta.asaas_invoice_url ?? null;
+                  return (
+                    <tr key={c.id} className="border-b border-border/50">
+                      <td className="py-2 pr-3">{fmtDate(c.created_at)}</td>
+                      <td className="py-2 pr-3">{fmtMoney(Number(c.valor ?? 0))}</td>
+                      <td className="py-2 pr-3">
+                        <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${cobStatusClass(c.status)}`}>
+                          {cobStatusLabel(c.status)}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3 uppercase">{c.payment_method ?? "—"}</td>
+                      <td className="py-2 pr-3">
+                        {url ? (
+                          <a href={url} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 hover:underline">
+                            Abrir <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Section>
     </div>
   );
