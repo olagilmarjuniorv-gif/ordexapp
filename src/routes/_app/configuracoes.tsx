@@ -69,6 +69,20 @@ function ConfiguracoesPage() {
   const qc = useQueryClient();
   const getFn = useServerFn(getConfiguracoes);
 
+  const initialTab = (() => {
+    if (typeof window === "undefined") return "empresa";
+    return new URLSearchParams(window.location.search).get("tab") || "empresa";
+  })();
+  const [tab, setTab] = useState<string>(initialTab);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") !== tab) {
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [tab]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["configuracoes"],
     queryFn: () => getFn({ data: {} }),
