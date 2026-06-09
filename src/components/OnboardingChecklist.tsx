@@ -87,15 +87,15 @@ function dismissKey(companyId: string | null) {
 }
 
 export function OnboardingChecklist() {
-  console.log("[OC] 1 component render start");
+  console.warn("[OC] 1 component render start");
   const getFn = useServerFn(getOnboardingStatus);
   const { data, isLoading, error } = useQuery({
     queryKey: ["onboarding-status"],
     queryFn: async () => {
-      console.log("[OC] 2 queryFn called");
+      console.warn("[OC] 2 queryFn called");
       try {
         const r = await getFn();
-        console.log("[OC] 3 queryFn resolved", r);
+        console.warn("[OC] 3 queryFn resolved", r);
         return r;
       } catch (e) {
         console.error("[OC] 3X queryFn threw", e);
@@ -104,7 +104,7 @@ export function OnboardingChecklist() {
     },
     staleTime: 10_000,
   });
-  console.log("[OC] 4 query state", { isLoading, hasData: !!data, error });
+  console.warn("[OC] 4 query state", { isLoading, hasData: !!data, error });
 
   // Recalcula quando dados-fonte mudam em tempo real
   useRealtimeInvalidate("pedidos", [["onboarding-status"]]);
@@ -131,12 +131,12 @@ export function OnboardingChecklist() {
     );
   }
   if (isLoading || !data || !data.companyId) {
-    console.log("[OC] 5 render guard (loading or no data)", { isLoading, data });
+    console.warn("[OC] 5 render guard (loading or no data)", { isLoading, data });
     return null;
   }
 
   const { items, completed, total, percent, done } = data;
-  console.log("[OC] 6 derived progress", { items, completed, total, percent, done });
+  console.warn("[OC] 6 derived progress", { items, completed, total, percent, done });
 
 
   // Quando 100%, oculta por padrão — usuário pode reabrir

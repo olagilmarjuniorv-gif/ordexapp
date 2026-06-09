@@ -6,10 +6,10 @@ import { getCaller } from "./auth.server";
 export const getOnboardingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    console.log("[OBF] A handler start, userId=", context.userId);
+    console.warn("[OBF] A handler start, userId=", context.userId);
     const caller = await getCaller(context.userId);
     const companyId = caller.companyId;
-    console.log("[OBF] B caller", { companyId, role: (caller as any).role });
+    console.warn("[OBF] B caller", { companyId, role: (caller as any).role });
 
     const empty = {
       companyId: null as string | null,
@@ -26,14 +26,14 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
       done: false,
     };
 
-    if (!companyId) { console.log("[OBF] C no companyId, return empty"); return empty; }
+    if (!companyId) { console.warn("[OBF] C no companyId, return empty"); return empty; }
 
     const companyRes = await supabaseAdmin
       .from("companies")
       .select("name, phone, email, pagamento_metodos")
       .eq("id", companyId)
       .maybeSingle();
-    console.log("[OBF] D company", { error: companyRes.error, data: companyRes.data });
+    console.warn("[OBF] D company", { error: companyRes.error, data: companyRes.data });
     const company = companyRes.data;
 
     const meu_restaurante =
@@ -43,7 +43,7 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
 
     const metodos = (company?.pagamento_metodos ?? {}) as Record<string, boolean>;
     const pagamentos = Object.values(metodos).some((v) => v === true);
-    console.log("[OBF] E meu_restaurante/pagamentos", { meu_restaurante, pagamentos, metodosType: typeof company?.pagamento_metodos });
+    console.warn("[OBF] E meu_restaurante/pagamentos", { meu_restaurante, pagamentos, metodosType: typeof company?.pagamento_metodos });
 
     const [catRes, prodRes] = await Promise.all([
       supabaseAdmin
@@ -57,7 +57,7 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
         .eq("company_id", companyId)
         .eq("active", true),
     ]);
-    console.log("[OBF] F cat/prod", { catErr: catRes.error, catCount: catRes.count, prodErr: prodRes.error, prodCount: prodRes.count });
+    console.warn("[OBF] F cat/prod", { catErr: catRes.error, catCount: catRes.count, prodErr: prodRes.error, prodCount: prodRes.count });
     const cardapio = (catRes.count ?? 0) > 0 && (prodRes.count ?? 0) > 0;
 
     const waRes = await supabaseAdmin
@@ -66,14 +66,14 @@ export const getOnboardingStatus = createServerFn({ method: "GET" })
       .eq("company_id", companyId)
       .eq("active", true)
       .eq("status", "conectado");
-    console.log("[OBF] G whatsapp", { err: waRes.error, count: waRes.count });
+    console.warn("[OBF] G whatsapp", { err: waRes.error, count: waRes.count });
     const whatsapp = (waRes.count ?? 0) > 0;
 
     const pedRes = await supabaseAdmin
       .from("pedidos")
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId);
-    console.log("[OBF] H pedidos", { err: pedRes.error, count: pedRes.count });
+    console.warn("[OBF] H pedidos", { err: pedRes.error, count: pedRes.count });
     const pedido_teste = (pedRes.count ?? 0) > 0;
 
     const items = { meu_restaurante, cardapio, pagamentos, whatsapp, pedido_teste };
