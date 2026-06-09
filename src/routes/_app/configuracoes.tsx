@@ -156,6 +156,10 @@ function ConfiguracoesPage() {
 }
 
 // ============== ABA 1 — EMPRESA ==============
+function ReqLabel({ label }: { label: string }) {
+  return <span>{label} <span className="text-destructive">*</span></span>;
+}
+
 function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: boolean; onSaved: () => void }) {
   const saveFn = useServerFn(updateEmpresa);
   const [saving, setSaving] = useState(false);
@@ -182,6 +186,14 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
   const upd = (k: keyof typeof f) => (e: any) => setF({ ...f, [k]: e.target.value });
 
   const save = async () => {
+    // validação amigável dos obrigatórios
+    const faltam: string[] = [];
+    if (!f.razao_social.trim()) faltam.push("Razão Social");
+    if (!f.cnpj.trim()) faltam.push("CNPJ");
+    if (!f.phone.trim()) faltam.push("Telefone Principal");
+    if (!f.email.trim()) faltam.push("E-mail Principal");
+    if (faltam.length) { toast.error(`Preencha: ${faltam.join(", ")}`); return; }
+
     setSaving(true);
     try {
       await saveFn({ data: f });
@@ -195,15 +207,14 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
   return (
     <div className="space-y-5">
       <Section title="Dados da empresa">
+        <p className="text-xs text-muted-foreground -mt-2">
+          Esses dados são necessários para emissão de cobranças e ativação da assinatura.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nome fantasia"><input className={inputCls} disabled={readOnly} value={f.name} onChange={upd("name")} /></Field>
-          <Field label="Razão social"><input className={inputCls} disabled={readOnly} value={f.razao_social} onChange={upd("razao_social")} /></Field>
-          <Field label="CNPJ"><input className={inputCls} disabled={readOnly} value={f.cnpj} onChange={upd("cnpj")} placeholder="00.000.000/0000-00" /></Field>
-          <Field label="Inscrição estadual"><input className={inputCls} disabled={readOnly} value={f.inscricao_estadual} onChange={upd("inscricao_estadual")} /></Field>
-          <Field label="Telefone principal"><input className={inputCls} disabled={readOnly} value={f.phone} onChange={upd("phone")} /></Field>
-          <Field label="E-mail principal"><input className={inputCls} disabled={readOnly} value={f.email} onChange={upd("email")} /></Field>
-          <Field label="E-mail financeiro"><input className={inputCls} disabled={readOnly} value={f.email_financeiro} onChange={upd("email_financeiro")} /></Field>
-          <Field label="E-mail operacional"><input className={inputCls} disabled={readOnly} value={f.email_operacional} onChange={upd("email_operacional")} /></Field>
+          <Field label={<ReqLabel label="Razão Social" /> as any}><input className={inputCls} disabled={readOnly} value={f.razao_social} onChange={upd("razao_social")} /></Field>
+          <Field label={<ReqLabel label="CNPJ" /> as any}><input className={inputCls} disabled={readOnly} value={f.cnpj} onChange={upd("cnpj")} placeholder="00.000.000/0000-00" /></Field>
+          <Field label={<ReqLabel label="Telefone Principal" /> as any}><input className={inputCls} disabled={readOnly} value={f.phone} onChange={upd("phone")} /></Field>
+          <Field label={<ReqLabel label="E-mail Principal" /> as any}><input className={inputCls} disabled={readOnly} value={f.email} onChange={upd("email")} /></Field>
         </div>
       </Section>
 
@@ -232,13 +243,6 @@ function AbaEmpresa({ company, readOnly, onSaved }: { company: any; readOnly: bo
           <Field label="Nome exibido"><input className={inputCls} disabled={readOnly} value={f.nome_publico} onChange={upd("nome_publico")} /></Field>
           <Field label="Telefone exibido"><input className={inputCls} disabled={readOnly} value={f.telefone_publico} onChange={upd("telefone_publico")} /></Field>
           <div className="sm:col-span-2"><Field label="Endereço exibido"><input className={inputCls} disabled={readOnly} value={f.endereco_publico} onChange={upd("endereco_publico")} /></Field></div>
-        </div>
-      </Section>
-
-      <Section title="Histórico">
-        <div className="grid gap-4 sm:grid-cols-2 text-sm text-muted-foreground">
-          <div>Criada em: {company.created_at ? new Date(company.created_at).toLocaleString("pt-BR") : "—"}</div>
-          <div>Atualizada em: {company.updated_at ? new Date(company.updated_at).toLocaleString("pt-BR") : "—"}</div>
         </div>
       </Section>
 
